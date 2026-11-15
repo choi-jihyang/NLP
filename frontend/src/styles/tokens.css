@@ -1,0 +1,25 @@
+/* 디자인 토큰 — 화면시안_v2.html 에서 옮김. 색·폰트는 여기서만 바꾼다. */
+:root {
+  --bg: #fafcfb;
+  --surface: #ffffff;
+  --surface-2: #f0f6f4;
+  --line: #dde7e4;
+  --grid: #edf3f1;
+  --fg: #1b2623;
+  --muted: #5f6f6a;
+  --logo: #1d6b5f;
+  --accent: #22887c;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2f4f0;
+  --good: #2e8a4a;
+  --good-soft: #e4f5e8;
+  --warn: #bd6912;
+  --warn-soft: #fdf0e0;
+  --bad: #c6463a;
+  --bad-soft: #fde8e5;
+  --f-display: 'Hahmlet', 'Noto Serif KR', serif;
+  --f-body: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --r: 10px;
+  color-scheme: light;
+}
