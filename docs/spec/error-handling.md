@@ -40,6 +40,7 @@
 | `ALREADY_SUBMITTED` | 409 | 이미 제출한 과제입니다. |
 | `CLASSIFIER_UNAVAILABLE` | 503 | AI 도움을 잠시 쓸 수 없습니다. 잠시 후 다시 시도해 주세요. |
 | `LLM_UNAVAILABLE` | 503 | AI 도움을 잠시 쓸 수 없습니다. 잠시 후 다시 시도해 주세요. |
+| `RUNNER_UNAVAILABLE` | 503 | 코드 실행 환경을 잠시 쓸 수 없습니다. 잠시 후 다시 시도해 주세요. |
 
 > 사용량 상한 도달은 **에러가 아니다.** 채팅 API가 200으로 안내 메시지(`response_mode = "USAGE_LIMIT"`)를 돌려준다.
 

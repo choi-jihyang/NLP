@@ -24,7 +24,7 @@
 
 **spec**
 - [api-contract.md](spec/api-contract.md) — 화면 ↔ 서버 API 목록, 프론트 함수와 1:1 (초안 v3)
-- [integration-contract.md](spec/integration-contract.md) — 분류기·LLM Provider 계약 (분류기 확정)
+- [integration-contract.md](spec/integration-contract.md) — 분류기·LLM Provider·코드 실행 계약 (분류기 확정, 코드 실행 구현됨)
 - [chat-policy.md](spec/chat-policy.md) — 분류 → 정책 분기 (구현됨)
 - [error-handling.md](spec/error-handling.md) — 에러 응답 형식 (초안)
 
