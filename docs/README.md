@@ -18,11 +18,12 @@
 **planning**
 - [architecture.md](planning/architecture.md) — 스택, 구성도, 채팅 처리 흐름 (확정)
 - [milestones.md](planning/milestones.md) — 11/17 · 11/24 · 12/1 (초안)
-- [screens.md](planning/screens.md) — 화면 목록·기능 명세, Figma 기준 (초안)
+- [screens.md](planning/screens.md) — 화면 목록·기능 명세, 화면시안 v3 기준 (초안 v3 · 프론트 구현됨)
+- [page_design.html](planning/page_design.html) — 화면시안 v3 (브라우저로 열기)
 - [schema.md](planning/schema.md) — ERD, 테이블 (초안)
 
 **spec**
-- [api-contract.md](spec/api-contract.md) — API 목록 (초안)
+- [api-contract.md](spec/api-contract.md) — 화면 ↔ 서버 API 목록, 프론트 함수와 1:1 (초안 v3)
 - [integration-contract.md](spec/integration-contract.md) — 분류기·LLM Provider 계약 (분류기 확정)
 - [chat-policy.md](spec/chat-policy.md) — 분류 → 정책 분기 (구현됨)
 - [error-handling.md](spec/error-handling.md) — 에러 응답 형식 (초안)

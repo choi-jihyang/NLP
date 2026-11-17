@@ -43,15 +43,19 @@ frontend/src/
 │   └── student/        # 학생 화면
 ├── components/         # 여러 화면이 함께 쓰는 UI
 │   └── layout/         # 헤더·탭 레이아웃
-├── hooks/              # 화면 로직 훅 (필요해지면 생성)
+├── hooks/              # 화면 로직 훅 (useSubmission, useChat, usePasteLog …)
 ├── api/                # 백엔드 호출 함수 + 요청/응답 타입
-│   └── client.ts       # fetch 공통 함수 (유일한 fetch 위치)
+│   ├── client.ts       # fetch 공통 함수 (유일한 fetch 위치)
+│   └── mock/           # 백엔드가 생기기 전까지 쓰는 예시 데이터 (화면은 직접 import 금지)
 └── styles/
     ├── tokens.css      # 디자인 토큰 (색·폰트 단일 출처)
-    └── base.css        # 공통 클래스 (.panel, .btn, .chip …)
+    ├── base.css        # 공통 클래스 (.panel, .btn, .chip …)
+    ├── components.css  # 여러 화면이 쓰는 위젯 (코드 블록, 테스트 결과, 선택지, 표 …)
+    └── screens.css     # 화면 전용 배치 (과제 풀이, 과제 만들기, 리포트)
 ```
 - **규칙**: `fetch()`는 `api/client.ts`에서만 호출한다. 다른 파일은 `api/`의 함수를 쓴다.
 - **규칙**: 새 API를 붙이면 `api/<도메인>.ts`에 함수와 응답 타입을 함께 둔다(예: `api/classes.ts`).
+- **규칙**: 예시 데이터(`api/mock/`)는 `api/<도메인>.ts`의 함수만 부른다. 화면·컴포넌트·훅은 `api/mock/`을 직접 import하지 않는다. 백엔드 API가 생기면 함수 안쪽만 `client.ts` 호출로 바꾸고 해당 mock 코드를 지운다.
 - **권장**: 한 화면에서만 쓰는 컴포넌트가 늘어나면 `pages/<영역>/<화면>/` 폴더로 묶는다.
 
 ---
