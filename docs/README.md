@@ -21,12 +21,16 @@
 - [screens.md](planning/screens.md) — 화면 목록·기능 명세, 화면시안 v3 기준 (초안 v3 · 프론트 구현됨)
 - [page_design.html](planning/page_design.html) — 화면시안 v3 (브라우저로 열기)
 - [schema.md](planning/schema.md) — ERD, 테이블 (초안)
+- [studychat-labeling-results.md](planning/studychat-labeling-results.md) — 라벨링 통합 집계·검증·재현 방법
+- [colab-vllm-guide.md](planning/colab-vllm-guide.md) — Colab vLLM 실행 안내
 
 **spec**
 - [api-contract.md](spec/api-contract.md) — 화면 ↔ 서버 API 목록, 프론트 함수와 1:1 (초안 v3)
 - [integration-contract.md](spec/integration-contract.md) — 분류기·LLM Provider 계약 (분류기 확정)
 - [chat-policy.md](spec/chat-policy.md) — 분류 → 정책 분기 (구현됨)
 - [error-handling.md](spec/error-handling.md) — 에러 응답 형식 (초안)
+- [student-input-labeling.md](spec/student-input-labeling.md) — 학생 입력 라벨링·근거·보류 규칙
+- [student-input-semantic-v0.3.md](spec/student-input-semantic-v0.3.md) — 누적 시도 근거 보충 규칙
 
 ## 문서 상태 표기
 각 문서 맨 위 `상태:` 줄 — **확정**(팀 승인) / **초안**(검토 필요) / **구현됨**(코드·테스트 있음).
