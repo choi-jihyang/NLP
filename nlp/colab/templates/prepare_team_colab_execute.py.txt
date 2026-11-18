@@ -1,0 +1,11 @@
+from itertools import islice
+from runner import read_inputs, run
+
+# 팀원 담당 3,000건 안에서 먼저 8건을 확인합니다. full과 별도 pilot 폴더입니다.
+pilot_selection = list(islice(read_inputs(WORK / "inputs.jsonl.gz"), 8))
+pilot_journal = run(pilot_selection, annotator, run_root / "pilot", run_config)
+from runner import export_review
+print("표본 검토:", export_review(pilot_journal, pilot_selection))
+print(pilot_journal.summary())
+for key, result in pilot_journal.records.items():
+    print(key, result["status"], "input_tokens:", result.get("input_tokens"))

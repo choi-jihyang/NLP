@@ -1,0 +1,24 @@
+import json
+from collections import Counter
+from journal import Journal, atomic_json, record_key, stable_hash
+from runner import read_inputs, run, configuration, export_review
+
+BASE_ROOT = PROJECT_DIR / "qwen35_9b_vllm_fp8_v1"
+RETRY_ROOT = PROJECT_DIR / "qwen35_9b_a100_bf16_retry_v1"
+RETRY_ROOT.mkdir(exist_ok=True)
+base_config = json.loads((BASE_ROOT / "full/run_config.json").read_text(encoding="utf-8"))
+if base_config["bundle_inputs_sha256"] != manifest["inputs_sha256"]:
+    raise ValueError("Original result and input ZIP differ")
+original_journal = Journal(BASE_ROOT / "full", base_config)
+original = original_journal.records
+MAX_INPUT = 131072
+MAX_OUTPUT = 2048
+BATCH_SIZE = 8  # 변경 시 RETRY_ROOT도 새 이름으로 변경하세요.
+retry_sources, estimated_deferred = select_retry_sources(
+    read_inputs(WORK / "inputs.jsonl.gz"), original, MAX_INPUT)
+if not retry_sources:
+    raise RuntimeError("재처리할 StudyChat 실패 건이 없습니다.")
+print("기존 결과:", original_journal.summary())
+print("실패 건만 선택:", len(retry_sources), "/ 기존 길이 기준 한도 초과:", len(estimated_deferred))
+atomic_json(RETRY_ROOT / "selection.json", {"original_signature": stable_hash(base_config),
+            "retry_ids": [record_key(s) for s in retry_sources], "estimated_deferred_ids": estimated_deferred})

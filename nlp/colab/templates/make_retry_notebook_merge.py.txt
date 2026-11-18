@@ -1,0 +1,16 @@
+saved_retry = Journal(RETRY_ROOT / "full", retry_config)
+merged, report = merge_retry_results(original, saved_retry.records, retry_config)
+output_dir = RETRY_ROOT / "merged_owner_studychat"
+output_dir.mkdir(exist_ok=True)
+target = output_dir / "annotations.jsonl"
+temp = target.with_suffix(".tmp")
+with temp.open("w", encoding="utf-8") as stream:
+    for key in sorted(merged):
+        stream.write(json.dumps(merged[key], ensure_ascii=False) + "\n")
+temp.replace(target)
+atomic_json(output_dir / "coverage.json", report)
+atomic_json(output_dir / "provenance.json", {"original_config": base_config, "retry_config": retry_config})
+atomic_json(output_dir / "remaining_errors.json", [r for r in merged.values() if r["status"] != "ok"])
+print({k: v for k, v in report.items() if k != "remaining_failed_ids"})
+print("기존 성공 + 재처리 성공 병합:", target)
+print("이 파일은 내 담당 범위입니다. 팀원 담당 StudyChat은 아직 포함되지 않습니다.")

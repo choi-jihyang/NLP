@@ -1,0 +1,17 @@
+from journal import Journal
+import zipfile
+
+saved = Journal(run_root / "full", run_config)
+summary = saved.summary()
+print(summary)
+if summary["processed"] != 3000:
+    raise RuntimeError("아직 3,000건을 모두 처리하지 않았습니다. 전체 실행 셀을 재개하세요.")
+annotation_path = saved.export()
+result_zip = PROJECT_DIR / "thinkguard_team_last3000_results.zip"
+with zipfile.ZipFile(result_zip, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+    archive.write(annotation_path, "annotations.jsonl")
+    archive.write(run_root / "full/run_config.json", "run_config.json")
+    archive.write(WORK / "assignment.json", "assignment.json")
+print("작업자에게 돌려줄 파일:", result_zip)
+print("오류/보류가 있으면 상태를 함께 전달하세요. 완료 건수는 정확도를 보증하지 않습니다.")
+files.download(str(result_zip))

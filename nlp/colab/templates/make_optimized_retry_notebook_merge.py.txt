@@ -1,0 +1,33 @@
+full = Journal(RETRY_ROOT / f"full_b{selected_batch}", selected_config)
+checked = validate_attempt(full.records, selected_config, original)
+if set(checked) != {record_key(s) for s in pending}:
+    raise ValueError("본 실행 결과 누락/추가 ID가 있습니다. 7번을 재개하세요.")
+successes, more_configs = reuse_successes([(checked, selected_config)], original)
+reused.update(successes)
+config_registry.update(more_configs)
+merged = dict(original)
+merged.update(reused)
+if len(merged) != len(original) or set(merged) != set(original):
+    raise ValueError("최종 결과에 누락/추가 ID가 있습니다.")
+if any(merged[k] != r for k, r in original.items() if r["status"] == "ok"):
+    raise ValueError("기존 성공 결과가 변경되었습니다.")
+report = {"expected_owner_rows": len(original), "processed": len(merged),
+    "original_ok_preserved": sum(r["status"] == "ok" for r in original.values()),
+    "retry_successes_reused_or_recovered": len(reused), "excluded_over_32k": len(excluded),
+    "statuses": dict(Counter(r["status"] for r in merged.values())),
+    "missing_ids": sorted(set(original) - set(merged)), "duplicate_ids": [],
+    "all_rows_ok": all(r["status"] == "ok" for r in merged.values()),
+    "note": "Owner range only; teammate not included. Existing failed outputs remain if not recovered."}
+out = RETRY_ROOT / "merged"
+out.mkdir(exist_ok=True)
+target = out / "annotations.jsonl"
+temp = target.with_suffix(".tmp")
+with temp.open("w", encoding="utf-8") as stream:
+    for key in sorted(merged):
+        stream.write(json.dumps(merged[key], ensure_ascii=False) + "\n")
+temp.replace(target)
+atomic_json(out / "coverage.json", report)
+atomic_json(out / "remaining_errors.json", [r for r in merged.values() if r["status"] != "ok"])
+atomic_json(out / "provenance.json", {"original_config": base_config, "retry_configs": config_registry})
+print(report)
+print("병합 결과:", target)

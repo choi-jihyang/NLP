@@ -1,0 +1,37 @@
+import os
+import time
+import importlib.metadata
+from functools import partial
+from huggingface_hub import HfApi
+import torch
+from contract import chat_messages, parse_annotation
+
+if "model" in globals():
+    raise RuntimeError("이미 모델이 있습니다. 세션을 다시 시작하고 1번부터 실행하세요.")
+if (WORK / "restart_required.json").exists():
+    raise RuntimeError("설치 후 세션을 다시 시작하고 1번부터 실행하세요.")
+if "A100" not in torch.cuda.get_device_name(0) or torch.cuda.get_device_properties(0).total_memory / 2**30 < 70:
+    raise RuntimeError("이 설정은 A100 80GB용입니다. 할당된 GPU를 확인하세요.")
+os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
+from vllm import LLM
+MODEL_ID = "Qwen/Qwen3.5-9B"
+pin_path = RETRY_ROOT / "model_revision.json"
+if pin_path.exists():
+    model_pin = json.loads(pin_path.read_text(encoding="utf-8"))
+else:
+    model_pin = {"model_id": MODEL_ID, "revision": HfApi().model_info(MODEL_ID).sha}
+    atomic_json(pin_path, model_pin)
+if model_pin["model_id"] != MODEL_ID:
+    raise ValueError("Unexpected model pin")
+settings = dict(dtype="bfloat16", max_model_len=MAX_INPUT + MAX_OUTPUT,
+                max_num_seqs=BATCH_SIZE, max_num_batched_tokens=16384,
+                gpu_memory_utilization=0.90, language_model_only=True,
+                enable_chunked_prefill=True, enforce_eager=True, seed=0)
+model = LLM(model=MODEL_ID, revision=model_pin["revision"], tokenizer_revision=model_pin["revision"],
+            trust_remote_code=False, **settings)
+tokenizer = model.get_tokenizer()
+metadata = {"model_id": MODEL_ID, "revision": model_pin["revision"], "engine": "vllm",
+            "quantization": "none; BF16", "engine_settings": settings,
+            "versions": {p: importlib.metadata.version(p) for p in ("torch", "vllm", "transformers", "huggingface-hub")},
+            "gpu": torch.cuda.get_device_name(0), "vram_gib": torch.cuda.get_device_properties(0).total_memory / 2**30}
+print("로드 완료:", metadata)

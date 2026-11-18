@@ -1,0 +1,26 @@
+
+attempts = []
+config_registry = {}
+for directory in (PREVIOUS_ROOT / "full", PREVIOUS_ROOT / "retry_32k_only_v1/full"):
+    config_path = directory / "run_config.json"
+    if config_path.exists():
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        if any(config.get(k) != base_config.get(k) for k in (
+            "bundle_inputs_sha256", "source_hashes", "prompt_version", "prompt_sha256")):
+            raise ValueError("Previous attempt uses different data/prompt")
+        saved = Journal(directory, config)
+        attempts.append((saved.records, config))
+reused, config_registry = reuse_successes(attempts, original)
+retry_sources = [s for s in retry_sources if record_key(s) not in reused]
+print("이전 재처리 성공 재사용:", len(reused), "/ 남은 실패:", len(retry_sources))
+# Reuse the exact pinned BF16 revision, including across future reconnections.
+pin_path = RETRY_ROOT / "model_revision.json"
+previous_pin = PREVIOUS_ROOT / "model_revision.json"
+if previous_pin.exists() and not pin_path.exists():
+    atomic_json(pin_path, json.loads(previous_pin.read_text(encoding="utf-8")))
+if attempts and not pin_path.exists():
+    raise ValueError("Previous model pin is missing; do not silently choose a new revision")
+length_identity = stable_hash({"inputs": manifest["inputs_sha256"],
+    "keys": [record_key(s) for s in retry_sources], "prompt": base_config["prompt_sha256"],
+    "model_pin": json.loads(pin_path.read_text(encoding="utf-8")) if pin_path.exists() else None,
+    "transformers": installed["transformers"]})

@@ -1,0 +1,5 @@
+# 첫 실행은 8건만 검사하고, 재실행하면 저장된 행을 건너뜁니다.
+retry_journal = run(retry_sources, annotator, RETRY_ROOT / "full", retry_config, limit=8)
+first_results = list(retry_journal.records.values())[:8]
+print("첫 처리 결과:", dict(Counter(r["status"] for r in first_results)))
+print("원문/근거 검토:", export_review(retry_journal, retry_sources[:8]))

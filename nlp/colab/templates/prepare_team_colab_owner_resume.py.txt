@@ -1,0 +1,13 @@
+# 기존에 사용하던 노트북에서 실행하세요. 새 빈 세션에서는 먼저 기존 1~5번을 실행해야 합니다.
+from itertools import islice
+from journal import Journal
+from runner import read_inputs, run
+
+OWNER_COUNT = 15764
+existing = Journal(run_root / "full", run_config)
+print("기존 결과:", existing.summary())
+full_journal = run(
+    islice(read_inputs(WORK / "inputs.jsonl.gz"), OWNER_COUNT),
+    annotator, run_root / "full", run_config,
+)
+print("내 담당 앞 15,764건 완료. 이후 팀원 결과와 합치세요.")

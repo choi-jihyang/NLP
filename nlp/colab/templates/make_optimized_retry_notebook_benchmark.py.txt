@@ -1,0 +1,84 @@
+from collections import Counter
+import time
+
+# Compute actual current prompt lengths once, then persist an identity-checked cache.
+length_cache = RETRY_ROOT / "token_lengths.json"
+cached = json.loads(length_cache.read_text(encoding="utf-8")) if length_cache.exists() else {}
+if cached.get("identity") == length_identity:
+    counts = cached["counts"]
+    print("저장된 길이 캐시 재사용")
+else:
+    counts = []
+    for index, source in enumerate(retry_sources, 1):
+        ids = tokenizer.apply_chat_template(chat_messages(source), add_generation_prompt=True,
+            tokenize=True, return_dict=False, enable_thinking=False)
+        if not isinstance(ids, list) or not ids or any(type(t) is not int for t in ids):
+            raise TypeError("Expected integer token IDs")
+        counts.append(len(ids))
+        if index % 200 == 0:
+            print("입력 길이 계산:", index, "/", len(retry_sources), flush=True)
+    atomic_json(length_cache, {"identity": length_identity, "counts": counts})
+eligible, excluded, lengths = schedule_32k(retry_sources, counts)
+atomic_json(RETRY_ROOT / "excluded_over_32k.json", [
+    {"id": record_key(s), "input_tokens": lengths[record_key(s)], "status": "context_overflow"}
+    for s in excluded])
+print("32K 이하:", len(eligible), "/ 초과 제외:", len(excluded))
+
+def config_for(batch):
+    item = Annotator(model, tokenizer, max_input_tokens=32000, max_new_tokens=MAX_OUTPUT)
+    item.batch_size = batch
+    config = configuration(manifest, metadata, item)
+    config.update(retry_of=stable_hash(base_config),
+        repair_version="exact-evidence-v2-two-attempts", execution_profile="32k-optimized-v1",
+        selection_sha256=stable_hash([record_key(s) for s in eligible]))
+    return item, config
+
+# Prefer prior context-overflow cases; known repeated output failures are processed later.
+overflow_candidates = [s for s in eligible if original[record_key(s)]["status"] == "context_overflow"]
+probe = representative_sample(overflow_candidates or eligible, lengths, 8)
+probe_identity = stable_hash({"keys": [record_key(s) for s in probe],
+    "configs": {str(b): config_for(b)[1] for b in (2, 4, 8)}})
+choice_path = RETRY_ROOT / "batch_selection.json"
+choice = json.loads(choice_path.read_text(encoding="utf-8")) if choice_path.exists() else None
+measurements, pilots = [], []
+for batch in (2, 4, 8):
+    item, config = config_for(batch)
+    path = RETRY_ROOT / f"benchmark/b{batch}"
+    cached_pilot = Journal(path, config)
+    if set(cached_pilot.records) != {record_key(s) for s in probe}:
+        if not model.reset_prefix_cache():
+            raise RuntimeError("Could not clear prefix cache before benchmark")
+        pilot = run(probe, item, path, config)
+    else:
+        pilot = cached_pilot
+    checked = validate_attempt(pilot.records, config, original)
+    if set(checked) != {record_key(s) for s in probe}:
+        raise ValueError("Benchmark has missing/extra IDs")
+    seconds = sum(r["batch_seconds"] / r["batch_size"] for r in checked.values())
+    ok = sum(r["status"] == "ok" for r in checked.values())
+    measurements.append({"batch": batch, "seconds": seconds, "count": len(probe), "ok": ok})
+    pilots.append((checked, config))
+    print("배치 비교:", measurements[-1], flush=True)
+if choice is not None:
+    if choice["identity"] != probe_identity:
+        raise ValueError("Benchmark identity changed; use a new run name")
+    selected_batch = choice["selected_batch"]
+    if selected_batch not in (2, 4, 8):
+        raise ValueError("Invalid saved batch")
+else:
+    # Prefer useful successful throughput. Failures are still saved and reported.
+    candidates = [m for m in measurements if m["ok"] > 0]
+    if probe and not candidates:
+        raise RuntimeError("No benchmark candidate produced a valid result; inspect benchmark logs")
+    selected_batch = min(candidates, key=lambda m: m["seconds"] / m["ok"])["batch"] if candidates else 2
+    atomic_json(choice_path, {"identity": probe_identity, "selected_batch": selected_batch,
+        "measurements": measurements, "comparison": "same 8 inputs; reusable successful pilot outputs"})
+pilot_successes, pilot_configs = reuse_successes(pilots, original)
+reused.update(pilot_successes)
+config_registry.update(pilot_configs)
+config_registry.update({stable_hash(c): c for _, c in attempts})
+selected_annotator, selected_config = config_for(selected_batch)
+pending = [s for s in eligible if record_key(s) not in reused]
+pending.sort(key=lambda s: (original[record_key(s)]["status"] != "context_overflow",
+    lengths[record_key(s)] // 2048, s["conversation_id"], lengths[record_key(s)], record_key(s)))
+print("선택 배치:", selected_batch, "/ 성공 재사용:", len(reused), "/ 본 실행:", len(pending))

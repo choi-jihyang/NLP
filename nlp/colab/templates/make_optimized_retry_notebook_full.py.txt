@@ -1,0 +1,2 @@
+# 길이 초과는 제외하고, 과거 context_overflow 건부터 처리합니다.
+optimized_journal = run(pending, selected_annotator, RETRY_ROOT / f"full_b{selected_batch}", selected_config)

@@ -1,0 +1,7 @@
+RUN_FULL = False  # 표본 근거와 결과를 확인한 뒤 True
+if RUN_FULL:
+    if any(r["status"] != "ok" for r in pilot_journal.records.values()):
+        raise RuntimeError("표본 오류를 먼저 확인하세요.")
+    full_journal = run(read_inputs(WORK / "inputs.jsonl.gz"), annotator, run_root / "full", run_config)
+else:
+    print("표본 검토 후 RUN_FULL=True로 바꾸세요.")
