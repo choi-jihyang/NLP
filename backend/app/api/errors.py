@@ -57,6 +57,9 @@ def install_error_handling(app: FastAPI) -> None:
     async def add_request_id(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         trace_id = uuid.uuid4().hex
         request.state.trace_id = trace_id
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        except Exception as exc:  # CORS 안쪽에서 500을 만들어야 브라우저가 에러 본문을 읽을 수 있다
+            response = await _unhandled_error(request, exc)
         response.headers[REQUEST_ID_HEADER] = trace_id
         return response

@@ -96,3 +96,21 @@ def test_catalog_matches_error_handling_doc():
         "ALREADY_ENROLLED": 409, "ALREADY_SUBMITTED": 409, "CLASSIFIER_UNAVAILABLE": 503,
         "LLM_UNAVAILABLE": 503, "RUNNER_UNAVAILABLE": 503,
     }
+
+
+def test_500_keeps_cors_header_for_browser():
+    from app.main import build_app
+
+    app = build_app()
+
+    @app.get("/crash-cors")
+    def crash_cors() -> None:
+        raise RuntimeError("boom")
+
+    res = TestClient(app, raise_server_exceptions=False).get(
+        "/crash-cors", headers={"Origin": "http://localhost:5173"}
+    )
+    assert res.status_code == 500
+    assert res.json()["code"] == "INTERNAL_ERROR"
+    assert res.headers.get("access-control-allow-origin") == "http://localhost:5173"
+    assert res.json()["trace_id"] == res.headers[REQUEST_ID_HEADER]

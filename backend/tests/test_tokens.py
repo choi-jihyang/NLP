@@ -85,3 +85,21 @@ def test_missing_secret_rejected(monkeypatch: pytest.MonkeyPatch):
 
 def test_teacher_token_hours_default():
     assert Settings(jwt_secret=TEST_JWT_SECRET, _env_file=None).teacher_token_hours == 12
+
+
+def test_short_secret_not_echoed():
+    with pytest.raises(ValidationError) as info:
+        Settings(jwt_secret="too-short-secret-value", _env_file=None)
+    assert "too-short-secret-value" not in str(info.value)
+
+
+def test_bad_secret_exits_with_one_line_message(monkeypatch: pytest.MonkeyPatch):
+    from app.core.config import load_settings
+
+    monkeypatch.setenv("JWT_SECRET", "too-short-secret-value")
+    with pytest.raises(SystemExit) as info:
+        load_settings(_env_file=None)
+    message = str(info.value)
+    assert "JWT_SECRET은 32자 이상" in message
+    assert "too-short-secret-value" not in message
+    assert "\n" not in message

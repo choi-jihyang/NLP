@@ -1,14 +1,15 @@
 from functools import lru_cache
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, ValidationError, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """환경변수(.env)에서 읽는 설정. 항목 설명은 .env.example 참고."""
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # hide_input_in_errors: 잘못된 비밀키 값이 오류 메시지·로그에 찍히지 않게
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", hide_input_in_errors=True)
 
     database_url: str = "sqlite:///./thinkguard.db"
     cors_origins: list[str] = ["http://localhost:5173"]
@@ -38,6 +39,15 @@ class Settings(BaseSettings):
         return value
 
 
+def load_settings(**overrides: Any) -> Settings:
+    """설정이 잘못되면 긴 traceback 대신 한 줄 안내로 멈춘다(값은 출력하지 않음)."""
+    try:
+        return Settings(**overrides)
+    except ValidationError as exc:
+        reasons = " / ".join(str(err["msg"]).removeprefix("Value error, ") for err in exc.errors())
+        raise SystemExit(f"설정 오류: {reasons}") from None
+
+
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return load_settings()
