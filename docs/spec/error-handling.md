@@ -34,6 +34,7 @@
 | `EMAIL_TAKEN` | 409 | 이미 가입된 이메일입니다. |
 | `INVALID_CREDENTIALS` | 401 | 이메일 또는 비밀번호가 올바르지 않습니다. |
 | `INVITE_CODE_INVALID` | 404 | 초대 코드를 찾을 수 없습니다. |
+| `CLASS_NOT_STARTED` | 409 | 아직 시작하지 않은 클래스입니다. |
 | `CLASS_FULL` | 409 | 클래스 정원이 가득 찼습니다. |
 | `CLASS_EXPIRED` | 409 | 이용 기간이 끝난 클래스입니다. |
 | `ALREADY_ENROLLED` | 409 | 이미 참여한 클래스입니다. |

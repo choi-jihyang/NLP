@@ -371,12 +371,11 @@ class AnswerKey(BaseModel):
 | D19 | 개념 확인 붙여넣기 | `concept_check_items.pasted` 없음. `paste_events`에서 계산 | 11/21 |
 
 ## 다른 문서에 반영할 것
-- `api-contract.md`: 정책에 `usage_limit` 추가, 학번 필드 `alias` → **`student_no`로 이름 변경**(D14), 클래스 개설 요청에 시작 날짜(`starts_on`) 추가, `ClassInfo`에 `starts_at` 추가
-- `error-handling.md`: `CLASS_NOT_STARTED` (409, "아직 시작하지 않은 클래스입니다.") 추가
+- ~~`api-contract.md`·`error-handling.md`: `usage_limit`, `student_no`, 시작 날짜, `CLASS_NOT_STARTED`, 테스트 배열, `pasted` 제거~~ → 반영함(11/21)
 - 클래스 개설 화면: 시작 날짜 선택 칸 (화면 담당)
 - `frontend/src/api/assignments.ts`: `AiPolicy`에 `usage_limit` 추가 (화면 담당)
-- `frontend/src/api/classes.ts`·`enrollments.ts`: `alias` → `student_no`, 명단 항목에 `is_use` 토글 (화면 담당)
+- `frontend/src/api/classes.ts`·`enrollments.ts`: `alias` → `student_no`, 명단 `roster`를 `{student_no, is_use}[]`로, 클래스 개설에 `starts_on` (화면 담당)
 - `backend/app/services/policy.py`: `ResponseMode` 대문자 + `OFFER_CHOICES` (채팅 API PR)
 - `backend/app/runner/`: 언어별 실행 이미지·명령 추가 (지금은 Python만) — 실행 API PR
 - `scope.md`: 확인 필요 ① → "여러 언어 지원"으로 정리
-- `api-contract.md`·`frontend/src/api/assignments.ts`: 교수자 문항 편집의 `tests[{hidden}]`를 그대로 받을지, 공개·숨김 두 배열로 나눌지 정하기. 서버는 저장할 때 `public_tests`·`answer_key.hidden_tests`로 나눈다(D17)
+- `frontend/src/api/`: 개념 확인·채팅 요청에서 `pasted` 빼기, 붙여넣기는 `logPaste`로만 (화면 담당)
