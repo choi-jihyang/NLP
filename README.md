@@ -10,7 +10,7 @@
 | 부분 | 상태 |
 |---|---|
 | 화면 (`frontend/`) | **전체 구현.** 백엔드 없이 예시 데이터(`frontend/src/api/mock/`)로 모든 흐름이 동작 |
-| 백엔드 (`backend/`) | 뼈대 + 채팅 정책(분류 → 정책 → 프롬프트) 로직과 테스트. API는 `/api/health`만 |
+| 백엔드 (`backend/`) | 뼈대 + 채팅 정책(분류 → 정책 → 프롬프트) 로직 + Docker 코드 실행기, 각각 테스트 있음. API는 `/api/health`만 |
 | NLP (`nlp/`) | 분류기 자리만 있음(항상 "모호함"). 누출 판별 · AI 작성 점수는 계약 제안 단계 |
 | 문서 | 화면 명세 · API 계약을 v3 기준으로 갱신(결정 필요 항목 남음). 스키마 · 채팅 정책 · 연동 계약은 각 담당이 v3에 맞춰 갱신 예정 |
 
@@ -118,6 +118,21 @@ cd frontend && npm run build && npm run lint
 | `CLASSIFIER_MODULE` | `모듈:함수` | `thinkguard_nlp.classifier:classify` | `CLASSIFIER=module`일 때 |
 | `CLASSIFIER_URL` | URL | `http://localhost:8001/classify` | `CLASSIFIER=http`일 때 |
 | `CLASSIFIER_MIN_CONFIDENCE` | 0.0–1.0 | `0.5` | 이보다 낮으면 "모호함"으로 보고 되묻기 |
+| `CODE_RUNNER` | `mock` · `docker` | `mock` | 코드 작성 문항 실행기 |
+| `RUNNER_IMAGE` | 이미지 이름 | `thinkguard-runner` | |
+| `RUNNER_TIMEOUT_SEC` | 초 | `5` | 학생 코드 실행 시간 제한 |
+| `RUNNER_MEMORY_MB` | MB | `128` | 컨테이너 메모리 제한 |
+
+## 코드 실행 (Docker)
+코드 작성 문항은 학생 코드를 격리된 Docker 컨테이너에서 실행한다. 개발 중에는 `CODE_RUNNER=mock`으로 Docker 없이도 된다. 자세히: [docs/spec/integration-contract.md](docs/spec/integration-contract.md#3-코드-실행-coderunner)
+1. [Docker Desktop](https://www.docker.com/products/docker-desktop/)을 설치하고 실행한다.
+2. 실행 이미지를 빌드한다(처음 한 번, `backend/sandbox/harness.py`를 고치면 다시).
+   ```bash
+   docker build -t thinkguard-runner backend/sandbox
+   ```
+3. `backend/.env`에서 `CODE_RUNNER=docker`로 바꾸고 백엔드를 다시 실행한다.
+
+이미지가 있으면 `pytest`가 실제 컨테이너 테스트까지 돌린다(없으면 건너뜀).
 
 ## 실제 LLM 쓰기 (Ollama)
 ```bash

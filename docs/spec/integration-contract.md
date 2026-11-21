@@ -96,3 +96,68 @@ async def generate(system_prompt: str, messages: list[ChatTurn]) -> str
 - 시연 PC가 RAM 16GB 이상이면 7B급, 8GB면 3B급.
 - 사용: `ollama pull qwen2.5:7b` → `backend/.env`에 `LLM_PROVIDER=ollama`, `OLLAMA_MODEL=qwen2.5:7b`.
 - 다른 LLM(API형 등)을 붙일 때는 `llm/<이름>.py`에 구현을 추가하고 `get_llm_provider()`에 분기 한 줄을 넣는다.
+
+---
+
+## 3. 코드 실행 (CodeRunner)
+
+> 상태: **구현됨** (`backend/app/runner/`, `backend/sandbox/`, 테스트 있음). 채점·실행 API 연결은 미구현.
+> 2026-11-17 결정: 코드 작성 문항은 **Docker 컨테이너**에서 실행한다. 숨김 테스트를 학생에게 보내지 않기 위해 서버에서 돌린다.
+
+```
+backend/app/runner/                CODE_RUNNER=
+  base.py      CodeRunner           ← 인터페이스
+  mock.py                             mock   (기본, 실행 없이 모두 통과)
+  docker.py                           docker (컨테이너 실행)
+backend/sandbox/
+  Dockerfile                         실행 이미지 (python:3.12-slim + 일반 사용자)
+  harness.py                         컨테이너 안에서 실행·비교
+```
+
+### 인터페이스
+```python
+async def run(code: str, tests: list[TestCase]) -> RunResult
+```
+| 타입 | 필드 |
+|---|---|
+| `TestCase` | `call` (호출식, 예 `sum_even([1, 2, 3, 4])`), `expected` (기대값) |
+| `TestResult` | `call`, `actual` (반환값 repr, 오류면 null, 최대 1000자), `passed`, `error` (예 `ZeroDivisionError: division by zero`) |
+| `RunResult` | `ok` (false면 문법 오류·시간 초과 등으로 실행 못 함), `error`, `results` |
+
+- **비교 방식**: `expected`를 Python 리터럴로 읽어 값으로 비교한다(`6`, `'ab'`, `[1, 2]`). 리터럴이 아니면 문자열로 비교한다(`ab` ↔ 반환값 `'ab'`도 통과).
+- **숨김 테스트 구분은 호출하는 service가 한다.** 실행기는 받은 테스트를 모두 돌린다. 학생에게 공개 테스트 결과만 보내는 것은 service·API 책임이다.
+- Docker를 쓸 수 없으면 `RunnerUnavailableError` → API는 503(`RUNNER_UNAVAILABLE`)으로 응답한다.
+
+### 격리 (DockerRunner)
+| 제한 | 값 |
+|---|---|
+| 네트워크 | `--network none` |
+| 메모리 | `RUNNER_MEMORY_MB` (기본 128MB, 스왑 없음) |
+| CPU · 프로세스 | `--cpus 0.5`, `--pids-limit 64` |
+| 파일 시스템 | `--read-only`, `/tmp`만 16MB 쓰기 가능 |
+| 권한 | root 아닌 사용자, `--cap-drop ALL`, `no-new-privileges` |
+| 시간 | `RUNNER_TIMEOUT_SEC` (기본 5초). 넘으면 컨테이너 강제 종료 |
+
+### harness 안의 구조
+학생 코드는 컨테이너 안에서도 **별도 자식 프로세스**로 돈다.
+- 자식에게는 `code`와 `call`만 보낸다. **기대값은 자식에게 가지 않는다** → 학생 코드가 숨김 테스트 기대값을 읽을 수 없다.
+- 통과 판정은 부모가 한다 → 학생 코드가 가짜 결과를 출력하고 종료해도 통과가 되지 않는다.
+- 학생 코드의 `print` 출력은 버린다.
+
+### 시연 PC 준비
+```bash
+docker build -t thinkguard-runner backend/sandbox
+```
+`backend/.env`에서 `CODE_RUNNER=docker`. Docker Desktop이 켜져 있어야 한다.
+
+### 수용 기준
+1. `CODE_RUNNER` 값만 바꿔 mock ↔ docker 전환, 코드 수정 없음.
+2. 컨테이너 안에서 인터넷 연결·파일 쓰기가 막힌다.
+3. 무한 루프는 시간 제한 안에 끝나고 `ok=false`, "실행 시간 초과".
+4. 학생 코드가 결과를 위조하거나 기대값을 읽을 수 없다.
+
+### 테스트
+| 파일 | 다루는 것 |
+|---|---|
+| `backend/tests/test_harness.py` | 비교 방식, 예외·문법 오류, print 무시, 결과 위조 방지, 기대값 비공개, 시간 초과 (Docker 없이) |
+| `backend/tests/test_runner.py` | Mock, 격리 옵션, Docker 없음 처리 / 실제 컨테이너: 실행·네트워크 차단·쓰기 차단·시간 초과 (이미지 없으면 건너뜀) |

@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     classifier_url: str = "http://localhost:8001/classify"
     classifier_min_confidence: float = 0.5
 
+    code_runner: Literal["mock", "docker"] = "mock"
+    runner_image: str = "thinkguard-runner"
+    runner_timeout_sec: float = 5.0
+    runner_memory_mb: int = 128
+
 
 @lru_cache
 def get_settings() -> Settings:
