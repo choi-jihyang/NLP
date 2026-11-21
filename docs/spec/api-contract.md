@@ -2,6 +2,7 @@
 
 > 상태: **초안 v3** — 프론트 화면시안 v3(프로그래밍 과제)와 `frontend/src/api/` 예시 데이터 기준. 팀 확인 전.
 > 공통: 모든 경로는 `/api` 아래. 요청·응답은 JSON, 필드는 snake_case, Enum 값은 대문자 문자열([../planning/schema.md](../planning/schema.md)).
+> id 필드: 모든 PK는 `seq`(숫자)로 주고받는다(schema.md D20). FK는 `class_id`·`student_id`처럼 원래 이름 + 숫자. 이 문서의 `id`·`{id, …}` 표기는 각 API 구현 PR에서 `seq`로 고친다.
 > 에러 형식은 [error-handling.md](error-handling.md). 실제 스펙은 서버를 띄운 뒤 `http://localhost:8000/docs`(Swagger)에서 확인하고, 이 문서와 다르면 이 문서를 고친다.
 > 응답 타입의 필드 목록은 `frontend/src/api/<도메인>.ts`의 타입과 같다. 백엔드 Pydantic 스키마는 그 이름을 그대로 쓴다.
 
@@ -42,8 +43,8 @@
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
 | GET | `/health` | 공개 | → `{status, llm_provider, classifier}` ✅ 구현됨 | `getHealth` |
-| POST | `/auth/signup` | 공개 | `{name, email, password}` → `{access_token, user}` 교수자만 가입. 비밀번호 8자 이상. 오류: `EMAIL_TAKEN` | `signup` |
-| POST | `/auth/login` | 공개 | `{email, password}` → `{access_token, user}` | `login` |
+| POST | `/auth/signup` | 공개 | `{name, email, password}` → **201** `{access_token, user{seq, name, email, role}}` 교수자만 가입. 이름 1–100자, 이메일은 소문자로 저장, 비밀번호 8–128자. 오류: `EMAIL_TAKEN`, `VALIDATION_FAILED` ✅ 구현됨 | `signup` |
+| POST | `/auth/login` | 공개 | `{email, password}` → `{access_token, user{seq, name, email, role}}`. 실패는 이유와 상관없이 `INVALID_CREDENTIALS`. 교수자 토큰 12시간 ✅ 구현됨 | `login` |
 
 ### 클래스 · 참여
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
