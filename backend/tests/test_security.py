@@ -30,3 +30,14 @@ def test_malformed_or_unknown_hash_returns_false():
     assert verify_password("pw", "not-a-hash") is False
     assert verify_password("pw", "pbkdf2_sha512$abc$!!$!!") is False
     assert verify_password("pw", "md5$1$c2FsdA==$aGFzaA==") is False
+
+
+def test_missing_stored_hash_returns_false():
+    # 수업 코드로 입장한 학생은 password_hash가 NULL
+    assert verify_password("pw", None) is False
+
+
+def test_unencodable_password_returns_false():
+    # JSON의 "\ud800"(짝 없는 surrogate)은 str로 들어오지만 UTF-8로 인코딩되지 않는다
+    stored = hash_password("pw")
+    assert verify_password("\ud800", stored) is False

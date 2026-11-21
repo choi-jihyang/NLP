@@ -22,8 +22,10 @@ def hash_password(password: str, *, iterations: int = ITERATIONS) -> str:
     return f"{ALGORITHM}${iterations}${salt_b64}${digest_b64}"
 
 
-def verify_password(password: str, stored: str) -> bool:
-    """저장된 반복 횟수로 다시 계산해 비교한다. 형식이 깨졌으면 False."""
+def verify_password(password: str, stored: str | None) -> bool:
+    """저장된 반복 횟수로 다시 계산해 비교한다. 저장 값이 없거나 형식이 깨졌으면 False."""
+    if stored is None:
+        return False
     try:
         algorithm, iterations_text, salt_b64, digest_b64 = stored.split("$")
         iterations = int(iterations_text)
@@ -33,4 +35,8 @@ def verify_password(password: str, stored: str) -> bool:
         return False
     if algorithm != ALGORITHM or iterations <= 0:
         return False
-    return hmac.compare_digest(_derive(password, salt, iterations), expected)
+    try:
+        actual = _derive(password, salt, iterations)
+    except UnicodeEncodeError:  # 짝 없는 surrogate 등 UTF-8로 못 바꾸는 입력
+        return False
+    return hmac.compare_digest(actual, expected)
