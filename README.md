@@ -80,9 +80,9 @@ python3 -m venv .venv
 cp .env.example .env
 .venv/bin/uvicorn app.main:app --reload
 ```
-- 시연용 데이터 넣기 (처음 한 번):
+- 시연용 데이터 넣기 (처음 한 번, 서버를 띄우기 전에 `backend` 폴더에서):
   ```bash
-  cd backend && .venv/bin/python -m app.seed
+  .venv/bin/python -m app.seed
   ```
   교수자 `teacher@thinkguard.test` / `thinkguard-demo`, 수업 코드 `TG-4821`, 학번 `20260001`–`20260003`(입장 완료), `20260004`(명단만).
   테이블 구조가 바뀌면 `backend/thinkguard.db`를 지우고 다시 실행한다(마이그레이션 없음).
