@@ -33,11 +33,12 @@
 ### 백엔드 기반
 - [x] **[백엔드]** KST 시각 · `KstDateTime` · 비밀번호 해시 · Enum · 요금제 · `AiPolicy` — PR #7 (리뷰 대기)
 - [x] **[백엔드]** 테이블 5개(users · classes · class_payments · enrollments · class_members), PK `seq`, 시드 — PR #8 (리뷰 대기)
-- [ ] **[백엔드]** ② 인증 — `feature/auth` (설계·계획 완료, 구현 전)
-  - [ ] 에러 형식 `{code, message, trace_id}` + `X-Request-Id`
-  - [ ] JWT(`JWT_SECRET` 32자 이상) · 교수자 토큰 12시간
-  - [ ] `POST /auth/signup` · `POST /auth/login`
-  - [ ] 권한 의존성(교수자만 · 학생만, 역할은 DB 기준)
+- [x] **[백엔드]** ② 인증 — PR #10 (리뷰 대기)
+  - [x] 에러 형식 `{code, message, trace_id}` + `X-Request-Id`
+  - [x] JWT(`JWT_SECRET` 32자 이상) · 교수자 토큰 12시간
+  - [x] `POST /auth/signup` · `POST /auth/login`
+  - [x] 권한 의존성(교수자만 · 학생만, 역할은 DB 기준)
+  - [ ] **[공통]** 각자 로컬 `backend/.env`에 `JWT_SECRET` 추가(없으면 서버가 시작되지 않음 — README 참고)
 
 ### 백엔드 API (시연 경로 순서)
 - [ ] **[백엔드]** ③ 클래스 · 참여 — `feature/class-api`
@@ -90,7 +91,7 @@
 - [ ] **[공통]** 실제 모델로 시연 시나리오 4번(정답 요청 → 힌트만) 통과 확인
 
 ### 프론트 연결
-- [ ] **[프론트]** `client.ts`: 토큰 저장 · `Authorization: Bearer` · 에러 `{code, message}`로 분기
+- [ ] **[프론트]** `client.ts`: 토큰 저장 · `Authorization: Bearer` · 에러 `{code, message}`로 분기 — 로그인 API는 PR #10에서 사용 가능(가입은 201)
 - [ ] **[프론트]** 타입 변경: id → `seq: number`, `alias` → `student_no`, 명단 `{student_no, is_use}[]`, 클래스 개설 `starts_on`, `AiPolicy.usage_limit`, 개념 확인·채팅 요청 `pasted` 제거
 - [ ] **[프론트]** 클래스 개설 화면에 시작 날짜 선택
 - [ ] **[프론트]** 과제 파일 올리기: `.md`만 받고 실제 파일 전송(`multipart`)
