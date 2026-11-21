@@ -16,8 +16,8 @@ class ClassRoom(TimestampMixin, Base):
 
     __tablename__ = "classes"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    teacher_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    seq: Mapped[int] = mapped_column(primary_key=True)
+    teacher_id: Mapped[int] = mapped_column(ForeignKey("users.seq"))
     name: Mapped[str] = mapped_column(String(100))
     invite_code: Mapped[str] = mapped_column(String(20), unique=True)
     plan: Mapped[PlanCode] = mapped_column(enum_column(PlanCode))

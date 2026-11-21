@@ -43,24 +43,24 @@ def seed(db: Session, today: date | None = None) -> ClassRoom:
     db.flush()
 
     klass = ClassRoom(
-        teacher_id=teacher.id, name="프로그래밍 기초 1분반", invite_code=SEED_INVITE_CODE,
+        teacher_id=teacher.seq, name="프로그래밍 기초 1분반", invite_code=SEED_INVITE_CODE,
         plan=plan.code, student_limit=plan.student_limit, starts_at=starts_at, expires_at=expires_at,
     )
     db.add(klass)
     db.flush()
 
     db.add(ClassPayment(
-        teacher_id=teacher.id, class_id=klass.id, plan=plan.code, student_limit=plan.student_limit,
+        teacher_id=teacher.seq, class_id=klass.seq, plan=plan.code, student_limit=plan.student_limit,
         kind=PaymentKind.NEW, amount=plan.price, period_start=starts_at, period_end=expires_at,
     ))
     for no in (*SEED_STUDENT_NOS, SEED_ROSTER_ONLY_NO):
-        db.add(ClassMember(class_id=klass.id, student_no=no))
+        db.add(ClassMember(class_id=klass.seq, student_no=no))
     for no in SEED_STUDENT_NOS:
         student = User(role=Role.STUDENT, name=no)
         db.add(student)
         db.flush()
         db.add(Enrollment(
-            class_id=klass.id, student_id=student.id, student_no=no,
+            class_id=klass.seq, student_id=student.seq, student_no=no,
             status=EnrollmentStatus.APPROVED, decided_at=now,
         ))
     db.commit()

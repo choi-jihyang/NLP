@@ -15,9 +15,9 @@ class Enrollment(TimestampMixin, Base):
     __tablename__ = "enrollments"
     __table_args__ = (UniqueConstraint("class_id", "student_no"),)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    class_id: Mapped[int] = mapped_column(ForeignKey("classes.id"))
-    student_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    seq: Mapped[int] = mapped_column(primary_key=True)
+    class_id: Mapped[int] = mapped_column(ForeignKey("classes.seq"))
+    student_id: Mapped[int] = mapped_column(ForeignKey("users.seq"))
     student_no: Mapped[str] = mapped_column(String(30))
     status: Mapped[EnrollmentStatus] = mapped_column(enum_column(EnrollmentStatus))
     decided_at: Mapped[datetime | None] = mapped_column(KstDateTime())

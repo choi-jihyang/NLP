@@ -14,9 +14,9 @@ class ClassPayment(CreatedAtMixin, Base):
 
     __tablename__ = "class_payments"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    teacher_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    class_id: Mapped[int | None] = mapped_column(ForeignKey("classes.id"))
+    seq: Mapped[int] = mapped_column(primary_key=True)
+    teacher_id: Mapped[int] = mapped_column(ForeignKey("users.seq"))
+    class_id: Mapped[int | None] = mapped_column(ForeignKey("classes.seq"))
     plan: Mapped[PlanCode] = mapped_column(enum_column(PlanCode))
     student_limit: Mapped[int]
     kind: Mapped[PaymentKind] = mapped_column(enum_column(PaymentKind))

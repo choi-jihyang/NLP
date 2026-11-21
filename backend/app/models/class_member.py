@@ -11,7 +11,7 @@ class ClassMember(TimestampMixin, Base):
     __tablename__ = "class_members"
     __table_args__ = (UniqueConstraint("class_id", "student_no"),)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    class_id: Mapped[int] = mapped_column(ForeignKey("classes.id"))
+    seq: Mapped[int] = mapped_column(primary_key=True)
+    class_id: Mapped[int] = mapped_column(ForeignKey("classes.seq"))
     student_no: Mapped[str] = mapped_column(String(30))
     is_use: Mapped[bool] = mapped_column(default=True)

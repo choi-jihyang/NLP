@@ -21,7 +21,7 @@ def _teacher(db: Session) -> User:
 def _class(db: Session, teacher: User, code: str = "TG-1000") -> ClassRoom:
     start = start_of_day_kst(now_kst().date())
     c = ClassRoom(
-        teacher_id=teacher.id, name="1분반", invite_code=code, plan=PlanCode.SMALL,
+        teacher_id=teacher.seq, name="1분반", invite_code=code, plan=PlanCode.SMALL,
         student_limit=50, starts_at=start, expires_at=start + timedelta(days=365),
     )
     db.add(c)
@@ -48,7 +48,7 @@ def test_class_defaults(db: Session):
     c = _class(db, _teacher(db))
     db.commit()
     db.expire_all()  # 메모리 객체가 아니라 DB에서 다시 읽는다
-    loaded = db.scalar(select(ClassRoom).where(ClassRoom.id == c.id))
+    loaded = db.scalar(select(ClassRoom).where(ClassRoom.seq == c.seq))
     assert loaded is not None
     assert loaded.join_mode == "APPROVAL"
     assert loaded.ai_defaults == default_ai_policy()
@@ -75,9 +75,9 @@ def test_many_students_without_email(db: Session):
 
 def test_same_student_no_twice_in_one_class_rejected(db: Session):
     c = _class(db, _teacher(db))
-    db.add(Enrollment(class_id=c.id, student_id=_student(db, "a").id, student_no="20260001",
+    db.add(Enrollment(class_id=c.seq, student_id=_student(db, "a").seq, student_no="20260001",
                       status=EnrollmentStatus.APPROVED))
-    db.add(Enrollment(class_id=c.id, student_id=_student(db, "b").id, student_no="20260001",
+    db.add(Enrollment(class_id=c.seq, student_id=_student(db, "b").seq, student_no="20260001",
                       status=EnrollmentStatus.PENDING))
     with pytest.raises(IntegrityError):
         db.commit()
@@ -88,23 +88,32 @@ def test_same_student_no_in_two_classes_allowed(db: Session):
     c1, c2 = _class(db, t, "TG-1001"), _class(db, t, "TG-1002")
     s = _student(db, "20260001")
     for c in (c1, c2):
-        db.add(Enrollment(class_id=c.id, student_id=s.id, student_no="20260001", status=EnrollmentStatus.APPROVED))
+        db.add(Enrollment(class_id=c.seq, student_id=s.seq, student_no="20260001", status=EnrollmentStatus.APPROVED))
     db.commit()
 
 
 def test_class_member_unique_and_default_is_use(db: Session):
     c = _class(db, _teacher(db))
-    m = ClassMember(class_id=c.id, student_no="20260001")
+    m = ClassMember(class_id=c.seq, student_no="20260001")
     db.add(m)
     db.commit()
     assert m.is_use is True
-    db.add(ClassMember(class_id=c.id, student_no="20260001"))
+    db.add(ClassMember(class_id=c.seq, student_no="20260001"))
     with pytest.raises(IntegrityError):
         db.commit()
 
 
 def test_foreign_key_enforced(db: Session):
-    db.add(Enrollment(class_id=999, student_id=_student(db, "x").id, student_no="20260009",
+    db.add(Enrollment(class_id=999, student_id=_student(db, "x").seq, student_no="20260009",
                       status=EnrollmentStatus.PENDING))
     with pytest.raises(IntegrityError):
         db.commit()
+
+
+def test_primary_key_column_is_seq(db: Session):
+    # 모든 테이블 PK 이름은 seq (auth 설계 A4)
+    bind = db.get_bind()
+    assert isinstance(bind, Engine)
+    insp = inspect(bind)
+    for table in ("users", "classes", "class_payments", "enrollments", "class_members"):
+        assert insp.get_pk_constraint(table)["constrained_columns"] == ["seq"], table

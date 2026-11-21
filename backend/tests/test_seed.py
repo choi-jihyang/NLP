@@ -38,7 +38,7 @@ def test_seed_contents(db: Session):
 
     payment = db.scalar(select(ClassPayment))
     assert payment is not None
-    assert (payment.class_id, payment.kind, payment.amount) == (klass.id, PaymentKind.NEW, 90_000)
+    assert (payment.class_id, payment.kind, payment.amount) == (klass.seq, PaymentKind.NEW, 90_000)
 
     students = db.scalars(select(User).where(User.role == Role.STUDENT)).all()
     assert sorted(s.name for s in students) == sorted(SEED_STUDENT_NOS)
@@ -46,7 +46,7 @@ def test_seed_contents(db: Session):
 
     enrollments = db.scalars(select(Enrollment)).all()
     assert sorted(e.student_no for e in enrollments) == sorted(SEED_STUDENT_NOS)
-    assert all(e.status == EnrollmentStatus.APPROVED and e.class_id == klass.id for e in enrollments)
+    assert all(e.status == EnrollmentStatus.APPROVED and e.class_id == klass.seq for e in enrollments)
 
     members = {m.student_no for m in db.scalars(select(ClassMember)).all()}
     assert members == {*SEED_STUDENT_NOS, SEED_ROSTER_ONLY_NO}

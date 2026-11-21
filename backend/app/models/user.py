@@ -14,7 +14,7 @@ class User(TimestampMixin, Base):
 
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    seq: Mapped[int] = mapped_column(primary_key=True)
     role: Mapped[Role] = mapped_column(enum_column(Role))
     email: Mapped[str | None] = mapped_column(String(255), unique=True)
     password_hash: Mapped[str | None] = mapped_column(String(255))
