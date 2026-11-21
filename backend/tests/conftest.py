@@ -1,10 +1,15 @@
-from collections.abc import Iterator
+import os
 
-import pytest
-from sqlalchemy.orm import Session
+TEST_JWT_SECRET = "test-only-jwt-secret-0123456789abcdef"  # 테스트 전용 값
+os.environ.setdefault("JWT_SECRET", TEST_JWT_SECRET)
 
-from app.db.init_db import init_db
-from app.db.session import create_db_engine
+from collections.abc import Iterator  # noqa: E402
+
+import pytest  # noqa: E402
+from sqlalchemy.orm import Session  # noqa: E402
+
+from app.db.init_db import init_db  # noqa: E402
+from app.db.session import create_db_engine  # noqa: E402
 
 
 @pytest.fixture

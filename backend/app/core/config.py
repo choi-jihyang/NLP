@@ -1,6 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -25,6 +26,16 @@ class Settings(BaseSettings):
     runner_image: str = "thinkguard-runner"
     runner_timeout_sec: float = 5.0
     runner_memory_mb: int = 128
+
+    jwt_secret: str = Field(default="", validate_default=True)
+    teacher_token_hours: int = Field(default=12, ge=1)
+
+    @field_validator("jwt_secret")
+    @classmethod
+    def _secret_long_enough(cls, value: str) -> str:
+        if len(value) < 32:
+            raise ValueError("JWT_SECRET은 32자 이상이어야 합니다. backend/.env에 무작위 값을 넣으세요.")
+        return value
 
 
 @lru_cache
