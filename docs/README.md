@@ -18,6 +18,7 @@
 **planning**
 - [architecture.md](planning/architecture.md) — 스택, 구성도, 채팅 처리 흐름 (확정)
 - [milestones.md](planning/milestones.md) — 11/17 · 11/24 · 12/1 (초안)
+- [scope.md](planning/scope.md) — 초기(12/1) / 고도화 범위 (초안)
 - [screens.md](planning/screens.md) — 화면 목록·기능 명세, 화면시안 v3 기준 (초안 v3 · 프론트 구현됨)
 - [page_design.html](planning/page_design.html) — 화면시안 v3 (브라우저로 열기)
 - [schema.md](planning/schema.md) — ERD, 테이블 (초안)

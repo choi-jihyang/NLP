@@ -40,6 +40,7 @@ http://localhost:5173 을 열고 아래 순서로 눌러 본다. 화면 위 "예
 | DB 테이블 | [docs/planning/schema.md](docs/planning/schema.md) |
 | AI가 어떤 기준으로 답하나 | [docs/spec/chat-policy.md](docs/spec/chat-policy.md) |
 | 일정 | [docs/planning/milestones.md](docs/planning/milestones.md) |
+| 12/1까지 하는 것 / 나중에 하는 것 | [docs/planning/scope.md](docs/planning/scope.md) |
 | 코드 규칙 · 브랜치 · PR | [docs/conventions/](docs/README.md) |
 
 ### 프론트 코드 구조 한눈에
