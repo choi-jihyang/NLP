@@ -21,6 +21,10 @@ env/
 
 # Data, models, logs
 data/raw/
+nlp/models/
+nlp/training/data/
+nlp/training/results/
+nlp/training/kaggle_upload/
 checkpoints/
 *.pt
 *.bin
