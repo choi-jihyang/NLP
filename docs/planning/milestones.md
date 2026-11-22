@@ -38,16 +38,16 @@
   - [x] JWT(`JWT_SECRET` 32자 이상) · 교수자 토큰 12시간
   - [x] `POST /auth/signup` · `POST /auth/login`
   - [x] 권한 의존성(교수자만 · 학생만, 역할은 DB 기준)
-  - [ ] **[공통]** 각자 로컬 `backend/.env`에 `JWT_SECRET` 추가(없으면 서버가 시작되지 않음 — README 참고)
+  - [x] **[공통]** 각자 로컬 `backend/.env`에 `JWT_SECRET` 추가(없으면 서버가 시작되지 않음 — README 참고)
 
 ### 백엔드 API (시연 경로 순서)
-- [ ] **[백엔드]** ③ 클래스 · 참여 — `feature/class-api`
-  - [ ] 클래스 개설(요금제 상한 복사, 수업 코드 발급·중복 시 재발급, 시작 날짜 → `starts_at`, 만료 = +1년) · 목록 · 상세
-  - [ ] 클래스 AI 기본값 조회·저장(`/ai-defaults`)
-  - [ ] 명단 · 입장 방식 조회·저장(`is_use` 토글, 저장 시 대기 중 요청 자동 수락)
-  - [ ] **학생 입장** `POST /enrollments`: 수업 코드 + 학번 → 학생 계정 · 학생 토큰(클래스 만료까지). `CLASS_NOT_STARTED` · `CLASS_FULL` · `CLASS_EXPIRED` · 내보낸 학번 `FORBIDDEN`
-  - [ ] 참여 상태 확인 · 기록 동의 · 참여 요청 목록 · 수락·거절 · 학생 내보내기 · 학생 목록 · `/me/classes`
-  - [ ] 권한 테스트(I7): 남의 클래스 · 다른 학생 데이터 접근 → `FORBIDDEN`
+- [ ] **[백엔드]** ③ 클래스 · 참여 — `feature/class-api` (로컬 완료 · 테스트 통과, PR 전)
+  - [x] 클래스 개설(요금제 상한 복사, 수업 코드 발급·중복 시 재발급, 시작 날짜 → `starts_at`, 만료 = +1년) · 목록 · 상세
+  - [x] 클래스 AI 기본값 조회·저장(`/ai-defaults`)
+  - [x] 명단 · 입장 방식 조회·저장(`is_use` 토글, 저장 시 대기 중 요청 자동 수락)
+  - [x] **학생 입장** `POST /enrollments`: 수업 코드 + 학번 → 학생 계정 · 학생 토큰(클래스 만료까지). `CLASS_NOT_STARTED` · `CLASS_FULL` · `CLASS_EXPIRED` · 내보낸 학번 `FORBIDDEN` — 다시 입장은 대기 티켓(교수자 수락 후 토큰, schema D21)
+  - [x] 참여 상태 확인 · 기록 동의 · 참여 요청 목록 · 수락·거절 · 학생 내보내기 · 학생 목록 · `/me/classes`
+  - [x] 권한 테스트(I7): 남의 클래스 · 다른 학생 데이터 접근 → `FORBIDDEN`
 - [ ] **[백엔드]** ⑤ 프롬프트 조립 — `feature/prompt-builder`
   - [ ] `ResponseMode` 대문자 + `OFFER_CHOICES`
   - [ ] `build_from_config`: 고정 규칙 → 정책 지시 → 교수자 지시 → `<과제 설명>` → `<알려 주면 안 되는 값>` ([chat-policy.md](../spec/chat-policy.md))
@@ -78,7 +78,7 @@
   - [ ] LLM에는 최근 대화 N개만, 분류 결과·누출 검사 결과 저장
 - [ ] **[백엔드]** 붙여넣기 기록 `POST /paste-events`(길이·시점만, 내용 필드 거부 — I5)
 - [ ] **[백엔드]** 이해 확인 · 내 리포트 · 교수자 반 리포트 · 간단 제작 채점 · 학생별 기록
-- [ ] **[백엔드]** 요금제 · 결제 목업 `/plans` · `/payments`(실제 PG 연동 없음, 항상 성공)
+- [ ] **[백엔드]** 요금제 · 결제 목업 `/plans` · `/payments`(실제 PG 연동 없음, 항상 성공) — `/plans` · NEW 결제는 ③에서 구현, 연장(EXTEND) 남음
 
 ### 모델 연결 (11/25까지)
 - [ ] **[NLP]** Qwen 버전·크기 확정(7B~8B 권장), 시연 PC에서 `ollama pull` · 응답 속도 측정
