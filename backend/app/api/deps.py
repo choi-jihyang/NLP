@@ -35,6 +35,22 @@ def get_current_user(
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
+def get_optional_user(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)], db: DbSession
+) -> User | None:
+    """토큰이 없거나 틀리거나 만료됐으면 None(401을 던지지 않음). 학생 입장에서만 쓴다."""
+    if credentials is None:
+        return None
+    try:
+        claims = decode_token(credentials.credentials)
+    except AppError:
+        return None
+    return db.get(User, claims.user_seq)
+
+
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]
+
+
 def require_teacher(user: CurrentUser) -> User:
     if user.role != Role.TEACHER:
         raise AppError(ErrorCode.FORBIDDEN)
