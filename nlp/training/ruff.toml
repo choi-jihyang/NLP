@@ -1,0 +1,9 @@
+# 학습·실험 스크립트용. 서비스 코드(nlp/thinkguard_nlp)는 상위 ruff.toml 규칙을 그대로 따른다.
+extend = "../ruff.toml"
+
+[lint]
+# 실험 스크립트의 긴 출력 문자열·짧은 반복 변수(l, x)는 허용
+ignore = ["E501", "E741", "E702", "B905", "B904"]
+
+[lint.isort]
+known-first-party = ["common", "judge", "policy"]
