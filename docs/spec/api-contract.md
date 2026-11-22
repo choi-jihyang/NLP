@@ -49,23 +49,25 @@
 ### 클래스 · 참여
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/classes` | T | → `ClassInfo[]` | `listClasses` |
-| POST | `/classes` | T | `{name, plan, starts_on}` → `ClassInfo` (수업 코드 발급, 학생 수 상한 = 요금제 상한). `starts_on`은 오늘 이후 날짜(`YYYY-MM-DD`), 시작 = 그날 00:00 KST, 만료 = 시작 + 1년. `ClassInfo`에 `starts_at`·`expires_at` 포함 | `createClass` |
-| GET | `/classes/{class_id}/ai-defaults` | T | → `AiPolicy` 새 과제에 미리 채울 정책 | `getAiDefaults` |
-| PUT | `/classes/{class_id}/ai-defaults` | T | `AiPolicy` → `AiPolicy` (`prompt_mode`는 항상 `FORM`, 이미 만든 과제에는 적용 안 함) | `saveAiDefaults` |
-| GET | `/classes/{class_id}` | T | → `ClassInfo` (`invite_code` 포함) | `getClass` |
-| GET | `/classes/{class_id}/students` | T | → `{id, student_no}[]` 참여 중인 학생 | `listStudents` |
-| GET | `/me/classes` | S | → `MyClass[]` (참여 클래스 + 과제별 상태 `IN_PROGRESS`·`FINALIZED`·`RELEASED`) | `listMyClasses` |
-| POST | `/enrollments` | 공개 | `{invite_code, student_no}` → `{class_id, class_name, status: APPROVED\|PENDING, access_token}` (결정 A). 명단에서 사용 중(`is_use`)이거나 입장 방식이 `OPEN`이면 바로 `APPROVED`, 아니면 참여 요청(`PENDING`). 오류: `INVITE_CODE_INVALID`, `CLASS_NOT_STARTED`, `CLASS_FULL`, `CLASS_EXPIRED`, 내보낸 학번이면 `FORBIDDEN` | `joinClass` |
-| GET | `/enrollments/{class_id}/me` | S | → `{status: PENDING\|APPROVED\|REJECTED\|REMOVED}` 참여 요청이 수락됐는지 확인 | `getMyEnrollment` |
-| POST | `/enrollments/{class_id}/consent` | S | → `{ok}` 기록 열람·붙여넣기 기록 안내 동의 | `acceptConsent` |
-| GET | `/classes/{class_id}/join-requests` | T | → `{id, student_no, requested_at}[]` 기다리는 참여 요청 | `listJoinRequests` |
-| POST | `/classes/{class_id}/join-requests/{request_id}` | T | `{approve: bool}` → `{ok}`. 수락할 때 정원이 차 있으면 `CLASS_FULL` | `decideJoinRequest` |
-| DELETE | `/classes/{class_id}/students/{student_id}` | T | → `{ok}` 학생 내보내기. **제출·대화 기록은 남기고** 학생의 과제·AI 접근만 막는다. 같은 학번으로 다시 입장 불가 | `removeStudent` |
-| GET | `/classes/{class_id}/roster` | T | → `{join_mode: APPROVAL\|OPEN, roster: {student_no, is_use}[]}` 입장 방식과 미리 넣어 둔 학번 명단 | `getRosterSettings` |
-| PUT | `/classes/{class_id}/roster` | T | 같은 모양 → 같은 모양. 명단에서 빼면 지우지 않고 `is_use = false`(이미 수락된 학생은 그대로). 이미 요청한 학생이 사용 중인 명단에 있으면 저장할 때 바로 수락 | `saveRosterSettings` |
+| GET | `/classes` | T | → `ClassInfo[]` 내 클래스만. `ClassInfo` = `{seq, name, invite_code, plan, student_limit, student_count, starts_at, expires_at}` ✅ | `listClasses` |
+| POST | `/classes` | T | `{name, starts_on, payment_seq}` → **201** `ClassInfo`. 결제(NEW, 미사용)로 개설: 요금제·상한은 결제에서 복사, 시작 = `starts_on` 00:00 KST(오늘 이후), 만료 = 시작 + 1년, 수업 코드 `TG-1234` 발급. 오류: `CONFLICT`(남의·이미 쓴 결제), `VALIDATION_FAILED` ✅ | `createClass` |
+| GET | `/classes/{class_id}` | T | → `ClassInfo` ✅ | `getClass` |
+| GET | `/classes/{class_id}/ai-defaults` | T | → `AiPolicy` 새 과제에 미리 채울 정책 ✅ | `getAiDefaults` |
+| PUT | `/classes/{class_id}/ai-defaults` | T | `AiPolicy` → `AiPolicy` (`prompt_mode`는 항상 `FORM`, 이미 만든 과제에는 적용 안 함) ✅ | `saveAiDefaults` |
+| GET | `/classes/{class_id}/students` | T | → `{seq, student_no}[]` 승인된 학생(`seq` = 학생 계정) ✅ | `listStudents` |
+| GET | `/me/classes` | S | → `{class_id, class_name, student_no, enrollment_status, assignments}[]` 승인·대기 중인 클래스. `assignments`는 ④ 과제 API 전까지 `[]` ✅ | `listMyClasses` |
+| POST | `/enrollments` | 공개(학생 토큰 있으면 사용) | `{invite_code, student_no}` → `{class_id, class_name, status: APPROVED\|PENDING, access_token \| null, reentry_ticket \| null}`. 명단에서 사용 중(`is_use`)이거나 `OPEN`이면 바로 `APPROVED`, 아니면 `PENDING`. **다시 입장**: 이미 입장한 학번이 토큰 없이(또는 다른 계정으로) 오면 토큰 대신 `reentry_ticket`만 준다(`access_token: null`, `status: PENDING`). 원래 참여 상태는 그대로(schema D21). 오류: `INVITE_CODE_INVALID`, `CLASS_NOT_STARTED`, `CLASS_EXPIRED`, `CLASS_FULL`, `ALREADY_ENROLLED`(같은 클래스 다른 학번), 내보낸 학번·교수자 토큰이면 `FORBIDDEN` ✅ | `joinClass` |
+| POST | `/enrollments/reentry` | 공개 | `{ticket}` → `{status, access_token \| null}`. 교수자 수락 전이면 `{status: PENDING, access_token: null}`, 수락 뒤 토큰을 **한 번** 준다. 거절·없는 티켓 · 내보낸 학생은 `NOT_FOUND` ✅ | `claimReentry` |
+| GET | `/enrollments/{class_id}/me` | S | → `{status}` 참여 요청이 수락됐는지 확인 ✅ | `getMyEnrollment` |
+| POST | `/enrollments/{class_id}/consent` | S | → `{ok}` 기록 열람·붙여넣기 기록 안내 동의(승인된 참여만) ✅ | `acceptConsent` |
+| GET | `/classes/{class_id}/join-requests` | T | → `{seq, student_no, requested_at, is_reentry}[]` 기다리는 참여 요청(`seq` = 참여). `is_reentry` = 다시 입장 요청(티켓 대기 중) ✅ | `listJoinRequests` |
+| POST | `/classes/{class_id}/join-requests/{seq}` | T | `{approve: bool}` → `{status}`. 처음 요청 수락 시 정원이 차 있으면 `CLASS_FULL`. 다시 입장 요청은 참여 상태·정원을 바꾸지 않고, 수락하면 티켓으로 토큰을 받을 수 있게, 거절하면 티켓 무효 ✅ | `decideJoinRequest` |
+| DELETE | `/classes/{class_id}/students/{student_id}` | T | → `{ok}` 학생 내보내기. **제출·대화 기록은 남기고** 과제·AI 접근만 막는다. 같은 학번으로 다시 입장 불가 ✅ | `removeStudent` |
+| GET | `/classes/{class_id}/roster` | T | → `{join_mode: APPROVAL\|OPEN, roster: {student_no, is_use}[]}` ✅ | `getRosterSettings` |
+| PUT | `/classes/{class_id}/roster` | T | 같은 모양 → 같은 모양. 목록에서 빠진 학번은 지우지 않고 `is_use = false`(이미 수락된 학생은 그대로). 사용 중인 명단 학번의 **처음** 참여 요청은 저장할 때 자동 수락(다시 입장 요청은 교수자만 수락). 같은 학번이 여러 번 오면 하나라도 사용이면 사용 ✅ | `saveRosterSettings` |
 
 - 시작 전(`starts_at` 이전) 클래스는 교수자 준비(과제 만들기·명단)만 되고, 학생 입장은 `CLASS_NOT_STARTED`.
+- 남의 클래스는 `FORBIDDEN`, 없는 클래스는 `NOT_FOUND`(불변식 I7).
 
 ### 과제 만들기 (교수자)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
@@ -136,8 +138,8 @@
 ### 요금제 · 결제 (목업)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/plans` | 공개 | → `Plan[]` `{code, name, student_limit, price}` | `listPlans` |
-| POST | `/payments` | T | `{plan, kind: NEW\|EXTEND, class_id}` → `{payment_id, amount, period_end}` | `payMock` |
+| GET | `/plans` | 공개 | → `Plan[]` `{code, name, student_limit, price}` ✅ | `listPlans` |
+| POST | `/payments` | T | `{plan, kind: "NEW"}` → **201** `{payment_seq, plan, student_limit, amount}` 클래스 미연결 이용권(schema D22). 연장(`EXTEND`)은 아직 없음 ✅ | `payMock` |
 
 - **실제 결제 대행(PG) 연동 코드는 넣지 않는다.** 항상 성공으로 처리한다.
 - 요금제(수익화 기획 기준, 클래스 하나 · 1년): `SMALL` 학생 50명 이하 90,000원 / `MEDIUM` 100명 이하 150,000원 / `LARGE` 200명 이하 250,000원. 기능은 같고 학생 수 상한만 다르다. 학생은 무료.

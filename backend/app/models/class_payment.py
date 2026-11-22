@@ -21,5 +21,5 @@ class ClassPayment(CreatedAtMixin, Base):
     student_limit: Mapped[int]
     kind: Mapped[PaymentKind] = mapped_column(enum_column(PaymentKind))
     amount: Mapped[int]
-    period_start: Mapped[datetime] = mapped_column(KstDateTime())
-    period_end: Mapped[datetime] = mapped_column(KstDateTime())
+    period_start: Mapped[datetime | None] = mapped_column(KstDateTime())  # 개설 전 NULL (③ C5)
+    period_end: Mapped[datetime | None] = mapped_column(KstDateTime())
