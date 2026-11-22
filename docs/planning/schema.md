@@ -170,7 +170,7 @@ erDiagram
 | title | VARCHAR | 과제 이름 |
 | course | VARCHAR | 과목 이름 (자유 입력) |
 | audience | VARCHAR | 대상 (예: 대학 1학년) |
-| language | VARCHAR | Language. 교수자가 과제 만들기 화면에서 선택(PDF 추출 때 자동으로 채우고 교수자가 확인). **코드 실행기가 실행 환경을 고르는 기준**이며, 실행할 때마다 다시 판단하지 않는다(채점 결과가 매번 같아야 하므로) |
+| language | VARCHAR | Language. 교수자가 과제 만들기 화면에서 선택(과제 파일 추출 때 자동으로 채우고 교수자가 확인). **코드 실행기가 실행 환경을 고르는 기준**이며, 실행할 때마다 다시 판단하지 않는다(채점 결과가 매번 같아야 하므로) |
 | description | TEXT | 과제 설명. AI 지시문에 맥락으로 들어감 |
 | due_at | KstDateTime nullable | 마감 |
 | policy | JSON | 이 과제의 AI 정책([AiPolicy](#aipolicy-json)) |
@@ -179,7 +179,7 @@ erDiagram
 | created_at, updated_at | KstDateTime | |
 
 - 화면의 과제 상태는 컬럼 없이 계산한다: `published_at` 없음 → `DRAFT` / 마감 전 → `OPEN` / 마감 후 → `CLOSED`.
-- 과제 파일(PDF) 추출은 **파일을 저장하지 않고** 추출한 내용으로 이 테이블과 `questions`의 초안만 만든다.
+- 과제 파일(md, 시간이 남으면 PDF) 추출은 **파일을 저장하지 않고** 추출한 내용으로 이 테이블과 `questions`의 초안만 만든다.
 
 #### AiPolicy (JSON)
 프론트 `AiPolicy` 타입과 같은 필드 + `usage_limit`.
@@ -366,7 +366,7 @@ class AnswerKey(BaseModel):
 | D8 | 시각 | 모두 KST, `+09:00` 포함해 저장 | 11/17 |
 | D9 | 묶음 값 저장 | AI 정책·테스트·선택지 등은 JSON 컬럼 + Pydantic 검증 | 11/17 |
 | D10 | 다시 제출 | 마지막 답만 저장 + 제출 횟수 | 11/17 |
-| D11 | 과제 파일 | PDF를 저장하지 않고 추출 결과만 남김 | 11/17 |
+| D11 | 과제 파일 | 파일을 저장하지 않고 추출 결과만 남김. md 먼저, 시간이 남으면 PDF(11/22 변경) | 11/17 |
 | D12 | 학생 수 상한 | 요금제가 정함(직접 입력 없음). 결제 시점 값을 `classes.student_limit`·`class_payments.student_limit`에 저장 | 11/17 |
 | D13 | 이용 시작 | 교수자가 시작 날짜 선택(오늘 이후), 00:00 KST. 시작 전에는 교수자 준비만, 학생 입장 불가 | 11/17 |
 | D14 | 학번 필드 이름 | DB·API·화면 모두 `student_no` | 11/17 |
