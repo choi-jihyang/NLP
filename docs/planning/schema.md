@@ -5,7 +5,9 @@
 > 한 번에 전부 만들지 말고, 기능 PR마다 필요한 테이블만 추가한다.
 
 ## 공통 규칙
-- 모든 테이블: `id` (INTEGER PK, 자동 증가), `created_at`. 수정되는 테이블은 `updated_at`도.
+- 모든 테이블: `seq` (INTEGER PK, 자동 증가), `created_at`. 수정되는 테이블은 `updated_at`도.
+  - FK 컬럼 이름(`teacher_id`, `class_id`, `student_id` …)은 그대로 두고, 가리키는 테이블의 `seq`를 뜻한다. API 응답 필드도 `seq`(숫자)로 같게 쓴다.
+  - 사람이 입력하는 값은 PK가 아니다: 로그인 ID = `users.email`, 학번 = `enrollments.student_no`.
 - **시각은 모두 KST(+09:00)**. 시간대 정보를 포함해 저장한다(예: `2026-11-17T17:30:00+09:00`). API도 같은 형식으로 주고받는다.
   - 서버에서 현재 시각은 `now_kst()` 하나로만 만든다(`datetime.now(ZoneInfo("Asia/Seoul"))`).
   - SQLite는 시간대를 저장하지 못하므로 `db/types.py`에 KST 전용 컬럼 타입(`KstDateTime`)을 두고, 모든 시각 컬럼은 이 타입을 쓴다. PostgreSQL로 옮기면 `timestamptz`로 매핑한다.
@@ -69,7 +71,7 @@ erDiagram
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | role | VARCHAR | Role |
 | email | VARCHAR UNIQUE nullable | 로그인 ID. 수업 코드로 입장한 학생은 NULL |
 | password_hash | VARCHAR nullable | 아래 [비밀번호 저장](#비밀번호-저장). 수업 코드로 입장한 학생은 NULL |
@@ -88,7 +90,7 @@ erDiagram
 ### classes
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | teacher_id | FK → users | `role = TEACHER`만 |
 | name | VARCHAR | 클래스 이름 (예: 프로그래밍 기초 1분반) |
 | invite_code | VARCHAR UNIQUE | 수업 코드. 예: `TG-4821`. 충돌 시 재발급 |
@@ -107,7 +109,7 @@ erDiagram
 ### class_payments (결제 목업)
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | teacher_id | FK → users | |
 | class_id | FK → classes nullable | **개설 전 결제라 비어 있을 수 있다.** `NEW`는 결제 뒤 클래스를 개설하면 채우고, `EXTEND`는 필수 |
 | plan | VARCHAR | PlanCode (`SMALL` · `MEDIUM` · `LARGE`) |
@@ -127,7 +129,7 @@ erDiagram
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | class_id | FK → classes | |
 | student_id | FK → users | `role = STUDENT` |
 | student_no | VARCHAR | 입장할 때 입력한 **학번**. DB·API·화면 모두 `student_no`로 부른다 |
@@ -145,7 +147,7 @@ erDiagram
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | class_id | FK → classes | |
 | student_no | VARCHAR | 학번 |
 | is_use | BOOLEAN | 사용 여부 토글. 기본 `true`. `false`면 명단에 없는 것으로 보고 일반 입장 방식(`join_mode`)을 따른다 |
@@ -159,7 +161,7 @@ erDiagram
 ### assignments
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | class_id | FK → classes | |
 | title | VARCHAR | 과제 이름 |
 | course | VARCHAR | 과목 이름 (자유 입력) |
@@ -194,7 +196,7 @@ erDiagram
 ### questions
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | assignment_id | FK → assignments | |
 | position | INTEGER | 문항 순서 |
 | type | VARCHAR | QuestionType |
@@ -229,7 +231,7 @@ class AnswerKey(BaseModel):
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | assignment_id | FK → assignments | |
 | enrollment_id | FK → enrollments | |
 | finalized_at | KstDateTime nullable | 최종 제출 시각. 이후 답 수정·AI 도움 잠김 |
@@ -243,7 +245,7 @@ class AnswerKey(BaseModel):
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | submission_id | FK → submissions | |
 | question_id | FK → questions | |
 | content | TEXT | 학생 답 (코드 작성은 코드 전체) |
@@ -268,7 +270,7 @@ class AnswerKey(BaseModel):
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | answer_id | FK → answers | |
 | position | INTEGER | 0, 1 |
 | question_text | TEXT | AI가 한 질문 |
@@ -288,7 +290,7 @@ class AnswerKey(BaseModel):
 **understanding_checks**
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | submission_id | FK → submissions UNIQUE | |
 | explanation | TEXT | 내 코드 설명 |
 | submitted_at | KstDateTime | |
@@ -297,7 +299,7 @@ class AnswerKey(BaseModel):
 **understanding_answers**
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | check_id | FK → understanding_checks | |
 | question_id | FK → questions | 확인 문제의 원 문항 |
 | value | TEXT | 학생 답 |
@@ -310,7 +312,7 @@ class AnswerKey(BaseModel):
 ### chat_messages
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | answer_id | FK → answers | 문항별 대화. 학생·과제·문항은 `answers → submissions`로 찾는다 |
 | role | VARCHAR | ChatRole |
 | content | TEXT | |
@@ -333,7 +335,7 @@ class AnswerKey(BaseModel):
 ### paste_events
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | answer_id | FK → answers | 어느 학생의 어느 문항에서 붙여넣었는지 |
 | field | VARCHAR | PasteField (답 칸 · 채팅 · 개념 확인) |
 | length | INTEGER | 붙여넣은 글자 수 |
@@ -369,6 +371,7 @@ class AnswerKey(BaseModel):
 | D17 | 문항 정답 값 | 🔒 값은 `questions.answer_key` JSON 하나에 모음. 공개 테스트(`public_tests`)와 숨김 테스트 분리 | 11/21 |
 | D18 | 대화·붙여넣기 묶음 | `chat_messages`·`paste_events`는 `answer_id`로 묶음. 답 행은 문항 첫 활동 때 생성 | 11/21 |
 | D19 | 개념 확인 붙여넣기 | `concept_check_items.pasted` 없음. `paste_events`에서 계산 | 11/21 |
+| D20 | PK 이름 | 모든 테이블 PK는 `seq`(숫자). API 응답도 `seq`. FK 이름은 그대로 | 11/21 |
 
 ## 다른 문서에 반영할 것
 - ~~`api-contract.md`·`error-handling.md`: `usage_limit`, `student_no`, 시작 날짜, `CLASS_NOT_STARTED`, 테스트 배열, `pasted` 제거~~ → 반영함(11/21)
