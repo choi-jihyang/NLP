@@ -117,3 +117,15 @@ def test_primary_key_column_is_seq(db: Session):
     insp = inspect(bind)
     for table in ("users", "classes", "class_payments", "enrollments", "class_members"):
         assert insp.get_pk_constraint(table)["constrained_columns"] == ["seq"], table
+
+
+def test_payment_period_can_be_empty_before_class(db: Session):
+    # 개설 전 결제(이용권)는 기간이 비어 있다 (③ 설계 C5)
+    from app.core.enums import PaymentKind
+    from app.models import ClassPayment
+
+    teacher = _teacher(db)
+    db.add(ClassPayment(
+        teacher_id=teacher.seq, plan=PlanCode.SMALL, student_limit=50, kind=PaymentKind.NEW, amount=90_000
+    ))
+    db.commit()

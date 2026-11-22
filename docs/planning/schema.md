@@ -116,7 +116,7 @@ erDiagram
 | student_limit | INTEGER | 이 결제 시점 요금제의 학생 수 상한 (상한 변경 이력) |
 | kind | VARCHAR | PaymentKind |
 | amount | INTEGER | 원. SMALL 90,000 / MEDIUM 150,000 / LARGE 250,000 |
-| period_start, period_end | KstDateTime | 이 결제로 산 이용 기간. `NEW`: 고른 시작일 00:00 ~ 1년 뒤 / `EXTEND`: 기존 `expires_at` ~ 1년 뒤 |
+| period_start, period_end | KstDateTime nullable | 이 결제로 산 이용 기간. `NEW`는 클래스를 개설할 때 채운다(개설 전 NULL): 고른 시작일 00:00 ~ 1년 뒤 / `EXTEND`: 기존 `expires_at` ~ 1년 뒤 |
 | created_at | KstDateTime | 결제 시각 |
 
 - 실제 PG 연동 없음. 항상 성공으로 행만 추가한다.
@@ -372,6 +372,8 @@ class AnswerKey(BaseModel):
 | D18 | 대화·붙여넣기 묶음 | `chat_messages`·`paste_events`는 `answer_id`로 묶음. 답 행은 문항 첫 활동 때 생성 | 11/21 |
 | D19 | 개념 확인 붙여넣기 | `concept_check_items.pasted` 없음. `paste_events`에서 계산 | 11/21 |
 | D20 | PK 이름 | 모든 테이블 PK는 `seq`(숫자). API 응답도 `seq`. FK 이름은 그대로 | 11/21 |
+| D21 | 다시 입장 | 이미 입장한 학번이 토큰 없이(또는 다른 계정으로) 들어오면 새 토큰 + 참여를 `PENDING`으로 되돌려 교수자가 다시 수락. 거절하면 `APPROVED` 복구. 다시 입장 요청 = `PENDING`이면서 `decided_at`이 있음 | 11/22 |
+| D22 | 결제 → 개설 | `POST /payments`(NEW)로 클래스 미연결 이용권을 만들고 `POST /classes`가 그 결제로 개설. 기간은 개설 때 채움 | 11/22 |
 
 ## 다른 문서에 반영할 것
 - ~~`api-contract.md`·`error-handling.md`: `usage_limit`, `student_no`, 시작 날짜, `CLASS_NOT_STARTED`, 테스트 배열, `pasted` 제거~~ → 반영함(11/21)
