@@ -58,3 +58,12 @@ def test_uncertain_skips_llm():
     assert out.mode is ResponseMode.ASK_ATTEMPT
     assert not out.used_llm
     assert llm.calls == []
+
+
+def test_empty_llm_reply_falls_back_to_fixed_message():
+    from app.services.policy import ASK_ATTEMPT_REPLY
+
+    llm = MockProvider(reply="   ")
+    out = run(FixedClassifier(requests_complete_answer=True), llm)
+    assert out.used_llm
+    assert out.text == ASK_ATTEMPT_REPLY

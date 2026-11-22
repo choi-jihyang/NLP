@@ -35,4 +35,7 @@ async def reply(
 
     system = prompt_builder.compose(base_prompt, decision.directive)
     text = await llm.generate(system, [*history, ChatTurn(role="student", content=message)])
+    if not text.strip():
+        # 생각 태그만 내거나 빈 답을 내면 학생에게 빈 말풍선 대신 시도를 묻는 고정 문구를 보낸다
+        text = policy.ASK_ATTEMPT_REPLY
     return ChatReply(text, decision.mode, result, used_llm=True)

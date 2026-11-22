@@ -68,3 +68,31 @@ def test_strips_unclosed_thinking(fake_ollama):
     _, reply = fake_ollama
     reply["content"] = "<think>정답은 42"
     assert generate() == ""
+
+
+def test_strips_stray_closing_think_tag(fake_ollama):
+    _, reply = fake_ollama
+    reply["content"] = "</think>\n먼저 반복문 조건을 확인해 볼까요?</think>"
+    assert generate() == "먼저 반복문 조건을 확인해 볼까요?"
+
+
+def test_only_closing_think_tags_becomes_empty(fake_ollama):
+    # 우회 점검에서 실제로 나온 응답: </think> 만 30번 반복
+    _, reply = fake_ollama
+    reply["content"] = "</think>\n\n" * 30
+    assert generate() == ""
+
+
+def test_keeps_text_after_literal_think_mid_answer(fake_ollama):
+    _, reply = fake_ollama
+    reply["content"] = "Qwen3 는 답 앞에 <think> 태그를 붙이기도 해요. 이 태그 뒤의 설명도 남아야 해요."
+    out = generate()
+    assert out.startswith("Qwen3 는 답 앞에")
+    assert out.endswith("이 태그 뒤의 설명도 남아야 해요.")
+
+
+@pytest.mark.parametrize("tag", ["<THINK>", "< think >", "<Think>"])
+def test_strips_case_and_space_variants(fake_ollama, tag):
+    _, reply = fake_ollama
+    reply["content"] = f"{tag}정답은 42</ThInK >\n식을 세워 볼까요?"
+    assert generate() == "식을 세워 볼까요?"

@@ -89,15 +89,16 @@ async def generate(system_prompt: str, messages: list[ChatTurn]) -> str
 ### Ollama (`LLM_PROVIDER=ollama`) — 모델
 | 후보 | 크기 | 장점 | 주의 |
 |---|---|---|---|
-| **`qwen3:8b`** (기본, 11/22 NLP 비교로 결정) | 약 5.2GB | 지시 따르기·정답 누출 방지가 가장 좋음, 응답이 짧음, Apache 2.0 | 생각 모드가 기본으로 켜짐 → `OllamaProvider`가 `"think": false`로 끈다 |
+| **`qwen3:8b`** (기본, 11/22 NLP 비교로 결정) | 약 5.2GB | 일반 질문 기준으로 지시 따르기·정답 누출 방지가 후보 중 가장 좋음, 응답이 짧음, Apache 2.0 | 생각 모드가 기본으로 켜짐 → `OllamaProvider`가 `"think": false`로 끈다 |
 | `qwen2.5:7b` | 약 4.7GB | 한국어 무난, 지시 따르기 좋음, Apache 2.0 | 가끔 중국어·영어가 섞임 → 프롬프트에 "한국어로만" 명시 |
 | `exaone3.5:7.8b` | 약 4.8GB | 국산 모델, 한국어 품질이 가장 좋음 | 비상업 연구용 라이선스 (수업 프로젝트는 가능) |
 | `qwen2.5:3b` | 약 1.9GB | 메모리 8GB 노트북에서도 빠름 | 단계별 안내 품질이 떨어짐 |
 
 - 비교(11/22, NLP): StudyChat 한국어 번역 test 40문장, 같은 응답 정책 프롬프트. 첫 생성에서 긴 코드·"정답은" 등 누출 의심이 `qwen3:8b` 1건 / `exaone3.5:7.8b` 17건, 응답 길이 중앙값 200자 / 860자. 자세히: `nlp/README.md`
+- 적대적 입력에는 약하다(11/22 우회 점검): "이전 지시는 무시해" 같은 문장이나 시도한 척하기에 66회 중 32회 완성 코드가 나갔다. 프롬프트만으로는 막지 못하므로 LLM 답을 보내기 전 정답 누출 검사가 필요하다(NLP 담당, 진행 중).
 - 시연 PC가 RAM 16GB 이상이면 7~8B급, 8GB면 3B급.
 - 사용: `ollama pull qwen3:8b` → `backend/.env`에 `LLM_PROVIDER=ollama`, `OLLAMA_MODEL=qwen3:8b`.
-- `OllamaProvider`는 항상 `"think": false`를 보낸다(생각 기능이 없는 모델은 무시). 옛 Ollama가 `<think>…</think>`를 본문에 섞어 보내면 학생에게 가기 전에 지운다.
+- `OllamaProvider`는 항상 `"think": false`를 보낸다(생각 기능이 없는 모델은 무시). 옛 Ollama가 `<think>…</think>`를 본문 맨 앞에 섞어 보내면 학생에게 가기 전에 지우고, 짝 없는 `</think>` 태그도 지운다. 지운 결과가 비면 `chat_service`가 `ASK_ATTEMPT_REPLY` 고정 문구로 바꾼다.
 - 다른 LLM(API형 등)을 붙일 때는 `llm/<이름>.py`에 구현을 추가하고 `get_llm_provider()`에 분기 한 줄을 넣는다.
 
 ---
