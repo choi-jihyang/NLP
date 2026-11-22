@@ -5,7 +5,9 @@
 > 한 번에 전부 만들지 말고, 기능 PR마다 필요한 테이블만 추가한다.
 
 ## 공통 규칙
-- 모든 테이블: `id` (INTEGER PK, 자동 증가), `created_at`. 수정되는 테이블은 `updated_at`도.
+- 모든 테이블: `seq` (INTEGER PK, 자동 증가), `created_at`. 수정되는 테이블은 `updated_at`도.
+  - FK 컬럼 이름(`teacher_id`, `class_id`, `student_id` …)은 그대로 두고, 가리키는 테이블의 `seq`를 뜻한다. API 응답 필드도 `seq`(숫자)로 같게 쓴다.
+  - 사람이 입력하는 값은 PK가 아니다: 로그인 ID = `users.email`, 학번 = `enrollments.student_no`.
 - **시각은 모두 KST(+09:00)**. 시간대 정보를 포함해 저장한다(예: `2026-11-17T17:30:00+09:00`). API도 같은 형식으로 주고받는다.
   - 서버에서 현재 시각은 `now_kst()` 하나로만 만든다(`datetime.now(ZoneInfo("Asia/Seoul"))`).
   - SQLite는 시간대를 저장하지 못하므로 `db/types.py`에 KST 전용 컬럼 타입(`KstDateTime`)을 두고, 모든 시각 컬럼은 이 타입을 쓴다. PostgreSQL로 옮기면 `timestamptz`로 매핑한다.
@@ -69,7 +71,7 @@ erDiagram
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | role | VARCHAR | Role |
 | email | VARCHAR UNIQUE nullable | 로그인 ID. 수업 코드로 입장한 학생은 NULL |
 | password_hash | VARCHAR nullable | 아래 [비밀번호 저장](#비밀번호-저장). 수업 코드로 입장한 학생은 NULL |
@@ -88,7 +90,7 @@ erDiagram
 ### classes
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | teacher_id | FK → users | `role = TEACHER`만 |
 | name | VARCHAR | 클래스 이름 (예: 프로그래밍 기초 1분반) |
 | invite_code | VARCHAR UNIQUE | 수업 코드. 예: `TG-4821`. 충돌 시 재발급 |
@@ -107,14 +109,14 @@ erDiagram
 ### class_payments (결제 목업)
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | teacher_id | FK → users | |
 | class_id | FK → classes nullable | **개설 전 결제라 비어 있을 수 있다.** `NEW`는 결제 뒤 클래스를 개설하면 채우고, `EXTEND`는 필수 |
 | plan | VARCHAR | PlanCode (`SMALL` · `MEDIUM` · `LARGE`) |
 | student_limit | INTEGER | 이 결제 시점 요금제의 학생 수 상한 (상한 변경 이력) |
 | kind | VARCHAR | PaymentKind |
 | amount | INTEGER | 원. SMALL 90,000 / MEDIUM 150,000 / LARGE 250,000 |
-| period_start, period_end | KstDateTime | 이 결제로 산 이용 기간. `NEW`: 고른 시작일 00:00 ~ 1년 뒤 / `EXTEND`: 기존 `expires_at` ~ 1년 뒤 |
+| period_start, period_end | KstDateTime nullable | 이 결제로 산 이용 기간. `NEW`는 클래스를 개설할 때 채운다(개설 전 NULL): 고른 시작일 00:00 ~ 1년 뒤 / `EXTEND`: 기존 `expires_at` ~ 1년 뒤 |
 | created_at | KstDateTime | 결제 시각 |
 
 - 실제 PG 연동 없음. 항상 성공으로 행만 추가한다.
@@ -127,7 +129,7 @@ erDiagram
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | class_id | FK → classes | |
 | student_id | FK → users | `role = STUDENT` |
 | student_no | VARCHAR | 입장할 때 입력한 **학번**. DB·API·화면 모두 `student_no`로 부른다 |
@@ -135,9 +137,13 @@ erDiagram
 | decided_at | KstDateTime nullable | 교수자가 수락·거절한 시각 (명단·OPEN 입장이면 입장 시각) |
 | consented_at | KstDateTime nullable | 기록 열람·붙여넣기 기록 안내 동의 시각. NULL이면 AI 도움 과제 이용 불가 |
 | removed_at | KstDateTime nullable | 내보낸 시각. **제출·대화 기록은 지우지 않는다** |
+| reentry_ticket_hash | VARCHAR nullable | 다시 입장 대기 티켓의 SHA-256 해시(원문 저장 안 함). 있으면 다시 입장 요청 중 (D21) |
+| reentry_requested_at | KstDateTime nullable | 다시 입장 요청 시각 |
+| reentry_approved_at | KstDateTime nullable | 교수자가 다시 입장을 수락한 시각. 티켓으로 토큰을 받으면 티켓 컬럼 3개를 비운다 |
 | created_at, updated_at | KstDateTime | `created_at` = 참여 요청 시각 |
 
 - UNIQUE(`class_id`, `student_no`) — 한 클래스에서 같은 학번은 한 명. `REMOVED`된 학번은 다시 입장 불가(`FORBIDDEN`).
+- UNIQUE(`class_id`, `student_id`) — 한 계정은 한 클래스에 참여 하나.
 - 다른 학생 학번 사칭은 `class_members`(명단) + `APPROVAL` 입장 방식으로 막는다.
 
 ### class_members
@@ -145,7 +151,7 @@ erDiagram
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | class_id | FK → classes | |
 | student_no | VARCHAR | 학번 |
 | is_use | BOOLEAN | 사용 여부 토글. 기본 `true`. `false`면 명단에 없는 것으로 보고 일반 입장 방식(`join_mode`)을 따른다 |
@@ -159,7 +165,7 @@ erDiagram
 ### assignments
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | class_id | FK → classes | |
 | title | VARCHAR | 과제 이름 |
 | course | VARCHAR | 과목 이름 (자유 입력) |
@@ -194,7 +200,7 @@ erDiagram
 ### questions
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | assignment_id | FK → assignments | |
 | position | INTEGER | 문항 순서 |
 | type | VARCHAR | QuestionType |
@@ -229,7 +235,7 @@ class AnswerKey(BaseModel):
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | assignment_id | FK → assignments | |
 | enrollment_id | FK → enrollments | |
 | finalized_at | KstDateTime nullable | 최종 제출 시각. 이후 답 수정·AI 도움 잠김 |
@@ -243,7 +249,7 @@ class AnswerKey(BaseModel):
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | submission_id | FK → submissions | |
 | question_id | FK → questions | |
 | content | TEXT | 학생 답 (코드 작성은 코드 전체) |
@@ -268,7 +274,7 @@ class AnswerKey(BaseModel):
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | answer_id | FK → answers | |
 | position | INTEGER | 0, 1 |
 | question_text | TEXT | AI가 한 질문 |
@@ -288,7 +294,7 @@ class AnswerKey(BaseModel):
 **understanding_checks**
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | submission_id | FK → submissions UNIQUE | |
 | explanation | TEXT | 내 코드 설명 |
 | submitted_at | KstDateTime | |
@@ -297,7 +303,7 @@ class AnswerKey(BaseModel):
 **understanding_answers**
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | check_id | FK → understanding_checks | |
 | question_id | FK → questions | 확인 문제의 원 문항 |
 | value | TEXT | 학생 답 |
@@ -310,7 +316,7 @@ class AnswerKey(BaseModel):
 ### chat_messages
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | answer_id | FK → answers | 문항별 대화. 학생·과제·문항은 `answers → submissions`로 찾는다 |
 | role | VARCHAR | ChatRole |
 | content | TEXT | |
@@ -333,7 +339,7 @@ class AnswerKey(BaseModel):
 ### paste_events
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
-| id | PK | |
+| seq | PK | |
 | answer_id | FK → answers | 어느 학생의 어느 문항에서 붙여넣었는지 |
 | field | VARCHAR | PasteField (답 칸 · 채팅 · 개념 확인) |
 | length | INTEGER | 붙여넣은 글자 수 |
@@ -369,6 +375,9 @@ class AnswerKey(BaseModel):
 | D17 | 문항 정답 값 | 🔒 값은 `questions.answer_key` JSON 하나에 모음. 공개 테스트(`public_tests`)와 숨김 테스트 분리 | 11/21 |
 | D18 | 대화·붙여넣기 묶음 | `chat_messages`·`paste_events`는 `answer_id`로 묶음. 답 행은 문항 첫 활동 때 생성 | 11/21 |
 | D19 | 개념 확인 붙여넣기 | `concept_check_items.pasted` 없음. `paste_events`에서 계산 | 11/21 |
+| D20 | PK 이름 | 모든 테이블 PK는 `seq`(숫자). API 응답도 `seq`. FK 이름은 그대로 | 11/21 |
+| D21 | 다시 입장 | 이미 입장한 학번이 토큰 없이(또는 다른 계정으로) 들어오면 **토큰 대신 대기 티켓**을 준다. 참여 상태는 그대로. 교수자가 수락하면 티켓으로 토큰을 한 번 받고, 거절하면 티켓 무효. 티켓은 해시만 저장 | 11/22 |
+| D22 | 결제 → 개설 | `POST /payments`(NEW)로 클래스 미연결 이용권을 만들고 `POST /classes`가 그 결제로 개설. 기간은 개설 때 채움 | 11/22 |
 
 ## 다른 문서에 반영할 것
 - ~~`api-contract.md`·`error-handling.md`: `usage_limit`, `student_no`, 시작 날짜, `CLASS_NOT_STARTED`, 테스트 배열, `pasted` 제거~~ → 반영함(11/21)
