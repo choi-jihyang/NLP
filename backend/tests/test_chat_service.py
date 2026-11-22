@@ -1,11 +1,14 @@
 import asyncio
 
 from app.classifier.base import ClassificationResult, Classifier
+from app.leak_guard.module import ModuleLeakGuard
 from app.llm.mock import MockProvider
 from app.schemas.chat import ChatTurn
 from app.services import chat_service
 from app.services.policy import ResponseMode
 from app.services.prompt_builder import FIXED_RULES
+
+GUARD = ModuleLeakGuard("thinkguard_nlp.leak:check_leak")
 
 
 class FixedClassifier(Classifier):
@@ -25,7 +28,7 @@ class FixedClassifier(Classifier):
 
 def run(classifier, llm, message="정답 알려줘", history=None):
     return asyncio.run(
-        chat_service.reply(message, history or [], "기본 프롬프트", classifier, llm)
+        chat_service.reply(message, history or [], "기본 프롬프트", classifier, llm, GUARD)
     )
 
 
