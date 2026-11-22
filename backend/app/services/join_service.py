@@ -1,5 +1,7 @@
-"""학생 입장(수업 코드 + 학번). 다시 입장은 새 토큰 + 다시 승인 대기 (③ 설계 C1 · C2)."""
+"""학생 입장(수업 코드 + 학번). 다시 입장은 토큰 대신 대기 티켓 (③ 설계 C1 · C2, schema D21)."""
 
+import hashlib
+import secrets
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -19,7 +21,19 @@ from app.services.access import approved_count, find_enrollment
 class JoinResult:
     klass: ClassRoom
     enrollment: Enrollment
-    access_token: str
+    status: EnrollmentStatus  # 응답에 보일 상태. 다시 입장 요청이면 PENDING(참여 자체는 그대로)
+    access_token: str | None
+    reentry_ticket: str | None = None
+
+
+@dataclass(frozen=True)
+class ClaimResult:
+    status: EnrollmentStatus
+    access_token: str | None
+
+
+def ticket_hash(ticket: str) -> str:
+    return hashlib.sha256(ticket.encode("utf-8")).hexdigest()
 
 
 def join(db: Session, invite_code: str, student_no: str, caller: User | None) -> JoinResult:
@@ -31,19 +45,51 @@ def join(db: Session, invite_code: str, student_no: str, caller: User | None) ->
     existing = db.scalar(
         select(Enrollment).where(Enrollment.class_id == klass.seq, Enrollment.student_no == student_no)
     )
+    if existing is not None and existing.status == EnrollmentStatus.REMOVED:
+        raise AppError(ErrorCode.FORBIDDEN, "이 수업에서 내보낸 학번입니다.")
+    if existing is not None and (caller is None or caller.seq != existing.student_id):
+        ticket = _request_reentry(existing, now)
+        _commit(db)
+        return JoinResult(klass, existing, EnrollmentStatus.PENDING, None, ticket)
     if existing is not None:
-        enrollment = _rejoin(existing, caller)
-        account = db.get(User, enrollment.student_id)
-        assert account is not None
+        enrollment = _rejoin_own(existing)
+        account = caller
     else:
         account, enrollment = _first_join(db, klass, student_no, caller, now)
+    assert account is not None
     account.login_at = now
+    _commit(db)
+    return JoinResult(klass, enrollment, enrollment.status, issue_token(account, klass.expires_at))
+
+
+def claim_reentry(db: Session, ticket: str) -> ClaimResult:
+    """교수자가 수락한 티켓이면 그 계정 토큰을 한 번 주고 티켓을 지운다."""
+    enrollment = db.scalar(select(Enrollment).where(Enrollment.reentry_ticket_hash == ticket_hash(ticket)))
+    if enrollment is None or enrollment.status == EnrollmentStatus.REMOVED:
+        raise AppError(ErrorCode.NOT_FOUND)
+    if enrollment.reentry_approved_at is None:
+        return ClaimResult(EnrollmentStatus.PENDING, None)
+    account = db.get(User, enrollment.student_id)
+    klass = db.get(ClassRoom, enrollment.class_id)
+    assert account is not None and klass is not None
+    clear_reentry(enrollment)
+    account.login_at = now_kst()
+    db.commit()
+    return ClaimResult(enrollment.status, issue_token(account, klass.expires_at))
+
+
+def clear_reentry(enrollment: Enrollment) -> None:
+    enrollment.reentry_ticket_hash = None
+    enrollment.reentry_requested_at = None
+    enrollment.reentry_approved_at = None
+
+
+def _commit(db: Session) -> None:
     try:
         db.commit()
-    except IntegrityError as exc:  # 같은 학번이 동시에 입장
+    except IntegrityError as exc:  # 같은 학번 · 같은 계정이 동시에 입장
         db.rollback()
         raise AppError(ErrorCode.CONFLICT) from exc
-    return JoinResult(klass, enrollment, issue_token(account, klass.expires_at))
 
 
 def _open_class(db: Session, invite_code: str) -> ClassRoom:
@@ -58,14 +104,19 @@ def _open_class(db: Session, invite_code: str) -> ClassRoom:
     return klass
 
 
-def _rejoin(enrollment: Enrollment, caller: User | None) -> Enrollment:
-    if enrollment.status == EnrollmentStatus.REMOVED:
-        raise AppError(ErrorCode.FORBIDDEN, "이 수업에서 내보낸 학번입니다.")
+def _request_reentry(enrollment: Enrollment, now: datetime) -> str:
+    """토큰은 주지 않고 티켓만. 참여 상태 · 자리는 그대로 둔다(리뷰 C1 · C2 · I1)."""
+    ticket = secrets.token_urlsafe(32)
+    enrollment.reentry_ticket_hash = ticket_hash(ticket)
+    enrollment.reentry_requested_at = now
+    enrollment.reentry_approved_at = None  # 새로 요청하면 앞선 수락은 무효
+    return ticket
+
+
+def _rejoin_own(enrollment: Enrollment) -> Enrollment:
     if enrollment.status == EnrollmentStatus.REJECTED:
         enrollment.status = EnrollmentStatus.PENDING  # 새 요청
         enrollment.decided_at = None
-    elif enrollment.status == EnrollmentStatus.APPROVED and (caller is None or caller.seq != enrollment.student_id):
-        enrollment.status = EnrollmentStatus.PENDING  # 다시 입장: decided_at을 남겨 구분한다
     return enrollment
 
 

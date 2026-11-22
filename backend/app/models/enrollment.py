@@ -13,7 +13,7 @@ class Enrollment(TimestampMixin, Base):
     """학생 한 명의 클래스 참여. created_at = 참여 요청 시각."""
 
     __tablename__ = "enrollments"
-    __table_args__ = (UniqueConstraint("class_id", "student_no"),)
+    __table_args__ = (UniqueConstraint("class_id", "student_no"), UniqueConstraint("class_id", "student_id"))
 
     seq: Mapped[int] = mapped_column(primary_key=True)
     class_id: Mapped[int] = mapped_column(ForeignKey("classes.seq"))
@@ -23,3 +23,7 @@ class Enrollment(TimestampMixin, Base):
     decided_at: Mapped[datetime | None] = mapped_column(KstDateTime())
     consented_at: Mapped[datetime | None] = mapped_column(KstDateTime())
     removed_at: Mapped[datetime | None] = mapped_column(KstDateTime())
+    # 다시 입장 대기 티켓(schema D21). 원문은 저장하지 않고 SHA-256 해시만
+    reentry_ticket_hash: Mapped[str | None] = mapped_column(String(64))
+    reentry_requested_at: Mapped[datetime | None] = mapped_column(KstDateTime())
+    reentry_approved_at: Mapped[datetime | None] = mapped_column(KstDateTime())

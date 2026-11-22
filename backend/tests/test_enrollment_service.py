@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.core.enums import EnrollmentStatus
 from app.core.errors import AppError, ErrorCode
+from app.core.tokens import decode_token
+from app.services.access import approved_count
 from app.services.enrollment_service import (
     consent,
     decide_request,
@@ -13,7 +15,8 @@ from app.services.enrollment_service import (
     my_enrollment,
     remove_student,
 )
-from tests.factories import enroll, make_class, make_student, make_teacher
+from app.services.join_service import claim_reentry
+from tests.factories import add_member, enroll, make_class, make_student, make_teacher
 
 
 def _error(fn, *args) -> ErrorCode:  # noqa: ANN001
@@ -41,11 +44,29 @@ def test_approve_when_full(db: Session):
     assert _error(decide_request, db, teacher, klass.seq, waiting.seq, True) == ErrorCode.CLASS_FULL
 
 
-def test_reentry_approval_ignores_limit(db: Session):
+def _reentry(db: Session, klass, student_no: str = "A") -> str:  # noqa: ANN001
+    """학번 student_no로 입장해 승인된 뒤, 토큰 없이 다시 입장해 받은 티켓."""
+    from app.services.join_service import join
+
+    add_member(db, klass, student_no)
+    join(db, klass.invite_code, student_no, None)
+    ticket = join(db, klass.invite_code, student_no, None).reentry_ticket
+    assert ticket
+    return ticket
+
+
+def test_reentry_approval_gives_token_once_and_keeps_seats(db: Session):
     teacher, klass = _setup(db, limit=1)
-    enroll(db, klass, make_student(db, "X"), "X")
-    back = enroll(db, klass, make_student(db, "A"), "A", EnrollmentStatus.PENDING, decided=True)
-    assert decide_request(db, teacher, klass.seq, back.seq, True).status == EnrollmentStatus.APPROVED
+    ticket = _reentry(db, klass)
+    request = list_requests(db, teacher, klass.seq)[0]
+    assert is_reentry(request)
+    decide_request(db, teacher, klass.seq, request.seq, True)
+    claimed = claim_reentry(db, ticket)
+    assert claimed.access_token and decode_token(claimed.access_token).user_seq == request.student_id
+    assert claimed.status == EnrollmentStatus.APPROVED
+    with pytest.raises(AppError):
+        claim_reentry(db, ticket)  # 한 번만
+    assert approved_count(db, klass.seq) == 1
 
 
 def test_reject_first_request(db: Session):
@@ -54,10 +75,15 @@ def test_reject_first_request(db: Session):
     assert decide_request(db, teacher, klass.seq, waiting.seq, False).status == EnrollmentStatus.REJECTED
 
 
-def test_reject_reentry_restores_approved(db: Session):
+def test_reject_reentry_voids_ticket_and_keeps_enrollment(db: Session):
     teacher, klass = _setup(db)
-    back = enroll(db, klass, make_student(db, "A"), "A", EnrollmentStatus.PENDING, decided=True)
-    assert decide_request(db, teacher, klass.seq, back.seq, False).status == EnrollmentStatus.APPROVED
+    ticket = _reentry(db, klass)
+    request = list_requests(db, teacher, klass.seq)[0]
+    decide_request(db, teacher, klass.seq, request.seq, False)
+    assert request.status == EnrollmentStatus.APPROVED and request.reentry_ticket_hash is None
+    with pytest.raises(AppError) as info:
+        claim_reentry(db, ticket)
+    assert info.value.code == ErrorCode.NOT_FOUND
 
 
 def test_decide_requires_pending_in_own_class(db: Session):
@@ -71,11 +97,23 @@ def test_decide_requires_pending_in_own_class(db: Session):
 
 def test_list_requests_marks_reentry(db: Session):
     teacher, klass = _setup(db)
-    first = enroll(db, klass, make_student(db, "A"), "A", EnrollmentStatus.PENDING)
-    back = enroll(db, klass, make_student(db, "B"), "B", EnrollmentStatus.PENDING, decided=True)
+    first = enroll(db, klass, make_student(db, "Z"), "Z", EnrollmentStatus.PENDING)
+    _reentry(db, klass, "B")
     enroll(db, klass, make_student(db, "C"), "C")
     requests = list_requests(db, teacher, klass.seq)
-    assert {(e.seq, is_reentry(e)) for e in requests} == {(first.seq, False), (back.seq, True)}
+    assert {(e.student_no, is_reentry(e)) for e in requests} == {("Z", False), ("B", True)}
+    assert first in requests
+
+
+def test_removed_student_ticket_is_not_found(db: Session):
+    teacher, klass = _setup(db)
+    ticket = _reentry(db, klass)
+    request = list_requests(db, teacher, klass.seq)[0]
+    decide_request(db, teacher, klass.seq, request.seq, True)
+    remove_student(db, teacher, klass.seq, request.student_id)
+    with pytest.raises(AppError) as info:
+        claim_reentry(db, ticket)
+    assert info.value.code == ErrorCode.NOT_FOUND
 
 
 def test_list_students_approved_only(db: Session):

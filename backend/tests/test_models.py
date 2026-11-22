@@ -129,3 +129,13 @@ def test_payment_period_can_be_empty_before_class(db: Session):
         teacher_id=teacher.seq, plan=PlanCode.SMALL, student_limit=50, kind=PaymentKind.NEW, amount=90_000
     ))
     db.commit()
+
+
+
+def test_one_enrollment_per_account_per_class(db: Session):
+    c = _class(db, _teacher(db))
+    s = _student(db, "x")
+    db.add(Enrollment(class_id=c.seq, student_id=s.seq, student_no="1", status=EnrollmentStatus.APPROVED))
+    db.add(Enrollment(class_id=c.seq, student_id=s.seq, student_no="2", status=EnrollmentStatus.PENDING))
+    with pytest.raises(IntegrityError):
+        db.commit()

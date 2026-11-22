@@ -73,3 +73,12 @@ def test_roster_roundtrip(client: TestClient):
         "join_mode": "OPEN",
         "roster": [{"student_no": "20260001", "is_use": True}, {"student_no": "20260002", "is_use": True}],
     }
+
+
+
+def test_roster_duplicate_number_prefers_in_use(client: TestClient):
+    teacher = api_teacher(client)
+    seq = api_class(client, teacher)["seq"]
+    body = {"join_mode": "APPROVAL", "roster": [{"student_no": "A"}, {"student_no": "A", "is_use": False}]}
+    saved = client.put(f"/api/classes/{seq}/roster", json=body, headers=teacher).json()
+    assert saved["roster"] == [{"student_no": "A", "is_use": True}]

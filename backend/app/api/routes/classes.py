@@ -59,14 +59,16 @@ def get_roster(class_id: int, teacher: TeacherUser, db: DbSession) -> RosterSett
 
 @router.put("/{class_id}/roster")
 def save_roster(class_id: int, body: RosterSettings, teacher: TeacherUser, db: DbSession) -> RosterSettings:
-    wanted = {entry.student_no: entry.is_use for entry in body.roster}
+    wanted: dict[str, bool] = {}
+    for entry in body.roster:  # 같은 학번이 여러 번 오면 하나라도 사용이면 사용
+        wanted[entry.student_no] = wanted.get(entry.student_no, False) or entry.is_use
     return _roster(*roster_service.save_roster(db, teacher, class_id, body.join_mode, wanted))
 
 
 @router.get("/{class_id}/join-requests")
 def list_join_requests(class_id: int, teacher: TeacherUser, db: DbSession) -> list[JoinRequestOut]:
     return [
-        JoinRequestOut(seq=e.seq, student_no=e.student_no, requested_at=e.updated_at,
+        JoinRequestOut(seq=e.seq, student_no=e.student_no, requested_at=enrollment_service.requested_at(e),
                        is_reentry=enrollment_service.is_reentry(e))
         for e in enrollment_service.list_requests(db, teacher, class_id)
     ]

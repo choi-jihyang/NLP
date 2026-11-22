@@ -56,14 +56,15 @@
 | PUT | `/classes/{class_id}/ai-defaults` | T | `AiPolicy` → `AiPolicy` (`prompt_mode`는 항상 `FORM`, 이미 만든 과제에는 적용 안 함) ✅ | `saveAiDefaults` |
 | GET | `/classes/{class_id}/students` | T | → `{seq, student_no}[]` 승인된 학생(`seq` = 학생 계정) ✅ | `listStudents` |
 | GET | `/me/classes` | S | → `{class_id, class_name, student_no, enrollment_status, assignments}[]` 승인·대기 중인 클래스. `assignments`는 ④ 과제 API 전까지 `[]` ✅ | `listMyClasses` |
-| POST | `/enrollments` | 공개(학생 토큰 있으면 사용) | `{invite_code, student_no}` → `{class_id, class_name, status: APPROVED\|PENDING, access_token}`. 명단에서 사용 중(`is_use`)이거나 `OPEN`이면 바로 `APPROVED`, 아니면 `PENDING`. **다시 입장**: 이미 입장한 학번이 토큰 없이(또는 다른 계정으로) 오면 새 토큰 + `PENDING`(교수자가 다시 수락, schema D21). 오류: `INVITE_CODE_INVALID`, `CLASS_NOT_STARTED`, `CLASS_EXPIRED`, `CLASS_FULL`, `ALREADY_ENROLLED`(같은 클래스 다른 학번), 내보낸 학번·교수자 토큰이면 `FORBIDDEN` ✅ | `joinClass` |
+| POST | `/enrollments` | 공개(학생 토큰 있으면 사용) | `{invite_code, student_no}` → `{class_id, class_name, status: APPROVED\|PENDING, access_token \| null, reentry_ticket \| null}`. 명단에서 사용 중(`is_use`)이거나 `OPEN`이면 바로 `APPROVED`, 아니면 `PENDING`. **다시 입장**: 이미 입장한 학번이 토큰 없이(또는 다른 계정으로) 오면 토큰 대신 `reentry_ticket`만 준다(`access_token: null`, `status: PENDING`). 원래 참여 상태는 그대로(schema D21). 오류: `INVITE_CODE_INVALID`, `CLASS_NOT_STARTED`, `CLASS_EXPIRED`, `CLASS_FULL`, `ALREADY_ENROLLED`(같은 클래스 다른 학번), 내보낸 학번·교수자 토큰이면 `FORBIDDEN` ✅ | `joinClass` |
+| POST | `/enrollments/reentry` | 공개 | `{ticket}` → `{status, access_token \| null}`. 교수자 수락 전이면 `{status: PENDING, access_token: null}`, 수락 뒤 토큰을 **한 번** 준다. 거절·없는 티켓 · 내보낸 학생은 `NOT_FOUND` ✅ | `claimReentry` |
 | GET | `/enrollments/{class_id}/me` | S | → `{status}` 참여 요청이 수락됐는지 확인 ✅ | `getMyEnrollment` |
 | POST | `/enrollments/{class_id}/consent` | S | → `{ok}` 기록 열람·붙여넣기 기록 안내 동의(승인된 참여만) ✅ | `acceptConsent` |
-| GET | `/classes/{class_id}/join-requests` | T | → `{seq, student_no, requested_at, is_reentry}[]` 기다리는 참여 요청(`seq` = 참여). `is_reentry` = 다시 입장 요청 ✅ | `listJoinRequests` |
-| POST | `/classes/{class_id}/join-requests/{seq}` | T | `{approve: bool}` → `{status}`. 처음 요청 수락 시 정원이 차 있으면 `CLASS_FULL`. 다시 입장 요청을 거절하면 원래 `APPROVED`로 복구 ✅ | `decideJoinRequest` |
+| GET | `/classes/{class_id}/join-requests` | T | → `{seq, student_no, requested_at, is_reentry}[]` 기다리는 참여 요청(`seq` = 참여). `is_reentry` = 다시 입장 요청(티켓 대기 중) ✅ | `listJoinRequests` |
+| POST | `/classes/{class_id}/join-requests/{seq}` | T | `{approve: bool}` → `{status}`. 처음 요청 수락 시 정원이 차 있으면 `CLASS_FULL`. 다시 입장 요청은 참여 상태·정원을 바꾸지 않고, 수락하면 티켓으로 토큰을 받을 수 있게, 거절하면 티켓 무효 ✅ | `decideJoinRequest` |
 | DELETE | `/classes/{class_id}/students/{student_id}` | T | → `{ok}` 학생 내보내기. **제출·대화 기록은 남기고** 과제·AI 접근만 막는다. 같은 학번으로 다시 입장 불가 ✅ | `removeStudent` |
 | GET | `/classes/{class_id}/roster` | T | → `{join_mode: APPROVAL\|OPEN, roster: {student_no, is_use}[]}` ✅ | `getRosterSettings` |
-| PUT | `/classes/{class_id}/roster` | T | 같은 모양 → 같은 모양. 목록에서 빠진 학번은 지우지 않고 `is_use = false`(이미 수락된 학생은 그대로). 사용 중인 명단 학번의 **처음** 참여 요청은 저장할 때 자동 수락(다시 입장 요청은 제외) ✅ | `saveRosterSettings` |
+| PUT | `/classes/{class_id}/roster` | T | 같은 모양 → 같은 모양. 목록에서 빠진 학번은 지우지 않고 `is_use = false`(이미 수락된 학생은 그대로). 사용 중인 명단 학번의 **처음** 참여 요청은 저장할 때 자동 수락(다시 입장 요청은 교수자만 수락). 같은 학번이 여러 번 오면 하나라도 사용이면 사용 ✅ | `saveRosterSettings` |
 
 - 시작 전(`starts_at` 이전) 클래스는 교수자 준비(과제 만들기·명단)만 되고, 학생 입장은 `CLASS_NOT_STARTED`.
 - 남의 클래스는 `FORBIDDEN`, 없는 클래스는 `NOT_FOUND`(불변식 I7).

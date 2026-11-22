@@ -1,6 +1,7 @@
 """참여 요청 수락·거절 · 학생 목록 · 내보내기 · 참여 상태 · 동의 · 내 클래스."""
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -10,6 +11,7 @@ from app.core.enums import EnrollmentStatus
 from app.core.errors import AppError, ErrorCode
 from app.models import ClassRoom, Enrollment, User
 from app.services.access import active_enrollment, approved_count, find_enrollment, own_class
+from app.services.join_service import clear_reentry
 
 
 @dataclass(frozen=True)
@@ -19,31 +21,45 @@ class MyClassView:
 
 
 def is_reentry(enrollment: Enrollment) -> bool:
-    """다시 입장 요청 = PENDING이면서 예전에 승인된 적이 있음 (③ 설계 C2)."""
-    return enrollment.status == EnrollmentStatus.PENDING and enrollment.decided_at is not None
+    """다시 입장 요청 = 티켓이 있고 아직 수락 전 (③ 설계 C2)."""
+    return enrollment.reentry_ticket_hash is not None and enrollment.reentry_approved_at is None
+
+
+def requested_at(enrollment: Enrollment) -> datetime:
+    if is_reentry(enrollment) and enrollment.reentry_requested_at is not None:
+        return enrollment.reentry_requested_at
+    return enrollment.updated_at
 
 
 def list_requests(db: Session, teacher: User, class_id: int) -> list[Enrollment]:
     klass = own_class(db, teacher, class_id)
+    reentry_waiting = Enrollment.reentry_ticket_hash.is_not(None) & Enrollment.reentry_approved_at.is_(None)
     query = select(Enrollment).where(
-        Enrollment.class_id == klass.seq, Enrollment.status == EnrollmentStatus.PENDING
-    ).order_by(Enrollment.updated_at, Enrollment.seq)
-    return list(db.scalars(query))
+        Enrollment.class_id == klass.seq,
+        (Enrollment.status == EnrollmentStatus.PENDING) | reentry_waiting,
+    )
+    return sorted(db.scalars(query), key=lambda e: (requested_at(e), e.seq))
 
 
 def decide_request(db: Session, teacher: User, class_id: int, enrollment_seq: int, approve: bool) -> Enrollment:
     klass = own_class(db, teacher, class_id)
     enrollment = db.get(Enrollment, enrollment_seq)
-    if enrollment is None or enrollment.class_id != klass.seq or enrollment.status != EnrollmentStatus.PENDING:
+    if enrollment is None or enrollment.class_id != klass.seq:
         raise AppError(ErrorCode.NOT_FOUND)
-    reentry = is_reentry(enrollment)
+    if is_reentry(enrollment):  # 참여 상태 · 정원은 건드리지 않는다
+        if approve:
+            enrollment.reentry_approved_at = now_kst()
+        else:
+            clear_reentry(enrollment)
+        db.commit()
+        return enrollment
+    if enrollment.status != EnrollmentStatus.PENDING:
+        raise AppError(ErrorCode.NOT_FOUND)
     if approve:
-        if not reentry and approved_count(db, klass.seq) >= klass.student_limit:
+        if approved_count(db, klass.seq) >= klass.student_limit:
             raise AppError(ErrorCode.CLASS_FULL)
         enrollment.status = EnrollmentStatus.APPROVED
         enrollment.decided_at = now_kst()
-    elif reentry:
-        enrollment.status = EnrollmentStatus.APPROVED  # 요청자가 그 학생이 아님 → 기존 참여 복구
     else:
         enrollment.status = EnrollmentStatus.REJECTED
         enrollment.decided_at = now_kst()
@@ -67,6 +83,7 @@ def remove_student(db: Session, teacher: User, class_id: int, student_id: int) -
         raise AppError(ErrorCode.NOT_FOUND)
     enrollment.status = EnrollmentStatus.REMOVED
     enrollment.removed_at = now_kst()
+    clear_reentry(enrollment)
     db.commit()
 
 

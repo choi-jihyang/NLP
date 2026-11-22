@@ -28,7 +28,17 @@ class JoinOut(BaseModel):
     class_id: int
     class_name: str
     status: EnrollmentStatus
-    access_token: str
+    access_token: str | None  # 다시 입장 요청이면 null — 대신 reentry_ticket
+    reentry_ticket: str | None = None
+
+
+class ReentryBody(BaseModel):
+    ticket: str = Field(min_length=1, max_length=100)
+
+
+class ReentryOut(BaseModel):
+    status: EnrollmentStatus
+    access_token: str | None
 
 
 class JoinRequestOut(BaseModel):

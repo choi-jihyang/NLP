@@ -137,9 +137,13 @@ erDiagram
 | decided_at | KstDateTime nullable | 교수자가 수락·거절한 시각 (명단·OPEN 입장이면 입장 시각) |
 | consented_at | KstDateTime nullable | 기록 열람·붙여넣기 기록 안내 동의 시각. NULL이면 AI 도움 과제 이용 불가 |
 | removed_at | KstDateTime nullable | 내보낸 시각. **제출·대화 기록은 지우지 않는다** |
+| reentry_ticket_hash | VARCHAR nullable | 다시 입장 대기 티켓의 SHA-256 해시(원문 저장 안 함). 있으면 다시 입장 요청 중 (D21) |
+| reentry_requested_at | KstDateTime nullable | 다시 입장 요청 시각 |
+| reentry_approved_at | KstDateTime nullable | 교수자가 다시 입장을 수락한 시각. 티켓으로 토큰을 받으면 티켓 컬럼 3개를 비운다 |
 | created_at, updated_at | KstDateTime | `created_at` = 참여 요청 시각 |
 
 - UNIQUE(`class_id`, `student_no`) — 한 클래스에서 같은 학번은 한 명. `REMOVED`된 학번은 다시 입장 불가(`FORBIDDEN`).
+- UNIQUE(`class_id`, `student_id`) — 한 계정은 한 클래스에 참여 하나.
 - 다른 학생 학번 사칭은 `class_members`(명단) + `APPROVAL` 입장 방식으로 막는다.
 
 ### class_members
@@ -372,7 +376,7 @@ class AnswerKey(BaseModel):
 | D18 | 대화·붙여넣기 묶음 | `chat_messages`·`paste_events`는 `answer_id`로 묶음. 답 행은 문항 첫 활동 때 생성 | 11/21 |
 | D19 | 개념 확인 붙여넣기 | `concept_check_items.pasted` 없음. `paste_events`에서 계산 | 11/21 |
 | D20 | PK 이름 | 모든 테이블 PK는 `seq`(숫자). API 응답도 `seq`. FK 이름은 그대로 | 11/21 |
-| D21 | 다시 입장 | 이미 입장한 학번이 토큰 없이(또는 다른 계정으로) 들어오면 새 토큰 + 참여를 `PENDING`으로 되돌려 교수자가 다시 수락. 거절하면 `APPROVED` 복구. 다시 입장 요청 = `PENDING`이면서 `decided_at`이 있음 | 11/22 |
+| D21 | 다시 입장 | 이미 입장한 학번이 토큰 없이(또는 다른 계정으로) 들어오면 **토큰 대신 대기 티켓**을 준다. 참여 상태는 그대로. 교수자가 수락하면 티켓으로 토큰을 한 번 받고, 거절하면 티켓 무효. 티켓은 해시만 저장 | 11/22 |
 | D22 | 결제 → 개설 | `POST /payments`(NEW)로 클래스 미연결 이용권을 만들고 `POST /classes`가 그 결제로 개설. 기간은 개설 때 채움 | 11/22 |
 
 ## 다른 문서에 반영할 것
