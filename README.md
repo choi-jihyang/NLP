@@ -114,7 +114,7 @@ cd frontend && npm run build && npm run lint
 | `CORS_ORIGINS` | JSON 배열 | `["http://localhost:5173"]` | |
 | `LLM_PROVIDER` | `mock` · `ollama` | `mock` | |
 | `OLLAMA_BASE_URL` | URL | `http://localhost:11434` | |
-| `OLLAMA_MODEL` | 모델 이름 | `qwen2.5:7b` | 후보: [integration-contract.md](docs/spec/integration-contract.md#2-llm-provider) |
+| `OLLAMA_MODEL` | 모델 이름 | `qwen3:8b` | 후보: [integration-contract.md](docs/spec/integration-contract.md#2-llm-provider) |
 | `CLASSIFIER` | `stub` · `module` · `http` | `stub` | |
 | `CLASSIFIER_MODULE` | `모듈:함수` | `thinkguard_nlp.classifier:classify` | `CLASSIFIER=module`일 때 |
 | `CLASSIFIER_URL` | URL | `http://localhost:8001/classify` | `CLASSIFIER=http`일 때 |
@@ -137,7 +137,7 @@ cd frontend && npm run build && npm run lint
 
 ## 실제 LLM 쓰기 (Ollama)
 ```bash
-ollama pull qwen2.5:7b
+ollama pull qwen3:8b
 ```
 `backend/.env`에서 `LLM_PROVIDER=ollama`로 바꾸고 백엔드를 다시 실행한다.
 

@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     llm_provider: Literal["mock", "ollama"] = "mock"
     ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "qwen2.5:7b"
+    ollama_model: str = "qwen3:8b"
 
     classifier: Literal["stub", "module", "http"] = "stub"
     classifier_module: str = "thinkguard_nlp.classifier:classify"
