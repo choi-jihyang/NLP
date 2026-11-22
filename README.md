@@ -78,6 +78,8 @@ cd backend
 python3 -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt
 cp .env.example .env
+# .env의 JWT_SECRET을 무작위 값으로 바꾼다 (32자 이상, 바꾸지 않으면 서버가 시작되지 않음)
+.venv/bin/python -c "import secrets; print('JWT_SECRET=' + secrets.token_urlsafe(48))" >> .env
 .venv/bin/uvicorn app.main:app --reload
 ```
 - 시연용 데이터 넣기 (처음 한 번, 서버를 띄우기 전에 `backend` 폴더에서):
@@ -125,6 +127,8 @@ cd frontend && npm run build && npm run lint
 | `CLASSIFIER_MODULE` | `모듈:함수` | `thinkguard_nlp.classifier:classify` | `CLASSIFIER=module`일 때 |
 | `CLASSIFIER_URL` | URL | `http://localhost:8001/classify` | `CLASSIFIER=http`일 때 |
 | `CLASSIFIER_MIN_CONFIDENCE` | 0.0–1.0 | `0.5` | 이보다 낮으면 "모호함"으로 보고 되묻기 |
+| `JWT_SECRET` | 32자 이상 문자열 | 없음(필수) | 로그인 토큰 서명 키. 커밋 금지 |
+| `TEACHER_TOKEN_HOURS` | 정수 | `12` | 교수자 토큰 유효 시간 |
 | `CODE_RUNNER` | `mock` · `docker` | `mock` | 코드 작성 문항 실행기 |
 | `RUNNER_IMAGE` | 이미지 이름 | `thinkguard-runner` | |
 | `RUNNER_TIMEOUT_SEC` | 초 | `5` | 학생 코드 실행 시간 제한 |
