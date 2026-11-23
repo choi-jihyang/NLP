@@ -72,27 +72,27 @@
 ### 과제 만들기 (교수자)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/classes/{class_id}/assignments` | T | → `AssignmentSummary[]` | `listAssignments` |
-| POST | `/classes/{class_id}/assignments/drafts` | T | `{source: "SAMPLE" \| "BLANK"}` → `Assignment` (저장 전 초안, `id: "new"`) | `createDraftFromSample`, `createBlankDraft` |
+| GET | `/classes/{class_id}/assignments` | T | → `AssignmentSummary[]` `{seq, title, kinds, status, due_at, hint_mode, submitted_count, student_count, todo, results_released}`. `submitted_count`는 ⑦ 전까지 0 ✅ | `listAssignments` |
+| POST | `/classes/{class_id}/assignments/drafts` | T | `{source: "BLANK"}` → `Assignment` (저장 전 초안, `seq: null`, 정책 = 클래스 AI 기본값) ✅. `SAMPLE`은 ④-2(샘플 md 파서)에서 | `createDraftFromSample`, `createBlankDraft` |
 | POST | `/classes/{class_id}/assignments/extract` | T | multipart `file` → `Assignment` 초안. 문항·코드·정답·테스트·배점 추출 | `extractFromFile` |
-| POST | `/classes/{class_id}/assignments` | T | `Assignment` → `Assignment` (새로 저장) | `saveAssignment` (id가 `new`) |
-| GET | `/assignments/{assignment_id}` | T | → `Assignment` (정답·숨김 테스트·모범 답안 포함) | `getAssignment` |
-| PUT | `/assignments/{assignment_id}` | T | `Assignment` → `Assignment` (결정 D) | `saveAssignment` |
-| POST | `/assignments/{assignment_id}/publish` | T | → `{invite_code}` | `publishAssignment` |
-| POST | `/assignments/{assignment_id}/release` | T | → `{results_released: true}` 점수·정답·내 리포트를 학생에게 공개 | `releaseResults` |
+| POST | `/classes/{class_id}/assignments` | T | `Assignment` → **201** `Assignment` (새로 저장). 유형별 검증 실패는 `VALIDATION_FAILED` ✅ | `saveAssignment` (id가 `new`) |
+| GET | `/assignments/{assignment_id}` | T | → `Assignment` (정답·숨김 테스트·모범 답안 포함) ✅ | `getAssignment` |
+| PUT | `/assignments/{assignment_id}` | T | `Assignment` → `Assignment`. 배포 전에는 문항을 통째로 교체. **배포 후에는 문항 · `language`가 바뀌면 `CONFLICT`**(같은 문항을 다시 보내는 건 통과), 결과 공개 후에는 모든 수정 `CONFLICT`(schema D24) ✅ | `saveAssignment` |
+| POST | `/assignments/{assignment_id}/publish` | T | → `{invite_code}`. 문항이 없으면 `CONFLICT`, 이미 배포했으면 그대로 ✅ | `publishAssignment` |
+| POST | `/assignments/{assignment_id}/release` | T | → `{results_released: true}` 점수·정답·내 리포트를 학생에게 공개. 배포 전이면 `CONFLICT` ✅ | `releaseResults` |
 | POST | `/assignments/preview` | T | `Assignment` → `{lines[], hint_mode_label}` "학생은 이렇게 경험해요" (프롬프트 원문 아님) | `getPolicyPreview` |
 | POST | `/assignments/prompt-draft` | T | `Assignment` → `{prompt}` 지시문 직접 작성의 시작 문안 | `getPromptDraft` (응답에서 `prompt`를 꺼냄) |
 | POST | `/assignments/simulate` | T | `Assignment` → `SimulationCase[]` 우회 요청을 보내 본 결과 | `simulateAttacks` |
 
 - preview · prompt-draft · simulate는 **저장 전 초안**을 받으므로 과제 id 없는 경로를 쓴다.
 - `Assignment.policy`(`AiPolicy`)에 `usage_limit`(학생 1명 · 이 과제 AI 메시지 수, 기본 30)를 둔다.
-- 코드 작성 문항 테스트는 지금처럼 `tests[{call, expected, hidden}]` 한 배열로 주고받는다. 서버가 저장할 때 공개(`public_tests`)와 숨김(`answer_key.hidden_tests`)으로 나누고, 교수자 조회 때 다시 합쳐 돌려준다([schema.md](../planning/schema.md) D17).
+- 코드 작성 문항 테스트는 `tests[{input, expected_output, hidden}]`(표준 입력 → 표준 출력, schema D23) 한 배열로 주고받는다. 서버가 저장할 때 공개(`public_tests`)와 숨김(`answer_key.hidden_tests`)으로 나누고, 교수자 조회 때 다시 합쳐 돌려준다([schema.md](../planning/schema.md) D17).
 - `custom_prompt`를 써도 고정 규칙(정답·완성 코드 금지, 시도 지어내기 금지, 누출 검사)은 항상 붙는다(불변식 I3).
 
 ### 풀이 · 제출 (학생)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/assignments/{assignment_id}/solve` | S | → `StudentAssignment` | `getStudentAssignment` |
+| GET | `/assignments/{assignment_id}/solve` | S | → `StudentAssignment` `{seq, title, course, language, due_at, hint_mode, hint_mode_label, max_hint_steps, external_signal_enabled, questions[{seq, type, points, prompt, code, choices, starter_code, ai_help, ai_enabled, public_tests[{input, expected_output}], hidden_test_count}]}`. 승인된 참여 + 배포된 과제만, 아니면 `FORBIDDEN`(초안 · 없는 과제 포함). 🔒 값 없음(I8) ✅ | `getStudentAssignment` |
 | GET | `/assignments/{assignment_id}/submission` | S | → `Submission` (없으면 만든다) | `getMySubmission` |
 | POST | `/assignments/{assignment_id}/questions/{question_id}/run` | S | `{code}` → `TestResult[]` **공개 테스트만** | `runPublicTests` |
 | PUT | `/assignments/{assignment_id}/answers/{question_id}` | S | `{content}` → `Submission`. 처음 내는 문항이고 힌트 0단계면 `AWAITING_CHECK`, 아니면 `SUBMITTED` | `submitAnswer` |

@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
-from app.api.routes import auth, classes, enrollments, health, me, payments, plans
+from app.api.routes import assignments, auth, classes, enrollments, health, me, payments, plans, solve
 
 api_router = APIRouter(prefix="/api")
-for module in (health, auth, plans, payments, classes, enrollments, me):
+for module in (health, auth, plans, payments, classes, enrollments, me, assignments, solve):
     api_router.include_router(module.router)
-# 기능별 라우터(assignments, chat, ...)는 구현하면서 여기에 추가
+# 기능별 라우터(chat, submissions, ...)는 구현하면서 여기에 추가
