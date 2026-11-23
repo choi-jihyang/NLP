@@ -24,7 +24,7 @@ class PlanCode(StrEnum):         SMALL, MEDIUM, LARGE            # 학생 50 / 1
 class PaymentKind(StrEnum):      NEW, EXTEND
 class JoinMode(StrEnum):         APPROVAL, OPEN                  # 명단 없는 학생: 참여 요청 / 바로 입장
 class EnrollmentStatus(StrEnum): PENDING, APPROVED, REJECTED, REMOVED
-class Language(StrEnum):         PYTHON, JAVA, C, JAVASCRIPT     # 여러 언어 지원. 실행기는 현재 PYTHON만 구현
+class Language(StrEnum):         PYTHON, JAVA, C, JAVASCRIPT     # 여러 언어 지원. 시연은 C(실행기는 C 실행기 PR에서 추가)
 class QuestionType(StrEnum):     MULTIPLE_CHOICE, SHORT_ANSWER, CODE, PROJECT
                                  # 객관식 퀴즈 / 출력 예측 / 코드 작성(테스트 실행) / 간단 제작(교수자 채점)
 class HintMode(StrEnum):         NONE, CONCEPT, STEP, EARNED
@@ -209,7 +209,7 @@ erDiagram
 | code | TEXT | 문제 코드 또는 요구사항. 없으면 빈 문자열 |
 | choices | JSON | 객관식 선택지 배열. 다른 유형은 `[]` |
 | starter_code | TEXT | 코드 작성 문항의 시작 코드 |
-| public_tests | JSON | 코드 작성 문항의 **공개 테스트만** `[{call, expected}]`. 학생 화면 "테스트 실행"에 쓴다 |
+| public_tests | JSON | 코드 작성 문항의 **공개 테스트만** `[{input, expected_output}]`(표준 입력 → 표준 출력, D23). 학생 화면 "테스트 실행"에 쓴다 |
 | ai_help | BOOLEAN | 간단 제작 문항에서 AI 도움을 열지 여부 |
 | answer_key | JSON | 🔒 **학생에게 보내지 않는 값 전부.** 아래 `AnswerKey` |
 | created_at, updated_at | KstDateTime | |
@@ -220,15 +220,17 @@ class AnswerKey(BaseModel):
     answer: str | None              # 객관식: 정답 번호('0'부터) / 출력 예측: 정답 값
     accepted_answers: list[str]     # 함께 인정할 표기
     misconceptions: dict[str, str]  # 오답 선택지 번호 → 예상 오개념
-    hidden_tests: list[Test]        # 코드 작성: 숨김 테스트 [{call, expected}]
+    hidden_tests: list[IOTest]      # 코드 작성: 숨김 테스트 [{input, expected_output}]
     rubric: list[str]               # 간단 제작 채점 기준
     model_answer: str | None        # 모범 답안
     variant: Variant | None         # 이해 확인용 확인 문제 {type, prompt, code, choices, answer, accepted_answers}
 ```
 - 🔒 값을 한 컬럼에 모은 이유: 학생용 조회는 `answer_key`를 **아예 읽지 않으면** 되므로, 직렬화 실수로 정답·숨김 테스트가 새는 일을 구조로 막는다.
 - 공개 테스트와 숨김 테스트를 다른 컬럼에 둔다. 한 배열에 `hidden` 표시로 섞지 않는다.
+- **출력 비교**: 각 줄 끝 공백과 마지막 줄바꿈은 무시하고 비교한다(D23). C 실행기 · 채점이 이 규칙을 따른다.
+- **배포 후 잠금**: 배포 전에는 문항을 통째로 교체한다. 배포 후에는 문항 · `language`가 바뀌면 거부하고, 결과 공개 후에는 모든 수정을 거부한다(D24).
 - 채점(정답 비교·숨김 테스트 실행)과 AI 프롬프트 조립만 `answer_key`를 읽는다. 프롬프트에 넣을 때도 정답은 "알려 주면 안 되는 값"으로만 쓴다.
-- 테스트: 학생용 문항 응답에 `answer_key`의 값이 하나도 없는지 확인한다(구현 시 추가).
+- 테스트: 학생용 문항 응답에 `answer_key`의 값이 하나도 없는지 확인한다 — `tests/test_assignments_api.py`, `tests/test_student_assignment.py`(불변식 I8).
 
 ### submissions
 학생 한 명의 과제 하나에 대한 제출. 학생이 그 과제에서 처음 활동할 때 만든다(`answers`보다 먼저).
@@ -378,6 +380,8 @@ class AnswerKey(BaseModel):
 | D20 | PK 이름 | 모든 테이블 PK는 `seq`(숫자). API 응답도 `seq`. FK 이름은 그대로 | 11/21 |
 | D21 | 다시 입장 | 이미 입장한 학번이 토큰 없이(또는 다른 계정으로) 들어오면 **토큰 대신 대기 티켓**을 준다. 참여 상태는 그대로. 교수자가 수락하면 티켓으로 토큰을 한 번 받고, 거절하면 티켓 무효. 티켓은 해시만 저장 | 11/22 |
 | D22 | 결제 → 개설 | `POST /payments`(NEW)로 클래스 미연결 이용권을 만들고 `POST /classes`가 그 결제로 개설. 기간은 개설 때 채움 | 11/22 |
+| D23 | 테스트 모양 | 모든 언어 `{input, expected_output}`(표준 입력 → 표준 출력). 출력은 줄 끝 공백 · 마지막 줄바꿈을 무시하고 비교 | 11/23 |
+| D24 | 배포 후 수정 | 문항 · 언어는 잠금, 제목 · 과목 · 대상 · 설명 · 마감 · AI 정책만 수정. 결과 공개 후 전부 잠금 | 11/23 |
 
 ## 다른 문서에 반영할 것
 - ~~`api-contract.md`·`error-handling.md`: `usage_limit`, `student_no`, 시작 날짜, `CLASS_NOT_STARTED`, 테스트 배열, `pasted` 제거~~ → 반영함(11/21)

@@ -17,7 +17,8 @@
 | I4 | 시도 근거는 **학생이 보낸 메시지**에서만 찾는다. AI 자신의 이전 답변은 근거가 아니다 | `tests/test_classifier_stub.py` |
 | I5 | 붙여넣기 이벤트에는 길이·시점만 저장되고 내용 컬럼은 없다 | 스키마 리뷰 (구현 시 테스트 추가) |
 | I6 | 사용량 상한에 도달하면 LLM을 부르지 않는다 | 구현 시 테스트 추가 |
-| I7 | 학생은 자기가 참여한 클래스의 과제·대화만 볼 수 있다. 교수자는 자기 클래스만 | `tests/test_access.py`, `tests/test_classes_api.py`, `tests/test_enrollments_api.py` (과제·대화 접근은 ④ · ⑥에서 추가) |
+| I7 | 학생은 자기가 참여한 클래스의 과제·대화만 볼 수 있다. 교수자는 자기 클래스만 | `tests/test_access.py`, `tests/test_classes_api.py`, `tests/test_enrollments_api.py`, `tests/test_student_assignment.py` (대화 접근은 ⑥에서 추가) |
+| I8 | 학생에게 가는 과제 응답에 정답 · 인정 답안 · 오개념 · 숨김 테스트 · 채점 기준 · 모범 답안 · 확인 문제가 없다(학생 스키마에 필드 자체가 없음) | `tests/test_assignments_api.py`, `tests/test_student_assignment.py` |
 
 > 불변식이 바뀌면 이 표부터 고친다. 표에 "구현 시 테스트 추가"로 남은 항목은 해당 기능 PR에서 테스트와 함께 채운다.
 
