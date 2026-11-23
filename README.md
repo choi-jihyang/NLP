@@ -127,6 +127,7 @@ cd frontend && npm run build && npm run lint
 | `CLASSIFIER_MODULE` | `모듈:함수` | `thinkguard_nlp.classifier:classify` | `CLASSIFIER=module`일 때 |
 | `CLASSIFIER_URL` | URL | `http://localhost:8001/classify` | `CLASSIFIER=http`일 때 |
 | `CLASSIFIER_MIN_CONFIDENCE` | 0.0–1.0 | `0.5` | 이보다 낮으면 "모호함"으로 보고 되묻기 |
+| `LEAK_GUARD_MODULE` | `모듈:함수` | `thinkguard_nlp.leak:check_leak` | AI 답변 누출 검사(항상 켜짐). `requirements.txt`가 `../nlp`를 설치한다 |
 | `JWT_SECRET` | 32자 이상 문자열 | 없음(필수) | 로그인 토큰 서명 키. 커밋 금지 |
 | `TEACHER_TOKEN_HOURS` | 정수 | `12` | 교수자 토큰 유효 시간 |
 | `CODE_RUNNER` | `mock` · `docker` | `mock` | 코드 작성 문항 실행기 |

@@ -7,6 +7,11 @@ from app.classifier.base import ClassificationResult
 
 ASK_ATTEMPT_REPLY = "이미 시도한 부분이 있나요? 어디까지 풀어 봤는지 적어 주면 그다음 단계를 함께 생각해 볼게요."
 OFF_TOPIC_REPLY = "지금은 과제와 관련된 질문에만 도움을 줄 수 있어요. 문항에서 막힌 부분을 알려 주세요."
+LEAK_BLOCKED_REPLY = (
+    "이 답변에는 정답이나 완성 코드가 들어 있어서 보여 드릴 수 없어요. "
+    "직접 써 본 코드나 막힌 줄을 알려 주면 그다음 한 단계를 함께 생각해 볼게요."
+)
+"""누출 검사가 LLM 답변을 막았을 때 대신 보내는 답변"""
 
 
 class ResponseMode(StrEnum):

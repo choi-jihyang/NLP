@@ -165,3 +165,52 @@ docker build -t thinkguard-runner backend/sandbox
 |---|---|
 | `backend/tests/test_harness.py` | 비교 방식, 예외·문법 오류, print 무시, 결과 위조 방지, 기대값 비공개, 시간 초과 (Docker 없이) |
 | `backend/tests/test_runner.py` | Mock, 격리 옵션, Docker 없음 처리 / 실제 컨테이너: 실행·네트워크 차단·쓰기 차단·시간 초과 (이미지 없으면 건너뜀) |
+
+---
+
+## 4. 누출 검사 (LeakGuard)
+
+> 상태: **계약 제안 · 규칙 기반 1차 구현됨** (`nlp/thinkguard_nlp/leak.py`, `backend/app/leak_guard/`, 테스트 `backend/tests/test_leak_guard.py`).
+> [chat-policy.md](chat-policy.md) "마지막 필터". LLM 답변을 학생에게 보내기 전에 항상 거친다(끄는 설정 없음).
+
+```
+backend/app/leak_guard/          LEAK_GUARD_MODULE=
+  base.py      LeakGuard          ← 인터페이스
+  module.py                         thinkguard_nlp.leak:check_leak (기본)
+```
+
+### 입력
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `reply` | string | 학생에게 보내기 전의 LLM 답변 초안 |
+| `history` | `{role, content}[]` | 분류기와 같은 형식, 오래된 순. 이번 학생 메시지는 들어가지 않는다 |
+
+### 출력
+| 필드 | 타입 | 의미 |
+|---|---|---|
+| `leaked` | bool | 정답·완성 코드가 들어 있어 학생에게 보내면 안 되는가 |
+| `reasons` | string[] | 걸린 규칙. `complete_function` · `filled_blank` · `code_chunk` · `answer_expression` · `accumulated` |
+
+### 1차 규칙 (`check_leak`)
+| 규칙 | 막는 것 |
+|---|---|
+| `complete_function` | 빈칸 없는 `def` + 본문(return 또는 문장 3개 이상). 코드블록 유무와 상관없음 |
+| `filled_blank` | `____` 빈칸 줄과 같은 모양에 빈칸만 채운 줄이 함께 있음 ("정답 채운 버전") |
+| `code_chunk` | 빈칸 없는 코드 문장 3개 이상 + return, 또는 5개 이상 (def 없이 "나머지 전부") |
+| `answer_expression` | `sum(x for x in … if …)`, `sorted(…)[1]` 같은 한 줄 정답 표현식 |
+| `accumulated` | 최근 AI 답변 4개 + 이번 답변의 코드를 합치면 위 `complete_function` · `filled_blank` |
+
+- 빈칸(`____`)이 남은 코드, 말로 된 힌트, 한두 줄짜리 예시는 통과시킨다(명세가 허용한 빈칸 채우기 형태).
+- 차단되면 백엔드는 답변을 `LEAK_BLOCKED_REPLY`로 바꾸고 `leak_blocked=true`, 원문은 `blocked_draft`에 둔다(학생에게 보내지 않음). 응답 모드 기록은 그대로다.
+- 검사기가 오류를 내거나 출력 형식이 다르면 답변을 내보내지 않고 오류가 난다 — "실패 시 통과" 없음.
+- 설치: `cd backend && .venv/bin/pip install -r requirements.txt` (`-e ../nlp` 포함).
+- 모델 기반 판별로 바꿀 때는 같은 함수 이름·입출력으로 교체한다. HTTP 방식이 필요하면 분류기처럼 `http.py`를 추가한다.
+
+### 수용 기준
+1. 우회 시도 검증(PR #12)의 누출 사례가 `test_leak_guard.py`에 고정되어 있고 모두 차단된다.
+2. HINT_ONLY · NEXT_STEP 등 LLM을 부르는 모든 모드에 적용된다.
+3. 대조군 힌트 · 빈칸 템플릿 · 짧은 예시는 통과한다.
+
+### 알려진 빈틈
+- 학생이 보낸 빈칸 코드의 빈칸만 채워 주는 답(PR #12 #15)은 학생 메시지를 보지 않아 놓친다.
+- 코드 조각을 문장 속에 흩어 주는 답(`x = list(set(nums))`로 …, `x[-2]`로 …), 기대 출력값(숫자)은 놓친다. 정답(`answer_key`) 비교는 문항 모델이 생기면 입력에 추가한다.

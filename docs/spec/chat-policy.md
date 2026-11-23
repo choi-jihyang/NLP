@@ -1,6 +1,6 @@
 # 학습 AI 채팅 정책
 
-> 상태: **분류 → 정책 → 프롬프트 합성 구현됨**(`services/policy.py`, `services/chat_service.py`, 테스트 있음).
+> 상태: **분류 → 정책 → 프롬프트 합성 → 누출 검사 구현됨**(`services/policy.py`, `services/chat_service.py`, `leak_guard/`, 테스트 있음).
 > 채팅 API·대화 저장·사용량 상한·AI 설정 → 프롬프트 변환은 **미구현**.
 > 관련: [integration-contract.md](integration-contract.md) · 불변식 [../conventions/ai-code-trust.md](../conventions/ai-code-trust.md)
 
@@ -12,7 +12,8 @@
 4. 고정 응답이면 바로 반환 (LLM 호출 안 함)
 5. 시스템 프롬프트 = AI 설정 프롬프트 + 고정 규칙 + 이번 응답 정책 지시
 6. llm.generate(시스템 프롬프트, history + message)
-7. 저장 후 응답                                                      (미구현)
+7. 누출 검사          leak_guard.check(답변, history) → 걸리면 고정 안내문으로 교체
+8. 저장 후 응답                                                      (미구현)
 ```
 
 ## 정책 분기 (우선순위 위에서부터)
@@ -53,7 +54,8 @@ LLM은 프롬프트 안의 글이 "참고 자료"인지 "지시"인지 확실히
 - 사용량 상한, 잠김(개념 확인 중·최종 제출 후)도 LLM 호출 전에 코드가 막는다.
 
 **마지막 필터**
-- LLM 답변은 학생에게 보내기 전에 NLP 누출 검사를 거친다([integration-contract.md](integration-contract.md)). 프롬프트가 뚫려도 정답·완성 코드는 여기서 막는다.
+- LLM 답변은 학생에게 보내기 전에 NLP 누출 검사를 거친다([integration-contract.md §4](integration-contract.md#4-누출-검사-leakguard)). 프롬프트가 뚫려도 정답·완성 코드는 여기서 막는다.
+- 막히면 `LEAK_BLOCKED_REPLY`를 보내고 `leak_blocked`·`blocked_draft`를 남긴다. 모드(`HINT_ONLY`·`NEXT_STEP`)는 그대로 기록한다.
 
 **테스트** (구현 시 추가)
 - 과제 설명·학생 메시지에 지시를 심어도 시스템 프롬프트 맨 앞에 고정 규칙이 그대로 있다.
@@ -81,3 +83,4 @@ LLM은 프롬프트 안의 글이 "참고 자료"인지 "지시"인지 확실히
 | `backend/tests/test_policy.py` | 분기 4종, 우선순위, confidence 경계값 |
 | `backend/tests/test_chat_service.py` | LLM 호출 여부, 시스템 프롬프트 구성, 메시지 순서 |
 | `backend/tests/test_classifier_stub.py` | 키워드 스텁 분류 결과, 시도 근거는 학생 메시지에서만 |
+| `backend/tests/test_leak_guard.py` | 누출 검사: 우회 사례 차단, 힌트·빈칸 템플릿 통과, 모든 LLM 모드 적용 |
