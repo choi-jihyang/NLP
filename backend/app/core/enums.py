@@ -47,3 +47,19 @@ class HintPenalty(StrEnum):
 class PromptMode(StrEnum):
     FORM = "FORM"
     CUSTOM = "CUSTOM"
+
+
+class Language(StrEnum):
+    """과제 언어. 코드 실행기가 실행 환경을 고르는 기준(schema D16)."""
+
+    PYTHON = "PYTHON"
+    JAVA = "JAVA"
+    C = "C"
+    JAVASCRIPT = "JAVASCRIPT"
+
+
+class QuestionType(StrEnum):
+    MULTIPLE_CHOICE = "MULTIPLE_CHOICE"  # 객관식 퀴즈
+    SHORT_ANSWER = "SHORT_ANSWER"  # 출력 예측
+    CODE = "CODE"  # 코드 작성(테스트 실행)
+    PROJECT = "PROJECT"  # 간단 제작(교수자 채점)
