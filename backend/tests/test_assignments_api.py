@@ -13,8 +13,8 @@ ASSIGNMENT = {
     "questions": [
         {"type": "MULTIPLE_CHOICE", "points": 10, "prompt": "1011은?", "choices": ["11", "13", "1011", "3"],
          "answer": "0", "misconceptions": {"1": "SECRET-MISCONCEPTION"},
-         "variant": {"type": "MULTIPLE_CHOICE", "prompt": "1101은?", "choices": ["13", "11"],
-                     "answer": "SECRET-VARIANT"}},
+         "variant": {"type": "MULTIPLE_CHOICE", "prompt": "SECRET-VARIANT 1101은?", "choices": ["13", "11"],
+                     "answer": "0"}},
         {"type": "SHORT_ANSWER", "points": 10, "prompt": "출력은?", "code": "printf(\"%d\", 13);",
          "answer": "SECRET-ANSWER", "accepted_answers": ["SECRET-ACCEPT"]},
         {"type": "CODE", "points": 20, "prompt": "변환기", "starter_code": "void print_binary(unsigned n) {}",

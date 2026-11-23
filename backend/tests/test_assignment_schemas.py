@@ -106,3 +106,27 @@ def test_same_questions_detects_changes():
 
 def test_language_values():
     assert {lang.value for lang in Language} == {"PYTHON", "JAVA", "C", "JAVASCRIPT"}
+
+
+@pytest.mark.parametrize("answer", ["٣", "１", "01", "1 "])
+def test_multiple_choice_answer_must_be_plain_ascii_index(answer: str):
+    # ⑦ 채점이 학생의 "1" 같은 ASCII 번호와 비교하므로 정규형만 받는다(리뷰 Important 1)
+    with pytest.raises(ValidationError):
+        _q({**MC, "choices": ["a", "b", "c", "d"]}, answer=answer)
+
+
+@pytest.mark.parametrize("variant", [
+    {"type": "MULTIPLE_CHOICE", "prompt": "1101은?", "answer": "7"},  # 선택지 없음
+    {"type": "MULTIPLE_CHOICE", "prompt": "1101은?", "choices": ["13", "11"], "answer": "2"},  # 범위 밖
+    {"type": "SHORT_ANSWER", "prompt": "출력은?", "answer": "   "},
+])
+def test_variant_is_checked_by_type(variant: dict):
+    with pytest.raises(ValidationError):
+        _q(MC, variant=variant)
+
+
+def test_whitespace_only_prompt_or_expected_output_is_rejected():
+    with pytest.raises(ValidationError):
+        _q(MC, prompt="   ")
+    with pytest.raises(ValidationError):
+        _q(CODE, tests=[{"input": "1", "expected_output": "   "}])

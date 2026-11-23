@@ -1,5 +1,6 @@
 """교수자 과제 요청/응답. 정답·숨김 테스트 포함 — 학생 응답에는 쓰지 않는다(student_assignments.py)."""
 
+import re
 from datetime import datetime
 from typing import Literal
 
@@ -10,6 +11,21 @@ from app.schemas.ai_policy import AiPolicy
 
 MAX_IO = 10_000
 MAX_CODE = 20_000
+_CHOICE_INDEX = re.compile(r"0|[1-9][0-9]*")  # ASCII 정규형만: "٣" · "１" · "01" 거부
+
+
+def check_choice_answer(choices: list[str], answer: str) -> None:
+    """객관식 · 확인 문제 공통: 선택지 2개 이상, 정답은 선택지 번호('0'부터)."""
+    if len(choices) < 2:
+        raise ValueError("객관식은 선택지가 2개 이상이어야 합니다.")
+    if not (_CHOICE_INDEX.fullmatch(answer) and int(answer) < len(choices)):
+        raise ValueError("객관식 정답은 선택지 번호('0'부터)여야 합니다.")
+
+
+def not_blank(value: str) -> str:
+    if not value.strip():
+        raise ValueError("비어 있으면 안 됩니다.")
+    return value
 
 
 class IOTest(BaseModel):
@@ -17,6 +33,8 @@ class IOTest(BaseModel):
 
     input: str = Field(default="", max_length=MAX_IO)
     expected_output: str = Field(min_length=1, max_length=MAX_IO)
+
+    _expected_not_blank = field_validator("expected_output")(not_blank)  # 줄 끝 공백은 비교에서 무시(A2)
 
 
 class TestCase(IOTest):
@@ -34,6 +52,16 @@ class Variant(BaseModel):
     choices: list[str] = Field(default_factory=list, max_length=20)
     answer: str = Field(min_length=1)
     accepted_answers: list[str] = Field(default_factory=list)
+
+    _prompt_not_blank = field_validator("prompt")(not_blank)
+
+    @model_validator(mode="after")
+    def _rules_by_type(self) -> "Variant":
+        if self.type == QuestionType.MULTIPLE_CHOICE:
+            check_choice_answer(self.choices, self.answer)
+        elif not self.answer.strip():
+            raise ValueError("확인 문제는 정답이 있어야 합니다.")
+        return self
 
 
 class AnswerKey(BaseModel):
@@ -65,13 +93,12 @@ class QuestionData(BaseModel):
     ai_help: bool = True
     variant: Variant | None = None
 
+    _prompt_not_blank = field_validator("prompt")(not_blank)
+
     @model_validator(mode="after")
     def _rules_by_type(self) -> "QuestionData":
         if self.type == QuestionType.MULTIPLE_CHOICE:
-            if len(self.choices) < 2:
-                raise ValueError("객관식은 선택지가 2개 이상이어야 합니다.")
-            if not (self.answer.isdecimal() and int(self.answer) < len(self.choices)):
-                raise ValueError("객관식 정답은 선택지 번호('0'부터)여야 합니다.")
+            check_choice_answer(self.choices, self.answer)
         elif self.type == QuestionType.SHORT_ANSWER and not self.answer.strip():
             raise ValueError("출력 예측 문항은 정답이 있어야 합니다.")
         elif self.type == QuestionType.CODE and not self.tests:
