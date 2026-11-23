@@ -33,7 +33,7 @@
 ### 백엔드 기반
 - [x] **[백엔드]** KST 시각 · `KstDateTime` · 비밀번호 해시 · Enum · 요금제 · `AiPolicy` — PR #7 (리뷰 대기)
 - [x] **[백엔드]** 테이블 5개(users · classes · class_payments · enrollments · class_members), PK `seq`, 시드 — PR #8 (리뷰 대기)
-- [x] **[백엔드]** ② 인증 — PR #10 (리뷰 대기)
+- [x] **[백엔드]** ② 인증 — PR #10 · #13
   - [x] 에러 형식 `{code, message, trace_id}` + `X-Request-Id`
   - [x] JWT(`JWT_SECRET` 32자 이상) · 교수자 토큰 12시간
   - [x] `POST /auth/signup` · `POST /auth/login`
@@ -41,7 +41,7 @@
   - [x] **[공통]** 각자 로컬 `backend/.env`에 `JWT_SECRET` 추가(없으면 서버가 시작되지 않음 — README 참고)
 
 ### 백엔드 API (시연 경로 순서)
-- [ ] **[백엔드]** ③ 클래스 · 참여 — `feature/class-api` (로컬 완료 · 테스트 통과, PR 전)
+- [x] **[백엔드]** ③ 클래스 · 참여 — `feature/class-api` — PR #11 · #13 (다시 입장은 대기 티켓)
   - [x] 클래스 개설(요금제 상한 복사, 수업 코드 발급·중복 시 재발급, 시작 날짜 → `starts_at`, 만료 = +1년) · 목록 · 상세
   - [x] 클래스 AI 기본값 조회·저장(`/ai-defaults`)
   - [x] 명단 · 입장 방식 조회·저장(`is_use` 토글, 저장 시 대기 중 요청 자동 수락)
@@ -54,14 +54,14 @@
   - [ ] 인젝션 테스트(과제 설명 · 학생 메시지에 지시 심기 → 고정 규칙 유지)
 - [ ] **[백엔드]** C 실행기 — `feature/c-runner`
   - [ ] gcc 실행 이미지(격리 옵션 동일: 네트워크 없음 · 메모리 · 시간 · 비root)
-  - [ ] 테스트 모양 `{input, expected_output}`(표준 입력 → 표준 출력), 컴파일 오류 안내
+  - [ ] 테스트 모양 `{input, expected_output}`(표준 입력 → 표준 출력), 컴파일 오류 안내 — 모양 · 비교 규칙은 PR #16에서 정함(schema D23)
   - [ ] 실행기 테스트 이미지 확인 `:latest` 수정(지금 Docker 테스트 4개가 건너뛰어짐)
-- [ ] **[백엔드]** ④ 과제 · 문항 — `feature/assignment-api`
-  - [ ] `assignments` · `questions` 모델(`answer_key` 분리, `public_tests`)
-  - [ ] **md 과제 추출** `POST /classes/{id}/assignments/extract` — 정해진 양식(샘플 `docs/spec/samples/c-binary-assignment.md`, md 추출 PR에서 테스트 자료로 추가), 규칙(정규식)으로 파싱, 양식 오류 안내
-  - [ ] 초안(샘플·빈 과제) · 저장 · 조회 · 배포 · 결과 공개 · 정책 미리보기 · 지시문 초안
+- [ ] **[백엔드]** ④ 과제 · 문항 — `feature/assignment-api` — ④-1 PR #16 (리뷰 대기), ④-2 남음
+  - [x] `assignments` · `questions` 모델(`answer_key` 분리, `public_tests`) — PR #16, 테스트 모양 `{input, expected_output}`(schema D23)
+  - [ ] **md 과제 추출** `POST /classes/{id}/assignments/extract` — 정해진 양식(샘플 `docs/spec/samples/c-binary-assignment.md`(PR #14)), 규칙(정규식)으로 파싱, 양식 오류 안내
+  - [ ] 초안(샘플·빈 과제) · 저장 · 조회 · 배포 · 결과 공개 · 정책 미리보기 · 지시문 초안 — 빈 초안 · 저장 · 조회 · 배포 · 결과 공개는 PR #16. 샘플 초안 · 정책 미리보기 · 지시문 초안 남음
   - [ ] 학생처럼 졸라보기(`/assignments/simulate`) — 실제 정책 경로로 우회 요청 실행
-  - [ ] 학생용 조회에 `answer_key` 값이 하나도 없는지 테스트
+  - [x] 학생용 조회에 `answer_key` 값이 하나도 없는지 테스트 — PR #16, 불변식 I8
   - [ ] 시드에 C 과제(2진수 변환기·덧셈기·뺄셈기) 추가
 - [ ] **[백엔드]** ⑦ 풀이 · 제출 — `feature/submission-api`
   - [ ] `submissions` · `answers` 모델, 학생 과제 조회 · 내 제출
@@ -81,12 +81,12 @@
 - [ ] **[백엔드]** 요금제 · 결제 목업 `/plans` · `/payments`(실제 PG 연동 없음, 항상 성공) — `/plans` · NEW 결제는 ③에서 구현, 연장(EXTEND) 남음
 
 ### 모델 연결 (11/25까지)
-- [ ] **[NLP]** Qwen 버전·크기 확정(7B~8B 권장), 시연 PC에서 `ollama pull` · 응답 속도 측정
-- [ ] **[백엔드]** Ollama Provider 점검 — Qwen 3이면 thinking 끄기, 타임아웃, `LLM_PROVIDER=ollama`로 채팅 경로 확인
+- [x] **[NLP]** Qwen 버전·크기 확정(7B~8B 권장), 시연 PC에서 `ollama pull` · 응답 속도 측정 — `qwen3:8b`, think 끔 4.1초(M2 Pro) — PR #12
+- [x] **[백엔드]** Ollama Provider 점검 — Qwen 3이면 thinking 끄기, 타임아웃, `LLM_PROVIDER=ollama`로 채팅 경로 확인 — think 끄기 · `<think>` 제거 · 빈 답 고정 문구는 PR #12. 채팅 경로 확인은 ⑥ 뒤
 - [ ] **[NLP]** 분류기 `classify()` 구현 — 계약 [integration-contract.md](../spec/integration-contract.md) (`is_learning_context` · `requests_complete_answer` · `has_self_attempt_evidence` · `uncertain` · `confidence`)
 - [ ] **[백엔드]** 분류기 교체 확인 — `CLASSIFIER=module` 또는 `http`, 계약 테스트, 모호하면 되묻기(I2)
-- [ ] **[NLP]** AI 답변 누출 검사(정답·완성 코드 판별) 구현
-- [ ] **[백엔드]** 누출 검사 연결 — 막히면 초안 대신 안전한 응답, `leak_check` 저장
+- [x] **[NLP]** AI 답변 누출 검사(정답·완성 코드 판별) 구현 — 규칙 기반 `check_leak`, PR #15
+- [ ] **[백엔드]** 누출 검사 연결 — 막히면 초안 대신 안전한 응답, `leak_check` 저장 — `chat_service.reply` 연결 · 막히면 안내문은 PR #15, `leak_check` 저장은 ⑥
 - [ ] **[NLP]** 개념 확인 답변 "AI 작성 점수" 담당·포함 여부 확정(scope.md ②), 하면 구현
 - [ ] **[공통]** 실제 모델로 시연 시나리오 4번(정답 요청 → 힌트만) 통과 확인
 
@@ -103,7 +103,7 @@
   - [ ] 리포트 · 채점 · 결과 공개 · 결제
 
 ### 문서
-- [ ] **[백엔드]** md 과제 양식 문서(`docs/spec/`, scope.md ③) — 샘플 md를 기준으로
+- [ ] **[백엔드]** md 과제 양식 문서(`docs/spec/`, scope.md ③) — 샘플 md를 기준으로 — 기준 샘플은 PR #14
 - [ ] **[공통]** 결정 필요: `AiPolicy` CUSTOM인데 지시문 비어 있음 허용 여부 · 지시문 최대 길이 (PR #7)
 
 ---
