@@ -147,7 +147,16 @@ class AssignmentSummary(BaseModel):
 
 
 class DraftBody(BaseModel):
-    source: Literal["BLANK"]  # SAMPLE은 ④-2(샘플 md 파서)에서
+    source: Literal["BLANK", "SAMPLE"]  # SAMPLE = docs/spec/samples/c-binary-assignment.md를 읽은 초안
+
+
+class PreviewOut(BaseModel):
+    lines: list[str]
+    hint_mode_label: str
+
+
+class PromptDraftOut(BaseModel):
+    prompt: str
 
 
 class PublishOut(BaseModel):

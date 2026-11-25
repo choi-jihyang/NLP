@@ -58,3 +58,16 @@ def test_seed_twice_refuses(db: Session):
         seed(db, today=date(2026, 11, 21))
     assert _count(db, User) == 1 + len(SEED_STUDENT_NOS)
     assert _count(db, ClassRoom) == 1
+
+
+def test_seed_has_published_c_assignment_from_sample(db: Session):
+    from app.core.enums import Language, QuestionType
+    from app.models import Assignment, Question
+
+    klass = seed(db, today=date(2026, 11, 21))
+    assignment = db.scalar(select(Assignment))
+    assert assignment is not None and assignment.class_id == klass.seq
+    assert assignment.language == Language.C and assignment.published_at is not None
+    types = [q.type for q in db.scalars(select(Question).order_by(Question.position))]
+    assert types == [QuestionType.MULTIPLE_CHOICE, QuestionType.SHORT_ANSWER, QuestionType.CODE,
+                     QuestionType.CODE, QuestionType.PROJECT]

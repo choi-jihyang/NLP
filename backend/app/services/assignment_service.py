@@ -12,6 +12,7 @@ from app.core.errors import AppError, ErrorCode
 from app.models import Assignment, ClassRoom, Question, User
 from app.schemas.ai_policy import AiPolicy
 from app.schemas.assignments import AssignmentData, AssignmentSummary
+from app.services import assignment_md
 from app.services.access import approved_count, own_class
 from app.services.question_codec import same_questions, to_columns, to_data
 
@@ -29,6 +30,25 @@ def new_blank_draft(db: Session, teacher: User, class_id: int) -> AssignmentData
     return AssignmentData(
         class_id=klass.seq, title="새 과제", language=Language.C, policy=AiPolicy.model_validate(klass.ai_defaults)
     )
+
+
+def new_sample_draft(db: Session, teacher: User, class_id: int) -> AssignmentData:
+    """샘플 md(C 2진수 과제)를 읽은 초안. AI 정책은 클래스 기본값."""
+    klass = own_class(db, teacher, class_id)
+    return assignment_md.parse(assignment_md.sample_text(), AiPolicy.model_validate(klass.ai_defaults), klass.seq)
+
+
+def extract_draft(db: Session, teacher: User, class_id: int, filename: str, raw: bytes) -> AssignmentData:
+    """올린 md 과제 파일 → 저장 전 초안. 양식 오류는 줄마다 모아 VALIDATION_FAILED 메시지로."""
+    klass = own_class(db, teacher, class_id)
+    try:
+        if not filename.lower().endswith((".md", ".markdown", ".txt")):
+            raise assignment_md.MdFormatError([".md 파일만 올릴 수 있어요 (PDF는 아직 지원하지 않아요)"])
+        return assignment_md.parse(
+            assignment_md.decode(raw), AiPolicy.model_validate(klass.ai_defaults), klass.seq
+        )
+    except assignment_md.MdFormatError as exc:
+        raise AppError(ErrorCode.VALIDATION_FAILED, "과제 파일 양식이 맞지 않아요.\n" + str(exc)) from exc
 
 
 def get_owned(db: Session, teacher: User, assignment_id: int) -> Assignment:
