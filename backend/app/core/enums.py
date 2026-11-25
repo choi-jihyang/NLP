@@ -63,3 +63,15 @@ class QuestionType(StrEnum):
     SHORT_ANSWER = "SHORT_ANSWER"  # 출력 예측
     CODE = "CODE"  # 코드 작성(테스트 실행)
     PROJECT = "PROJECT"  # 간단 제작(교수자 채점)
+
+
+class AnswerStatus(StrEnum):
+    DRAFT = "DRAFT"
+    AWAITING_CHECK = "AWAITING_CHECK"  # 힌트 없이 처음 낸 문항: 개념 확인 답변 대기
+    SUBMITTED = "SUBMITTED"
+
+
+class ConceptStatus(StrEnum):
+    CONFIRMED = "CONFIRMED"
+    NEEDS_WORK = "NEEDS_WORK"
+    UNCLEAR = "UNCLEAR"

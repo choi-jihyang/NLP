@@ -93,14 +93,16 @@
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
 | GET | `/assignments/{assignment_id}/solve` | S | → `StudentAssignment` `{seq, title, course, language, due_at, hint_mode, hint_mode_label, max_hint_steps, external_signal_enabled, questions[{seq, type, points, prompt, code, choices, starter_code, ai_help, ai_enabled, public_tests[{input, expected_output}], hidden_test_count}]}`. 승인된 참여 + 배포된 과제만, 아니면 `FORBIDDEN`(초안 · 없는 과제 포함). 🔒 값 없음(I8) ✅ | `getStudentAssignment` |
-| GET | `/assignments/{assignment_id}/submission` | S | → `Submission` (없으면 만든다) | `getMySubmission` |
-| POST | `/assignments/{assignment_id}/questions/{question_id}/run` | S | `{code}` → `TestResult[]` **공개 테스트만** | `runPublicTests` |
-| PUT | `/assignments/{assignment_id}/answers/{question_id}` | S | `{content}` → `Submission`. 처음 내는 문항이고 힌트 0단계면 `AWAITING_CHECK`, 아니면 `SUBMITTED` | `submitAnswer` |
-| POST | `/assignments/{assignment_id}/answers/{question_id}/concept-check` | S | `{reply, elapsed_ms}` → `Submission`. 붙여넣기는 `/paste-events`(`field = CONCEPT_CHECK`)로만 보낸다 | `answerConceptCheck` |
-| DELETE | `/assignments/{assignment_id}/answers/{question_id}/concept-check` | S | → `Submission` 답 고치러 돌아가기(`DRAFT`). 추가 질문 단계에서는 `CONFLICT` | `cancelConceptCheck` |
-| POST | `/assignments/{assignment_id}/submission/finalize` | S | → `Submission` 최종 제출. 안 낸 문항이 있으면 `CONFLICT` | `finalizeSubmission` |
+| GET | `/assignments/{assignment_id}/submission` | S | → `Submission` `{assignment_id, answers{문항 seq: AnswerState}, finalized, results_released}` (없으면 만든다). `AnswerState` = `{question_id, content, status, submitted_at, submit_count, hint_step, concept_check{questions[], answered} \| null}` ✅ | `getMySubmission` |
+| POST | `/assignments/{assignment_id}/questions/{question_id}/run` | S | `{code}` → `{ok, error, results[{input, expected_output, actual_output, passed, error}]}` **공개 테스트만**. 컴파일 오류면 `ok: false` + `error`. 코드 작성 문항이 아니면 `CONFLICT`, 실행기 없으면 `RUNNER_UNAVAILABLE` ✅ | `runPublicTests` |
+| PUT | `/assignments/{assignment_id}/answers/{question_id}` | S | `{content}` → `Submission`. 처음 내는 문항이고 힌트 0단계면(`concept_check_enabled`일 때) `AWAITING_CHECK`, 아니면 `SUBMITTED`. 제출할 때 자동 채점(🔒 저장만). 객관식은 선택지 번호(`'0'`부터) ✅ | `submitAnswer` |
+| POST | `/assignments/{assignment_id}/answers/{question_id}/concept-check` | S | `{reply, elapsed_ms}` → `Submission`. 붙여넣기는 `/paste-events`(`field = CONCEPT_CHECK`)로만 보낸다(다른 필드는 거부). 기다리는 질문이 없으면 `CONFLICT` ✅ | `answerConceptCheck` |
+| DELETE | `/assignments/{assignment_id}/answers/{question_id}/concept-check` | S | → `Submission` 답 고치러 돌아가기(`DRAFT`). 추가 질문 단계에서는 `CONFLICT`. 다시 제출하면 같은 질문이 이어진다 ✅ | `cancelConceptCheck` |
+| POST | `/assignments/{assignment_id}/submission/finalize` | S | → `Submission` 최종 제출. 안 낸 문항(개념 확인 대기 포함)이 있으면 `CONFLICT`, 마감 뒤 `CONFLICT` ✅ | `finalizeSubmission` |
 
-- 최종 제출 뒤 답 제출·개념 확인·채팅은 `ALREADY_SUBMITTED`.
+- 최종 제출 뒤 답 제출·개념 확인·테스트 실행·채팅은 `ALREADY_SUBMITTED`. 마감 뒤 제출은 `CONFLICT`(결정 C).
+- **채점**(제출 때, 🔒 `answers`에만): 객관식 = 번호 일치, 출력 예측 = 정답 · 인정 답안과 비교(앞뒤 · 줄 끝 공백 무시), 코드 작성 = 공개 + 숨김 테스트 전체 실행 후 **통과 비율만큼 점수(내림)**, 간단 제작 = 교수자 채점. 감점: `PER_STEP` 힌트 단계마다 −1, `PRACTICE` 힌트를 받았으면 0점.
+- 개념 확인 질문은 지금 **유형별 고정 문구**다. AI 작성 점수(scope ②)가 정해지면 점수가 0.7 이상일 때 질문을 하나 더 붙인다(코드 자리 있음).
 - **결과 공개 전 학생 응답에는 정오·점수·숨김 테스트 결과를 넣지 않는다.** `AnswerState`에 해당 필드 자체가 없다.
 
 ### 학습 AI 채팅 (학생)

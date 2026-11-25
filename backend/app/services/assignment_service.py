@@ -3,13 +3,13 @@
 from collections import Counter
 from typing import Any
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.core.clock import now_kst
 from app.core.enums import Language, QuestionType
 from app.core.errors import AppError, ErrorCode
-from app.models import Assignment, ClassRoom, Question, User
+from app.models import Assignment, ClassRoom, Question, Submission, User
 from app.schemas.ai_policy import AiPolicy
 from app.schemas.assignments import AssignmentData, AssignmentSummary
 from app.services.access import approved_count, own_class
@@ -131,6 +131,13 @@ def _kinds(questions: list[Question]) -> str:
     return " · ".join(f"{label} {counts[t]}" for t, label in TYPE_LABEL.items() if counts[t])
 
 
+def _finalized_count(db: Session, assignment_id: int) -> int:
+    query = select(func.count()).select_from(Submission).where(
+        Submission.assignment_id == assignment_id, Submission.finalized_at.is_not(None)
+    )
+    return db.scalar(query) or 0
+
+
 def list_summaries(db: Session, teacher: User, class_id: int) -> list[AssignmentSummary]:
     klass = own_class(db, teacher, class_id)
     students = approved_count(db, klass.seq)
@@ -141,7 +148,7 @@ def list_summaries(db: Session, teacher: User, class_id: int) -> list[Assignment
         AssignmentSummary(
             seq=a.seq, title=a.title, kinds=_kinds(questions_of(db, a.seq)), status=_status(a), due_at=a.due_at,
             hint_mode=AiPolicy.model_validate(a.policy).hint_mode, student_count=students,
-            results_released=a.results_released_at is not None,
+            submitted_count=_finalized_count(db, a.seq), results_released=a.results_released_at is not None,
         )
         for a in assignments
     ]

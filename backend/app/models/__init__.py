@@ -6,6 +6,10 @@ from app.models.class_payment import ClassPayment
 from app.models.class_room import ClassRoom
 from app.models.enrollment import Enrollment
 from app.models.question import Question
+from app.models.submission import Answer, ConceptCheckItem, Submission
 from app.models.user import User
 
-__all__ = ["Assignment", "ClassMember", "ClassPayment", "ClassRoom", "Enrollment", "Question", "User"]
+__all__ = [
+    "Answer", "Assignment", "ClassMember", "ClassPayment", "ClassRoom", "ConceptCheckItem", "Enrollment", "Question",
+    "Submission", "User",
+]
