@@ -3,8 +3,13 @@
 from fastapi import APIRouter
 
 from app.api.deps import DbSession, TeacherUser
+from app.classifier import get_classifier
+from app.core.config import get_settings
+from app.leak_guard import get_leak_guard
+from app.llm import get_llm_provider
 from app.schemas.assignments import AssignmentData, AssignmentSummary, DraftBody, PublishOut, ReleaseOut
 from app.services import assignment_service as svc
+from app.services.simulate_service import SimulationCase, simulate
 
 router = APIRouter(tags=["assignments"])
 
@@ -22,6 +27,13 @@ def create_draft(class_id: int, body: DraftBody, teacher: TeacherUser, db: DbSes
 @router.post("/classes/{class_id}/assignments", status_code=201)
 def create_assignment(class_id: int, body: AssignmentData, teacher: TeacherUser, db: DbSession) -> AssignmentData:
     return svc.assignment_data(db, svc.create_assignment(db, teacher, class_id, body))
+
+
+@router.post("/assignments/simulate")
+async def simulate_attacks(body: AssignmentData, teacher: TeacherUser) -> list[SimulationCase]:
+    """저장 전 초안으로 우회 요청을 실제 정책 경로(분류기 · LLM · 누출 검사)에 보내 본다."""
+    return await simulate(body, get_classifier(), get_llm_provider(), get_leak_guard(),
+                          get_settings().classifier_min_confidence)
 
 
 @router.get("/assignments/{assignment_id}")

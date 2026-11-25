@@ -48,10 +48,10 @@
   - [x] **학생 입장** `POST /enrollments`: 수업 코드 + 학번 → 학생 계정 · 학생 토큰(클래스 만료까지). `CLASS_NOT_STARTED` · `CLASS_FULL` · `CLASS_EXPIRED` · 내보낸 학번 `FORBIDDEN` — 다시 입장은 대기 티켓(교수자 수락 후 토큰, schema D21)
   - [x] 참여 상태 확인 · 기록 동의 · 참여 요청 목록 · 수락·거절 · 학생 내보내기 · 학생 목록 · `/me/classes`
   - [x] 권한 테스트(I7): 남의 클래스 · 다른 학생 데이터 접근 → `FORBIDDEN`
-- [ ] **[백엔드]** ⑤ 프롬프트 조립 — `feature/prompt-builder`
-  - [ ] `ResponseMode` 대문자 + `OFFER_CHOICES`
-  - [ ] `build_from_config`: 고정 규칙 → 정책 지시 → 교수자 지시 → `<과제 설명>` → `<알려 주면 안 되는 값>` ([chat-policy.md](../spec/chat-policy.md))
-  - [ ] 인젝션 테스트(과제 설명 · 학생 메시지에 지시 심기 → 고정 규칙 유지)
+- [x] **[백엔드]** ⑤ 프롬프트 조립 — `feature/prompt-builder` (리뷰 대기)
+  - [x] `ResponseMode` 대문자 + `OFFER_CHOICES` · `USAGE_LIMIT`, `HelpChoice`
+  - [x] `build_from_config`: 고정 규칙 → 정책 지시 → 교수자 지시 → `<과제 설명>` → `<알려 주면 안 되는 값>` ([chat-policy.md](../spec/chat-policy.md))
+  - [x] 인젝션 테스트(과제 설명 · 교수자 지시 · 정답 값에 지시·태그 심기 → 고정 규칙 유지, 블록 탈출 불가)
 - [x] **[백엔드]** C 실행기 — `feature/c-runner` (리뷰 대기)
   - [x] gcc 실행 이미지(격리 옵션 동일: 네트워크 없음 · 메모리 · 시간 · 비root)
   - [x] 테스트 모양 `{input, expected_output}`(표준 입력 → 표준 출력), 컴파일 오류 안내 — 모양 · 비교 규칙은 PR #16에서 정함(schema D23)
@@ -61,7 +61,8 @@
   - [x] `assignments` · `questions` 모델(`answer_key` 분리, `public_tests`) — PR #16, 테스트 모양 `{input, expected_output}`(schema D23)
   - [ ] **md 과제 추출** `POST /classes/{id}/assignments/extract` — 정해진 양식(샘플 `docs/spec/samples/c-binary-assignment.md`(PR #14)), 규칙(정규식)으로 파싱, 양식 오류 안내
   - [ ] 초안(샘플·빈 과제) · 저장 · 조회 · 배포 · 결과 공개 · 정책 미리보기 · 지시문 초안 — 빈 초안 · 저장 · 조회 · 배포 · 결과 공개는 PR #16. 샘플 초안 · 정책 미리보기 · 지시문 초안 남음
-  - [ ] 학생처럼 졸라보기(`/assignments/simulate`) — 실제 정책 경로로 우회 요청 실행
+  - [x] 학생처럼 졸라보기(`/assignments/simulate`) — 실제 정책 경로로 우회 요청 실행 — `feature/assignment-simulate` (리뷰 대기)
+  - [ ] **[NLP]** 누출 검사가 C 코드를 못 막음(졸라보기로 발견, `test_simulate.py` xfail) — 시연 과제가 C라 우선 수정
   - [x] 학생용 조회에 `answer_key` 값이 하나도 없는지 테스트 — PR #16, 불변식 I8
   - [ ] 시드에 C 과제(2진수 변환기·덧셈기·뺄셈기) 추가
 - [x] **[백엔드]** ⑦ 풀이 · 제출 — `feature/submission-api` (리뷰 대기, `feature/c-runner` 위에 쌓음)

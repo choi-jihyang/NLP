@@ -11,9 +11,9 @@
 ## ThinkGuard 불변식
 | # | 불변식 | 확인 위치 |
 |---|---|---|
-| I1 | 완성 답안 요청 + 시도 근거 없음 → 응답 정책은 항상 "힌트만" | `tests/test_policy.py` |
+| I1 | 완성 답안 요청 + 시도 근거 없음 → LLM을 부르면 응답 정책은 항상 "힌트만"(먼저 도움 방식 고르기 `OFFER_CHOICES`, 무엇을 골라도 `HINT_ONLY`) | `tests/test_policy.py` |
 | I2 | 분류가 모호하면(uncertain 또는 confidence 미달) LLM을 부르지 않고 "이미 시도한 부분이 있나요?"를 되묻는다 | `tests/test_policy.py`, `tests/test_chat_service.py` |
-| I3 | LLM에 가는 시스템 프롬프트에는 항상 고정 규칙(정답 금지, 시도 지어내기 금지)이 들어간다 | `tests/test_chat_service.py` |
+| I3 | LLM에 가는 시스템 프롬프트에는 항상 고정 규칙(정답 금지, 시도 지어내기 금지)이 **맨 앞에** 들어간다 | `tests/test_chat_service.py`, `tests/test_prompt_builder.py` |
 | I4 | 시도 근거는 **학생이 보낸 메시지**에서만 찾는다. AI 자신의 이전 답변은 근거가 아니다 | `tests/test_classifier_stub.py` |
 | I5 | 붙여넣기 이벤트에는 길이·시점만 저장되고 내용 컬럼은 없다 | 스키마 리뷰 (구현 시 테스트 추가) |
 | I6 | 사용량 상한에 도달하면 LLM을 부르지 않는다 | 구현 시 테스트 추가 |
