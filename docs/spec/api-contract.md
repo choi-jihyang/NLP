@@ -143,7 +143,7 @@
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
 | GET | `/plans` | 공개 | → `Plan[]` `{code, name, student_limit, price}` ✅ | `listPlans` |
-| POST | `/payments` | T | `{plan, kind: "NEW"}` → **201** `{payment_seq, plan, student_limit, amount}` 클래스 미연결 이용권(schema D22). 연장(`EXTEND`)은 아직 없음 ✅ | `payMock` |
+| POST | `/payments` | T | `{plan, kind: "NEW"}` → **201** `{payment_seq, plan, student_limit, amount}` 클래스 미연결 이용권(schema D22). `{plan, kind: "EXTEND", class_id}` → **201** `{…, class_id, expires_at}` 내 클래스 1년 연장 · 요금제 변경(지금 학생 수보다 작으면 `CONFLICT`, 남의 클래스 `FORBIDDEN`). `class_id`는 EXTEND에만 ✅ | `payMock` |
 
 - **실제 결제 대행(PG) 연동 코드는 넣지 않는다.** 항상 성공으로 처리한다.
 - 요금제(수익화 기획 기준, 클래스 하나 · 1년): `SMALL` 학생 50명 이하 90,000원 / `MEDIUM` 100명 이하 150,000원 / `LARGE` 200명 이하 250,000원. 기능은 같고 학생 수 상한만 다르다. 학생은 무료.

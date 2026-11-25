@@ -80,7 +80,7 @@
   - [x] LLM에는 최근 대화 N개만(`CHAT_HISTORY_TURNS`=8), 분류 결과·누출 검사 결과 저장, `DEMO_TRACE`
 - [x] **[백엔드]** 붙여넣기 기록 `POST /paste-events`(길이·시점만, 내용 필드 거부 — I5) — `feature/chat-api`
 - [ ] **[백엔드]** 이해 확인 · 내 리포트 · 교수자 반 리포트 · 간단 제작 채점 · 학생별 기록 — **간단 제작 채점만 완료**(`feature/grading-api`, 리뷰 대기). 이해 확인 · 리포트 · 학생별 기록 남음
-- [ ] **[백엔드]** 요금제 · 결제 목업 `/plans` · `/payments`(실제 PG 연동 없음, 항상 성공) — `/plans` · NEW 결제는 ③에서 구현, 연장(EXTEND) 남음
+- [x] **[백엔드]** 요금제 · 결제 목업 `/plans` · `/payments`(실제 PG 연동 없음, 항상 성공) — `/plans` · NEW 결제는 ③, 연장(EXTEND)은 `feature/payment-extend` (리뷰 대기)
 
 ### 모델 연결 (11/25까지)
 - [x] **[NLP]** Qwen 버전·크기 확정(7B~8B 권장), 시연 PC에서 `ollama pull` · 응답 속도 측정 — `qwen3:8b`, think 끔 4.1초(M2 Pro) — PR #12

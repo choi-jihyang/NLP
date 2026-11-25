@@ -3,7 +3,7 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.core.enums import JoinMode, PlanCode
 from app.schemas.enrollments import normalize_student_no
@@ -18,7 +18,15 @@ class PlanOut(BaseModel):
 
 class PaymentCreate(BaseModel):
     plan: PlanCode
-    kind: Literal["NEW"]  # 연장(EXTEND)은 이번 범위 밖
+    kind: Literal["NEW", "EXTEND"]
+    class_id: int | None = None
+    """EXTEND일 때 연장할 내 클래스. NEW에는 쓰지 않는다"""
+
+    @model_validator(mode="after")
+    def _class_for_extend(self) -> "PaymentCreate":
+        if (self.kind == "EXTEND") != (self.class_id is not None):
+            raise ValueError("연장(EXTEND)에만 class_id를 보냅니다.")
+        return self
 
 
 class PaymentOut(BaseModel):
@@ -26,6 +34,9 @@ class PaymentOut(BaseModel):
     plan: PlanCode
     student_limit: int
     amount: int
+    class_id: int | None = None
+    expires_at: datetime | None = None
+    """EXTEND: 늘어난 만료 시각"""
 
 
 class ClassCreate(BaseModel):
