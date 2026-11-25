@@ -5,7 +5,10 @@
 
 from dataclasses import dataclass
 
+import httpx
+
 from app.classifier.base import ClassificationResult, Classifier
+from app.core.errors import AppError, ErrorCode
 from app.leak_guard.base import LeakGuard
 from app.llm.base import LLMProvider
 from app.schemas.chat import ChatTurn
@@ -37,7 +40,10 @@ async def reply(
     context: prompt_builder.PromptContext | None = None,
 ) -> ChatReply:
     """`context`가 있으면 build_from_config로, 없으면 base_prompt로 시스템 프롬프트를 만든다."""
-    result = await classifier.classify(message, history)
+    try:
+        result = await classifier.classify(message, history)
+    except httpx.HTTPError as exc:  # http 분류기 서버가 꺼져 있거나 오류
+        raise AppError(ErrorCode.CLASSIFIER_UNAVAILABLE) from exc
     decision = policy.decide(result, min_confidence, choice)
 
     if decision.fixed_reply is not None:
@@ -47,7 +53,10 @@ async def reply(
         system = prompt_builder.build_from_config(context, decision.directive)
     else:
         system = prompt_builder.compose(base_prompt, decision.directive)
-    draft = await llm.generate(system, [*history, ChatTurn(role="student", content=message)])
+    try:
+        draft = await llm.generate(system, [*history, ChatTurn(role="student", content=message)])
+    except httpx.HTTPError as exc:  # Ollama가 꺼져 있거나 시간 초과
+        raise AppError(ErrorCode.LLM_UNAVAILABLE) from exc
     if not draft.strip():
         # 생각 태그만 내거나 빈 답을 내면 학생에게 빈 말풍선 대신 시도를 묻는 고정 문구를 보낸다
         return ChatReply(policy.ASK_ATTEMPT_REPLY, decision.mode, result, used_llm=True)

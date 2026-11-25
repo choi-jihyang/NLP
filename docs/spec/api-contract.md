@@ -82,7 +82,7 @@
 | POST | `/assignments/{assignment_id}/release` | T | → `{results_released: true}` 점수·정답·내 리포트를 학생에게 공개. 배포 전이면 `CONFLICT` ✅ | `releaseResults` |
 | POST | `/assignments/preview` | T | `Assignment` → `{lines[], hint_mode_label}` "학생은 이렇게 경험해요" (프롬프트 원문 아님) | `getPolicyPreview` |
 | POST | `/assignments/prompt-draft` | T | `Assignment` → `{prompt}` 지시문 직접 작성의 시작 문안 | `getPromptDraft` (응답에서 `prompt`를 꺼냄) |
-| POST | `/assignments/simulate` | T | `Assignment` → `SimulationCase[]` 우회 요청을 보내 본 결과 | `simulateAttacks` |
+| POST | `/assignments/simulate` | T | `Assignment` → `SimulationCase[]` `{question_index, message, classification, attempt, leak_blocked, external_signals, response_mode, reply}`. 실제 정책 경로(분류기 · LLM · 누출 검사)로 우회 요청 최대 6개를 보낸다. 도움 방식 고르기가 나오면 `ORIGINAL`을 고른 것으로 한 번 더 보낸다. 분류기 · LLM이 꺼져 있으면 503 ✅ | `simulateAttacks` |
 
 - preview · prompt-draft · simulate는 **저장 전 초안**을 받으므로 과제 id 없는 경로를 쓴다.
 - `Assignment.policy`(`AiPolicy`)에 `usage_limit`(학생 1명 · 이 과제 AI 메시지 수, 기본 30)를 둔다.

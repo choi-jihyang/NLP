@@ -60,7 +60,8 @@
   - [x] `assignments` · `questions` 모델(`answer_key` 분리, `public_tests`) — PR #16, 테스트 모양 `{input, expected_output}`(schema D23)
   - [ ] **md 과제 추출** `POST /classes/{id}/assignments/extract` — 정해진 양식(샘플 `docs/spec/samples/c-binary-assignment.md`(PR #14)), 규칙(정규식)으로 파싱, 양식 오류 안내
   - [ ] 초안(샘플·빈 과제) · 저장 · 조회 · 배포 · 결과 공개 · 정책 미리보기 · 지시문 초안 — 빈 초안 · 저장 · 조회 · 배포 · 결과 공개는 PR #16. 샘플 초안 · 정책 미리보기 · 지시문 초안 남음
-  - [ ] 학생처럼 졸라보기(`/assignments/simulate`) — 실제 정책 경로로 우회 요청 실행
+  - [x] 학생처럼 졸라보기(`/assignments/simulate`) — 실제 정책 경로로 우회 요청 실행 — `feature/assignment-simulate` (리뷰 대기)
+  - [ ] **[NLP]** 누출 검사가 C 코드를 못 막음(졸라보기로 발견, `test_simulate.py` xfail) — 시연 과제가 C라 우선 수정
   - [x] 학생용 조회에 `answer_key` 값이 하나도 없는지 테스트 — PR #16, 불변식 I8
   - [ ] 시드에 C 과제(2진수 변환기·덧셈기·뺄셈기) 추가
 - [ ] **[백엔드]** ⑦ 풀이 · 제출 — `feature/submission-api`

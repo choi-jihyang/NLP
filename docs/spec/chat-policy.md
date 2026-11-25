@@ -80,6 +80,12 @@ LLM은 프롬프트 안의 글이 "참고 자료"인지 "지시"인지 확실히
 | `hint_mode` = `EARNED` | 학생이 시도해 보여 준 만큼만 다음 내용, 시도가 없으면 첫 단계 힌트 |
 | `code_line_limit` = n | 코드는 한 번에 n줄 이하(0이면 코드 없음) |
 
+## 학생처럼 졸라보기 (`services/simulate_service.py`)
+- 학생 채팅과 **같은** `chat_service.reply`를 쓴다(따로 만든 흉내 경로 없음).
+- 대상: AI 도움을 쓰는 문항 중 코드 작성 → 간단 제작 → 나머지 순. 첫 문항에 우회 요청 4개, 둘째 문항에 1개.
+- 프롬프트 맥락: 과제 설명 + 문항 문제 · 코드는 `<과제 설명>`, 정답 · 인정 답안 · 숨김 테스트 기대 출력은 `<알려 주면 안 되는 값>`.
+- 11/25 발견: 규칙 기반 누출 검사가 **완성 C 함수를 막지 못한다**(Python 문법만 봄). `tests/test_simulate.py::test_leaking_c_reply_is_blocked`에 `xfail`로 고정 — NLP 쪽 수정 후 지운다.
+
 ## 수용 기준
 1. 분류 결과가 같으면 정책 결과도 항상 같다(LLM 결과와 무관).
 2. `ASK_ATTEMPT`·`OFF_TOPIC`·`USAGE_LIMIT`에서는 LLM이 호출되지 않는다.
