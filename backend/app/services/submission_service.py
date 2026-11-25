@@ -8,6 +8,7 @@
 """
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.clock import now_kst
@@ -48,9 +49,9 @@ def _context(db: Session, student: User, assignment_id: int) -> tuple[Assignment
         Submission.assignment_id == assignment.seq, Submission.enrollment_id == enrollment.seq
     ))
     if sub is None:
-        sub = Submission(assignment_id=assignment.seq, enrollment_id=enrollment.seq)
-        db.add(sub)
-        db.flush()
+        where = (Submission.assignment_id == assignment.seq, Submission.enrollment_id == enrollment.seq)
+        new = Submission(assignment_id=assignment.seq, enrollment_id=enrollment.seq)
+        sub = _create_once(db, new, lambda: db.scalar(select(Submission).where(*where)))
     return assignment, sub
 
 
@@ -61,12 +62,30 @@ def _question(db: Session, assignment: Assignment, question_id: int) -> Question
     return q
 
 
+def _create_once(db: Session, row, find):  # noqa: ANN001, ANN202
+    """처음 활동할 때 행을 만든다. 같은 순간 들어온 다른 요청이 먼저 만들었으면(UNIQUE) 그 행을 쓴다.
+
+    화면은 과제를 열 때 제출 · 채팅 요청을 동시에 보내므로 경쟁이 실제로 난다(11/26 화면 연결 때 500 발견).
+    """
+    try:
+        with db.begin_nested():
+            db.add(row)
+            db.flush()
+        return row
+    except IntegrityError:
+        existing = find()
+        if existing is None:
+            raise
+        return existing
+
+
 def _answer(db: Session, sub: Submission, q: Question) -> Answer:
-    a = db.scalar(select(Answer).where(Answer.submission_id == sub.seq, Answer.question_id == q.seq))
+    def find() -> Answer | None:
+        return db.scalar(select(Answer).where(Answer.submission_id == sub.seq, Answer.question_id == q.seq))
+
+    a = find()
     if a is None:
-        a = Answer(submission_id=sub.seq, question_id=q.seq)
-        db.add(a)
-        db.flush()
+        a = _create_once(db, Answer(submission_id=sub.seq, question_id=q.seq), find)
     return a
 
 

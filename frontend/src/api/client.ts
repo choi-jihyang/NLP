@@ -65,7 +65,7 @@ export const del = <T>(path: string) => api<T>(path, { method: 'DELETE' })
 export const sid = (seq: number | null | undefined): string => (seq == null ? 'new' : String(seq))
 export const nid = (id: string): number => {
   const n = Number(id)
-  if (!Number.isInteger(n)) throw new ApiError(400, 'VALIDATION_FAILED', `잘못된 id: ${id}`)
+  if (!id || !Number.isInteger(n) || n <= 0) throw new ApiError(400, 'VALIDATION_FAILED', `잘못된 id: ${id}`)
   return n
 }
 

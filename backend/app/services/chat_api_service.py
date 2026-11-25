@@ -30,6 +30,12 @@ from app.services.simulate_service import classification_label
 from app.services.submission_service import _answer, _context, _question
 
 _HINT_MODES = (ResponseMode.HINT_ONLY, ResponseMode.NEXT_STEP)
+CHOICE_TEXT = {
+    HelpChoice.FIRST_HINT: "첫 힌트만 받기",
+    HelpChoice.FEEDBACK: "내가 짠 코드 피드백 받기",
+    HelpChoice.ORIGINAL: "원래 질문 그대로 보내기",
+}
+"""도움 방식을 고른 학생 턴은 메시지가 비어 있어서 고른 방식 이름으로 보여 준다(화면 버튼 문구와 같음)"""
 
 
 # ---------- 맥락 ----------
@@ -83,7 +89,8 @@ def _state(db: Session, assignment: Assignment, sub: Submission, answer: Answer 
     for m in _messages(db, answer) if answer else []:
         if m.role is ChatRole.STUDENT:
             last_student = m
-            turns.append(ChatTurnOut(role=m.role, text=m.content, response_mode=None))
+            text = m.content or (CHOICE_TEXT[m.help_choice] if m.help_choice else "")
+            turns.append(ChatTurnOut(role=m.role, text=text, response_mode=None))
         else:
             turns.append(ChatTurnOut(role=m.role, text=m.content, response_mode=m.response_mode,
                                      trace=_trace(last_student, m)))

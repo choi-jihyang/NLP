@@ -74,7 +74,8 @@ def test_prompt_has_fixed_rules_first_and_hidden_values_only_in_secret_block():
         assert system.startswith(FIXED_RULES)
         before_secret = system.split(f"<{SECRET_TAG}>")[0]
         assert "SECRET-HIDDEN-OUT" not in before_secret
-        assert "SECRET-HIDDEN-OUT" in system  # 숨김 기대 출력은 알려 주면 안 되는 값 블록에만
+        if "[이 문항]\n변환기" in system:  # 코드 작성 문항 맥락이면 숨김 기대 출력은 비밀 블록에만 있다
+            assert "SECRET-HIDDEN-OUT" in system
         assert all("SECRET" not in m.content for m in messages)  # 학생 쪽 메시지에는 없다
 
 

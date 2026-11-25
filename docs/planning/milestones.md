@@ -93,16 +93,17 @@
 - [ ] **[공통]** 실제 모델로 시연 시나리오 4번(정답 요청 → 힌트만) 통과 확인
 
 ### 프론트 연결
-- [ ] **[프론트]** `client.ts`: 토큰 저장 · `Authorization: Bearer` · 에러 `{code, message}`로 분기 — 로그인 API는 PR #10에서 사용 가능(가입은 201)
-- [ ] **[프론트]** 타입 변경: id → `seq: number`, `alias` → `student_no`, 명단 `{student_no, is_use}[]`, 클래스 개설 `starts_on`, `AiPolicy.usage_limit`, 개념 확인·채팅 요청 `pasted` 제거
-- [ ] **[프론트]** 클래스 개설 화면에 시작 날짜 선택
-- [ ] **[프론트]** 과제 파일 올리기: `.md`만 받고 실제 파일 전송(`multipart`)
-- [ ] **[프론트]** 백엔드 API가 생기는 순서대로 `api/<도메인>.ts`의 mock → 실제 호출 교체, 교체한 mock 코드 삭제
-  - [ ] 인증 · 클래스 · 참여 · 명단
-  - [ ] 과제 만들기 · 추출 · 배포
-  - [ ] 풀이 · 제출 · 테스트 실행 · 개념 확인 · 이해 확인
-  - [ ] 채팅 · 붙여넣기
-  - [ ] 리포트 · 채점 · 결과 공개 · 결제
+- [x] **[프론트]** `client.ts`: 토큰 저장(탭마다 sessionStorage) · `Authorization: Bearer` · 에러 `{code, message}` → `ApiError` — `feature/backend-m2`
+- [x] **[프론트]** 타입 변경 — **화면 타입은 그대로 두고 `api/*.ts` 안에서 변환**(seq ↔ id, `student_no` ↔ `alias`, 명단 is_use, 언어 표기, 테스트 `{input, expected_output}` ↔ `{call, expected}`), `pasted`는 `/paste-events`로. 화면 타입 이름 정리는 PR 논의
+- [ ] **[프론트]** 클래스 개설 화면에 시작 날짜 선택 — 지금은 오늘 시작으로 고정(api에서)
+- [x] **[프론트]** 과제 파일 올리기: `.md`만 받고 실제 파일 전송(`multipart`)
+- [x] **[프론트]** `api/<도메인>.ts`의 mock → 실제 호출 교체, mock 코드 삭제
+  - [x] 인증 · 클래스 · 참여 · 명단
+  - [x] 과제 만들기 · 추출 · 배포
+  - [x] 풀이 · 제출 · 테스트 실행 · 개념 확인 · 이해 확인
+  - [x] 채팅 · 붙여넣기
+  - [x] 리포트 · 채점 · 결과 공개 · 결제
+- [x] **[공통]** 실제 브라우저로 교수자 · 학생 화면 점검(시드 + Docker 실행기): 페이지 오류 0, 학생 흐름(입장 → C 테스트 실행 → 컴파일 오류 → 통과 → AI 도움 고르기 → 제출) 통과
 
 ### 문서
 - [x] **[백엔드]** md 과제 양식 문서(`docs/spec/`, scope.md ③) — [assignment-md-format.md](../spec/assignment-md-format.md), 기준 샘플은 PR #14

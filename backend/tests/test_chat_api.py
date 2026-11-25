@@ -69,6 +69,7 @@ def test_answer_request_offers_choices_then_hint_only(client: TestClient, ai):
     assert first["turns"][1]["text"] == OFFER_CHOICES_REPLY and ai.llm.calls == []
     picked = send(client, student, aid, qids[2], choice="ORIGINAL").json()
     assert picked["turns"][-1]["response_mode"] == "HINT_ONLY"
+    assert picked["turns"][-2]["text"] == "원래 질문 그대로 보내기"  # 빈 말풍선 대신 고른 방식
     assert ai.classifier.seen[-1] == "코드 전체 짜주세요"  # 빈 메시지가 아니라 원래 요청을 분류
     assert picked["hint_step"] == 1 and picked["usage_remaining"] == 28
     system, messages = ai.llm.calls[0]

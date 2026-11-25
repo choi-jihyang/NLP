@@ -311,3 +311,34 @@ def test_me_classes_lists_published_assignments_with_status(client: TestClient, 
     client.post(f"/api/assignments/{aid}/release", headers=teacher)
     row = client.get("/api/me/classes", headers=student).json()[0]["assignments"][0]
     assert row["status"] == "RELEASED" and row["score_text"].startswith("40/75점")
+
+
+def test_concurrent_first_requests_do_not_500(tmp_path):
+    """과제를 처음 열 때 제출 · 채팅 조회가 동시에 와도 submissions/answers UNIQUE 충돌로 500이 나지 않는다."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    from sqlalchemy.orm import sessionmaker
+
+    from app.db.init_db import init_db
+    from app.db.session import create_db_engine, get_db
+    from app.main import app
+
+    engine = create_db_engine(f"sqlite:///{tmp_path / 'race.db'}")
+    init_db(engine)
+    make = sessionmaker(engine, expire_on_commit=False)
+
+    def per_request():
+        with make() as s:
+            yield s
+
+    app.dependency_overrides[get_db] = per_request
+    try:
+        client = TestClient(app, raise_server_exceptions=False)
+        _, student, aid, qids = setup(client)
+        urls = [f"{base(aid)}/submission"] + [f"{base(aid)}/questions/{q}/chat" for q in qids] * 2
+        with ThreadPoolExecutor(8) as pool:
+            codes = list(pool.map(lambda u: client.get(u, headers=student).status_code, urls))
+        assert codes == [200] * len(urls)
+    finally:
+        app.dependency_overrides.clear()
+        engine.dispose()

@@ -6,7 +6,7 @@ import { getChat, sendChat, type ChatState, type HelpChoice } from '../api/chat'
 export function useChat(assignmentId: string, questionId: string) {
   const client = useQueryClient()
   const key = ['chat', assignmentId, questionId]
-  const query = useQuery({ queryKey: key, queryFn: () => getChat(assignmentId, questionId) })
+  const query = useQuery({ queryKey: key, queryFn: () => getChat(assignmentId, questionId), enabled: !!questionId })
   const send = useMutation({
     mutationFn: (body: { message: string; choice?: HelpChoice; pasted?: boolean }) =>
       sendChat({ assignment_id: assignmentId, question_id: questionId, ...body }),

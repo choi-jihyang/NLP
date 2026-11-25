@@ -87,7 +87,7 @@ export default function StepLoad({ draft, loaded, loading, fileName, error, onCh
         </div>
       )}
       {error && <p className="error-text">{error.message}</p>}
-      <p className="note">예시 데이터에서는 어떤 파일을 올려도 샘플 과제(반복문과 리스트 5문항, Python)를 불러와요.</p>
+      <p className="note">정해진 양식(docs/spec/assignment-md-format.md)의 .md 파일만 읽어요. 양식이 다르면 틀린 곳을 알려 줘요.</p>
       <div className="spread">
         <span />
         <button className="btn primary" disabled={!loaded || loading} onClick={onNext}>문항 확인하기</button>

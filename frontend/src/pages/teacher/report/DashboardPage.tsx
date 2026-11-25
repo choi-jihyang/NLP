@@ -29,7 +29,7 @@ export default function DashboardPage() {
       <div className="spread">
         <h2>{r.title} · 반 리포트</h2>
         <div className="row">
-          <span className="chip">예시 데이터 · 가상 학급 {r.submitted_count}명</span>
+          <span className="chip">최종 제출 {r.submitted_count}명 기준</span>
           {hasProject && <Link className="btn sm primary" to={`${base}/assignments/${assignmentId}/grading`}>간단 제작 채점</Link>}
         </div>
       </div>

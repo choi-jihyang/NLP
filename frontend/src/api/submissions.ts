@@ -94,18 +94,30 @@ type RunOut = {
   results: { input: string; expected_output: string; actual_output: string | null; passed: boolean; error: string | null }[]
 }
 
-const toSubmission = (s: SubmissionOut): Submission => ({
-  assignment_id: sid(s.assignment_id),
-  finalized: s.finalized,
-  results_released: s.results_released,
-  answers: Object.fromEntries(
-    Object.entries(s.answers).map(([qid, a]) => [qid, { ...a, question_id: sid(a.question_id) }]),
-  ),
-})
+/** 아직 손대지 않은 문항은 서버에 답이 없다 → 시작 코드가 든 빈 답(DRAFT)으로 채운다(화면은 모든 문항의 답을 기대) */
+const starters = new Map<string, Record<string, string>>()
+
+const toSubmission = async (s: SubmissionOut): Promise<Submission> => {
+  const aid = sid(s.assignment_id)
+  if (!starters.has(aid)) {
+    const a = await getStudentAssignment(aid)
+    starters.set(aid, Object.fromEntries(a.questions.map((q) => [q.id, q.starter_code])))
+  }
+  const blank = (qid: string): AnswerState => ({
+    question_id: qid, content: starters.get(aid)?.[qid] ?? '', status: 'DRAFT', submitted_at: null, hint_step: 0,
+    concept_check: null,
+  })
+  const answers: Record<string, AnswerState> = Object.fromEntries(
+    Object.keys(starters.get(aid) ?? {}).map((qid) => [qid, blank(qid)]),
+  )
+  for (const [qid, a] of Object.entries(s.answers)) answers[qid] = { ...a, question_id: sid(a.question_id) }
+  return { assignment_id: aid, finalized: s.finalized, results_released: s.results_released, answers }
+}
 
 const base = (assignmentId: string) => `/assignments/${nid(assignmentId)}`
 
-export const getStudentAssignment = async (assignmentId: string): Promise<StudentAssignment> => {
+export async function getStudentAssignment(assignmentId: string): Promise<StudentAssignment> {
+
   const { seq, language, questions, ...a } = await get<StudentAssignmentOut>(`${base(assignmentId)}/solve`)
   return {
     ...a,

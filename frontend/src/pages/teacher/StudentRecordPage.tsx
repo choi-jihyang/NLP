@@ -36,7 +36,7 @@ export default function StudentRecordPage() {
         </label>
         <Link className="btn sm" to={`${base}/dashboard?assignment=${assignmentId}`}>반 리포트로</Link>
       </div>
-      <p className="flow">학생에게는 담당 교수자가 이 기록을 볼 수 있다고 첫 접속 때 안내해요. 예시 데이터에서는 모든 학생이 같은 기록으로 보여요.</p>
+      <p className="flow">학생에게는 담당 교수자가 이 기록을 볼 수 있다고 첫 접속 때 안내해요.</p>
       <div className="figs">
         <div className="fig">
           <span className="label">원문제 점수</span>

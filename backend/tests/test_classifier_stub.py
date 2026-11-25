@@ -46,3 +46,23 @@ def test_unmatched_message_is_uncertain():
 
 def test_off_topic():
     assert not classify("오늘 날씨 어때?").is_learning_context
+
+
+import pytest  # noqa: E402
+
+
+@pytest.mark.parametrize("message", [
+    "코드 전체 짜주세요",  # 시연 시나리오 4번 문장
+    "print_binary 코드 전체 짜주세요",
+    "코드 짜주세요",
+    "이거 풀어주세요",
+    "완성 코드 보여 주세요",
+    "코드 통째로 써주세요",
+])
+def test_polite_and_reordered_answer_requests(message):
+    import asyncio
+
+    from app.classifier.keyword_stub import KeywordStubClassifier
+
+    r = asyncio.run(KeywordStubClassifier().classify(message, []))
+    assert r.requests_complete_answer and not r.uncertain
