@@ -33,14 +33,20 @@ async def reply(
     llm: LLMProvider,
     leak_guard: LeakGuard,
     min_confidence: float = 0.5,
+    choice: policy.HelpChoice | None = None,
+    context: prompt_builder.PromptContext | None = None,
 ) -> ChatReply:
+    """`context`가 있으면 build_from_config로, 없으면 base_prompt로 시스템 프롬프트를 만든다."""
     result = await classifier.classify(message, history)
-    decision = policy.decide(result, min_confidence)
+    decision = policy.decide(result, min_confidence, choice)
 
     if decision.fixed_reply is not None:
         return ChatReply(decision.fixed_reply, decision.mode, result, used_llm=False)
 
-    system = prompt_builder.compose(base_prompt, decision.directive)
+    if context is not None:
+        system = prompt_builder.build_from_config(context, decision.directive)
+    else:
+        system = prompt_builder.compose(base_prompt, decision.directive)
     draft = await llm.generate(system, [*history, ChatTurn(role="student", content=message)])
     if not draft.strip():
         # 생각 태그만 내거나 빈 답을 내면 학생에게 빈 말풍선 대신 시도를 묻는 고정 문구를 보낸다

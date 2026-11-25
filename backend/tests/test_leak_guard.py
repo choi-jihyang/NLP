@@ -14,7 +14,7 @@ from app.leak_guard.module import ModuleLeakGuard
 from app.llm.mock import MockProvider
 from app.schemas.chat import ChatTurn
 from app.services import chat_service
-from app.services.policy import LEAK_BLOCKED_REPLY, ResponseMode
+from app.services.policy import LEAK_BLOCKED_REPLY, HelpChoice, ResponseMode
 
 GUARD = ModuleLeakGuard("thinkguard_nlp.leak:check_leak")
 
@@ -34,7 +34,7 @@ class FixedClassifier(Classifier):
 def reply(draft, mode=HINT_ONLY, history=None, guard: LeakGuard = GUARD):
     return asyncio.run(
         chat_service.reply("정답 코드 주세요", history or [], "기본 프롬프트", FixedClassifier(**mode),
-                           MockProvider(draft), guard)
+                           MockProvider(draft), guard, choice=HelpChoice.ORIGINAL)
     )
 
 

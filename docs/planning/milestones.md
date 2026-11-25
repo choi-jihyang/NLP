@@ -48,10 +48,10 @@
   - [x] **학생 입장** `POST /enrollments`: 수업 코드 + 학번 → 학생 계정 · 학생 토큰(클래스 만료까지). `CLASS_NOT_STARTED` · `CLASS_FULL` · `CLASS_EXPIRED` · 내보낸 학번 `FORBIDDEN` — 다시 입장은 대기 티켓(교수자 수락 후 토큰, schema D21)
   - [x] 참여 상태 확인 · 기록 동의 · 참여 요청 목록 · 수락·거절 · 학생 내보내기 · 학생 목록 · `/me/classes`
   - [x] 권한 테스트(I7): 남의 클래스 · 다른 학생 데이터 접근 → `FORBIDDEN`
-- [ ] **[백엔드]** ⑤ 프롬프트 조립 — `feature/prompt-builder`
-  - [ ] `ResponseMode` 대문자 + `OFFER_CHOICES`
-  - [ ] `build_from_config`: 고정 규칙 → 정책 지시 → 교수자 지시 → `<과제 설명>` → `<알려 주면 안 되는 값>` ([chat-policy.md](../spec/chat-policy.md))
-  - [ ] 인젝션 테스트(과제 설명 · 학생 메시지에 지시 심기 → 고정 규칙 유지)
+- [x] **[백엔드]** ⑤ 프롬프트 조립 — `feature/prompt-builder` (리뷰 대기)
+  - [x] `ResponseMode` 대문자 + `OFFER_CHOICES` · `USAGE_LIMIT`, `HelpChoice`
+  - [x] `build_from_config`: 고정 규칙 → 정책 지시 → 교수자 지시 → `<과제 설명>` → `<알려 주면 안 되는 값>` ([chat-policy.md](../spec/chat-policy.md))
+  - [x] 인젝션 테스트(과제 설명 · 교수자 지시 · 정답 값에 지시·태그 심기 → 고정 규칙 유지, 블록 탈출 불가)
 - [ ] **[백엔드]** C 실행기 — `feature/c-runner`
   - [ ] gcc 실행 이미지(격리 옵션 동일: 네트워크 없음 · 메모리 · 시간 · 비root)
   - [ ] 테스트 모양 `{input, expected_output}`(표준 입력 → 표준 출력), 컴파일 오류 안내 — 모양 · 비교 규칙은 PR #16에서 정함(schema D23)
