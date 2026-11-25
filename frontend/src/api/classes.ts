@@ -1,7 +1,6 @@
 import type { AiPolicy, HintMode } from './assignments'
-import type { PlanCode } from './plans'
-import { mockClasses } from './mock/classStore'
-import { mockEnrollments } from './mock/enrollmentStore'
+import { get, langToUi, nid, post, put, sid, type BackendLanguage } from './client'
+import { buyNewPass, type PlanCode } from './plans'
 
 export type ClassInfo = {
   id: string
@@ -43,13 +42,43 @@ export type MyClass = {
 /** 학생 수 상한은 요금제가 정한다 */
 export type ClassCreate = { name: string; plan: PlanCode }
 
-export const listClasses = () => mockClasses.list()
-/** 클래스 개설. 수업 코드가 새로 발급된다 */
-export const createClass = (body: ClassCreate) => mockClasses.create(body)
+type ClassOut = Omit<ClassInfo, 'id'> & { seq: number; starts_at: string }
+type MyAssignmentOut = Omit<MyAssignment, 'id' | 'language'> & { seq: number; language: BackendLanguage }
+type MyClassOut = {
+  class_id: number
+  class_name: string
+  student_no: string
+  enrollment_status: 'APPROVED' | 'PENDING'
+  assignments: MyAssignmentOut[]
+}
+
+const toClass = ({ seq, ...c }: ClassOut): ClassInfo => ({ ...c, id: sid(seq) })
+
+/** 오늘 날짜(한국 시간) YYYY-MM-DD */
+const todayKst = () => new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10)
+
+export const listClasses = async () => (await get<ClassOut[]>('/classes')).map(toClass)
+/** 클래스 개설. 결제 목업(NEW) 이용권을 먼저 만들고, 오늘부터 시작하는 클래스로 연다. 수업 코드가 새로 발급된다 */
+export const createClass = async (body: ClassCreate) => {
+  const payment_seq = await buyNewPass(body.plan)
+  return toClass(await post<ClassOut>('/classes', { name: body.name, starts_on: todayKst(), payment_seq }))
+}
 /** 이 클래스에서 새로 만드는 과제에 미리 채울 AI 도움 정책 */
-export const getAiDefaults = (classId: string) => mockClasses.aiDefaults(classId)
-export const saveAiDefaults = (classId: string, policy: AiPolicy) => mockClasses.saveAiDefaults(classId, policy)
-export const getClass = (classId: string) => mockClasses.get(classId)
-export const listStudents = (classId: string) => mockEnrollments.students(classId)
+export const getAiDefaults = (classId: string) => get<AiPolicy>(`/classes/${nid(classId)}/ai-defaults`)
+export const saveAiDefaults = (classId: string, policy: AiPolicy) =>
+  put<AiPolicy>(`/classes/${nid(classId)}/ai-defaults`, policy)
+export const getClass = async (classId: string) => toClass(await get<ClassOut>(`/classes/${nid(classId)}`))
+export const listStudents = async (classId: string): Promise<ClassStudent[]> =>
+  (await get<{ seq: number; student_no: string }[]>(`/classes/${nid(classId)}/students`)).map((s) => ({
+    id: sid(s.seq),
+    alias: s.student_no,
+  }))
 /** 학생: 참여한 클래스와 과제 목록 */
-export const listMyClasses = () => mockClasses.mine()
+export const listMyClasses = async (): Promise<MyClass[]> =>
+  (await get<MyClassOut[]>('/me/classes')).map((c) => ({
+    class_id: sid(c.class_id),
+    class_name: c.class_name,
+    alias: c.student_no,
+    enrollment_status: c.enrollment_status,
+    assignments: c.assignments.map(({ seq, language, ...a }) => ({ ...a, id: sid(seq), language: langToUi(language) })),
+  }))

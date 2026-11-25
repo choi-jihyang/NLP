@@ -1,4 +1,4 @@
-import { mockStudent } from './mock/studentStore'
+import { nid, post } from './client'
 
 export type PasteField = 'ANSWER' | 'CHAT' | 'CONCEPT_CHECK'
 
@@ -10,4 +10,5 @@ export type PasteEvent = {
   pasted_at: string
 }
 
-export const logPaste = (event: PasteEvent) => mockStudent.logPaste(event)
+export const logPaste = (event: PasteEvent) =>
+  post<{ ok: boolean }>('/paste-events', { ...event, question_id: nid(event.question_id) })

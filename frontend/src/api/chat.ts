@@ -1,4 +1,5 @@
-import { mockStudent } from './mock/studentStore'
+import { get, nid, post } from './client'
+import { logPaste } from './pasteEvents'
 
 /** schema.md 의 ResponseMode + 도움 방식 고르기(OFFER_CHOICES) */
 export type ResponseMode = 'NEXT_STEP' | 'HINT_ONLY' | 'ASK_ATTEMPT' | 'OFF_TOPIC' | 'USAGE_LIMIT' | 'OFFER_CHOICES'
@@ -38,5 +39,17 @@ export type ChatRequest = {
   pasted?: boolean
 }
 
-export const getChat = (assignmentId: string, questionId: string) => mockStudent.chat(assignmentId, questionId)
-export const sendChat = (req: ChatRequest) => mockStudent.sendChat(req)
+type ChatStateOut = Omit<ChatState, 'question_id'> & { question_id: number }
+const toState = (s: ChatStateOut): ChatState => ({ ...s, question_id: String(s.question_id) })
+const url = (a: string, q: string) => `/assignments/${nid(a)}/questions/${nid(q)}/chat`
+
+export const getChat = async (assignmentId: string, questionId: string) =>
+  toState(await get<ChatStateOut>(url(assignmentId, questionId)))
+/** 붙여넣기 여부는 본문에 싣지 않고 /paste-events(길이 · 시점만)로 따로 보낸다(불변식 I5) */
+export const sendChat = async (req: ChatRequest) => {
+  if (req.pasted) {
+    await logPaste({ question_id: req.question_id, field: 'CHAT', length: req.message.length, pasted_at: new Date().toISOString() })
+  }
+  const body = req.choice ? { message: req.message, choice: req.choice } : { message: req.message }
+  return toState(await post<ChatStateOut>(url(req.assignment_id, req.question_id), body))
+}

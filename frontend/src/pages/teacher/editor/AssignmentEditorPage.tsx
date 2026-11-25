@@ -33,9 +33,9 @@ export default function AssignmentEditorPage() {
           fileName={fileName}
           error={load.error}
           onChange={update}
-          onFile={(name) => {
-            setFileName(name)
-            load.mutate({ kind: 'FILE', fileName: name })
+          onFile={(file) => {
+            setFileName(file.name)
+            load.mutate({ kind: 'FILE', file })
           }}
           onSample={() => {
             setFileName(null)

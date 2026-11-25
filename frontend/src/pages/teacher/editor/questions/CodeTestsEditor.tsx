@@ -16,7 +16,7 @@ export default function CodeTestsEditor({ question: q, onChange }: Props) {
         <span className="label">테스트 케이스 · 숨김 테스트는 학생에게 입력이 보이지 않아요</span>
         {q.tests.map((t, j) => (
           <div className="tedit" key={j}>
-            <input className="inp mono" aria-label={`테스트 ${j + 1} 호출`} value={t.call} placeholder="호출 예: f([1, 2])" onChange={(e) => setTest(j, { call: e.target.value })} />
+            <input className="inp mono" aria-label={`테스트 ${j + 1} 입력`} value={t.call} placeholder="표준 입력 예: 5" onChange={(e) => setTest(j, { call: e.target.value })} />
             <input className="inp mono" aria-label={`테스트 ${j + 1} 기대 출력`} value={t.expected} placeholder="기대 출력" onChange={(e) => setTest(j, { expected: e.target.value })} />
             <label className="check note">
               <input type="checkbox" checked={t.hidden} onChange={(e) => setTest(j, { hidden: e.target.checked })} />

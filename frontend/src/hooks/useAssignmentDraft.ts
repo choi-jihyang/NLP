@@ -10,7 +10,7 @@ import {
   type Question,
 } from '../api/assignments'
 
-type LoadSource = { kind: 'SAMPLE' } | { kind: 'BLANK' } | { kind: 'FILE'; fileName: string }
+type LoadSource = { kind: 'SAMPLE' } | { kind: 'BLANK' } | { kind: 'FILE'; file: File }
 
 /** 과제 만들기 화면의 편집 중인 과제. 서버에는 배포할 때 한 번에 저장한다 */
 export function useAssignmentDraft(classId: string, assignmentId: string | undefined) {
@@ -31,7 +31,7 @@ export function useAssignmentDraft(classId: string, assignmentId: string | undef
 
   const load = useMutation({
     mutationFn: (src: LoadSource) =>
-      src.kind === 'SAMPLE' ? createDraftFromSample(classId) : src.kind === 'BLANK' ? createBlankDraft(classId) : extractFromFile(classId, src.fileName),
+      src.kind === 'SAMPLE' ? createDraftFromSample(classId) : src.kind === 'BLANK' ? createBlankDraft(classId) : extractFromFile(classId, src.file),
     onSuccess: (found) => {
       // 교수자가 먼저 적어 둔 과목·대상·언어·설명은 유지하고 문항만 채운다
       const keep = draft ?? found

@@ -8,7 +8,7 @@ type Props = {
   fileName: string | null
   error: Error | null
   onChange: (patch: Partial<Assignment>) => void
-  onFile: (fileName: string) => void
+  onFile: (file: File) => void
   onSample: () => void
   onBlank: () => void
   onNext: () => void
@@ -64,8 +64,8 @@ export default function StepLoad({ draft, loaded, loading, fileName, error, onCh
       <p className="note">퀴즈, 출력 예측, 코드 작성, 간단 제작 같은 문항 유형은 다음 단계에서 문항마다 정해요.</p>
       <label className="drop">
         <strong>과제 파일 올리기</strong>
-        <span className="note">PDF, HWP, 마크다운, .py · .ipynb · 눌러서 선택</span>
-        <input type="file" accept=".pdf,.hwp,.md,.py,.ipynb,.txt" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0].name)} />
+        <span className="note">정해진 양식의 마크다운(.md) · 눌러서 선택</span>
+        <input type="file" accept=".md,.markdown,.txt" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
       </label>
       <div className="row">
         <span className="note">파일이 없나요?</span>

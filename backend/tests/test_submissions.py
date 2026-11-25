@@ -297,3 +297,17 @@ def test_teacher_list_counts_finalized_submissions(client: TestClient, runner):
     _submit_all(client, student, aid, qids)
     client.post(f"{base(aid)}/submission/finalize", headers=student)
     assert count() == 1
+
+
+@needs_gcc
+def test_me_classes_lists_published_assignments_with_status(client: TestClient, runner):
+    teacher, student, aid, qids = setup(client, policy={"concept_check_enabled": False})
+    row = client.get("/api/me/classes", headers=student).json()[0]["assignments"][0]
+    assert (row["seq"], row["status"], row["submitted"], row["total"], row["score_text"]) == (aid, "IN_PROGRESS", 0, 4,
+                                                                                             None)
+    _submit_all(client, student, aid, qids)
+    client.post(f"{base(aid)}/submission/finalize", headers=student)
+    assert client.get("/api/me/classes", headers=student).json()[0]["assignments"][0]["status"] == "FINALIZED"
+    client.post(f"/api/assignments/{aid}/release", headers=teacher)
+    row = client.get("/api/me/classes", headers=student).json()[0]["assignments"][0]
+    assert row["status"] == "RELEASED" and row["score_text"].startswith("40/75점")
