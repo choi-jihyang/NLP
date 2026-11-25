@@ -133,8 +133,8 @@
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
 | GET | `/assignments/{assignment_id}/report` | T | → `AssignmentReport` | `getAssignmentReport` |
-| GET | `/assignments/{assignment_id}/grading` | T | → `GradingItem[]` 간단 제작 답안 | `getGradingList` |
-| PUT | `/answers/{answer_id}/grade` | T | `{score, feedback}` → `GradingItem`. `0 ≤ score ≤ points` | `gradeAnswer` |
+| GET | `/assignments/{assignment_id}/grading` | T | → `GradingItem[]` `{answer_id, student_name(학번), question_index(1부터), points, rubric, content, signals, score, feedback}` 제출된 간단 제작 답안. `signals` = 붙여넣기 길이로 계산한 참고 신호 ✅ | `getGradingList` |
+| PUT | `/answers/{answer_id}/grade` | T | `{score, feedback}` → `GradingItem`. `0 ≤ score ≤ points`(아니면 `VALIDATION_FAILED`). 간단 제작 · 제출된 답만(아니면 `CONFLICT`), 남의 클래스 `FORBIDDEN`. 결과 공개 뒤에도 가능(결정 D) ✅ | `gradeAnswer` |
 | GET | `/assignments/{assignment_id}/students/{student_id}/record` | T | → `StudentRecord` | `getStudentRecord` |
 
 - 외부 AI 참고 신호·개념 확인 AI 작성 신호는 **교수자 응답에만** 있고, 점수를 바꾸지 않는다.
