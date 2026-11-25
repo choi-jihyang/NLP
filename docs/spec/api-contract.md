@@ -125,17 +125,17 @@
 ### 이해 확인 · 내 리포트 (학생)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/assignments/{assignment_id}/understanding-check` | S | → `UnderstandingCheck` (최종 제출 후에만) | `getUnderstandingCheck` |
-| POST | `/assignments/{assignment_id}/understanding-check` | S | `{explanation, answers[{question_id, value, confidence}]}` → `{submitted_at}`. 정오는 돌려주지 않음 | `submitUnderstandingCheck` |
-| GET | `/assignments/{assignment_id}/my-report` | S | → `{released: false, assignment_title}` 또는 `{released: true, …MyReport}` | `getMyReport` |
+| GET | `/assignments/{assignment_id}/understanding-check` | S | → `UnderstandingCheck` `{explain_prompt, explain_code, items[{question_id, type, prompt, code, choices}], submitted}` (최종 제출 후에만, 아니면 `CONFLICT`). 확인 문제의 정답은 없음. `variant_enabled`가 꺼져 있으면 `items: []` ✅ | `getUnderstandingCheck` |
+| POST | `/assignments/{assignment_id}/understanding-check` | S | `{explanation, answers[{question_id, value, confidence}]}` → `{submitted_at}`. 정오는 돌려주지 않음. 한 번만(두 번째는 `CONFLICT`), 목록에 없는 문항은 `VALIDATION_FAILED` ✅ | `submitUnderstandingCheck` |
+| GET | `/assignments/{assignment_id}/my-report` | S | → `{released: false, assignment_title}` 또는 `{released: true, …MyReport}`. 문장 칸은 규칙 기반 ✅ | `getMyReport` |
 
 ### 리포트 · 채점 (교수자)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/assignments/{assignment_id}/report` | T | → `AssignmentReport` | `getAssignmentReport` |
-| GET | `/assignments/{assignment_id}/grading` | T | → `GradingItem[]` `{answer_id, student_name(학번), question_index(1부터), points, rubric, content, signals, score, feedback}` 제출된 간단 제작 답안. `signals` = 붙여넣기 길이로 계산한 참고 신호 ✅ | `getGradingList` |
+| GET | `/assignments/{assignment_id}/report` | T | → `AssignmentReport` 최종 제출한 학생 기준. 문장 칸(오개념 note · supplement · cause)은 과제 파일 오개념 표 · 확인 문제 결과로 만든 규칙 기반 문장 ✅ | `getAssignmentReport` |
+| GET | `/assignments/{assignment_id}/grading` | T | → `GradingItem[]` `{answer_id, student_name(학번), question_index(0부터), points, rubric, content, signals, score, feedback}` 제출된 간단 제작 답안. `signals` = 붙여넣기 길이로 계산한 참고 신호 ✅ | `getGradingList` |
 | PUT | `/answers/{answer_id}/grade` | T | `{score, feedback}` → `GradingItem`. `0 ≤ score ≤ points`(아니면 `VALIDATION_FAILED`). 간단 제작 · 제출된 답만(아니면 `CONFLICT`), 남의 클래스 `FORBIDDEN`. 결과 공개 뒤에도 가능(결정 D) ✅ | `gradeAnswer` |
-| GET | `/assignments/{assignment_id}/students/{student_id}/record` | T | → `StudentRecord` | `getStudentRecord` |
+| GET | `/assignments/{assignment_id}/students/{student_id}/record` | T | → `StudentRecord` 이 반 학생만(없으면 `NOT_FOUND`). `conversation`은 힌트를 가장 많이 받은 문항의 대화 ✅ | `getStudentRecord` |
 
 - 외부 AI 참고 신호·개념 확인 AI 작성 신호는 **교수자 응답에만** 있고, 점수를 바꾸지 않는다.
 

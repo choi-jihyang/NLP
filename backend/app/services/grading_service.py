@@ -37,7 +37,7 @@ def _item(db: Session, answer: Answer, q: Question, index: int, student_no: str)
 
 def grading_list(db: Session, teacher: User, assignment_id: int) -> list[GradingItem]:
     assignment = get_owned(db, teacher, assignment_id)
-    projects = {q.seq: (i, q) for i, q in enumerate(questions_of(db, assignment.seq), start=1)
+    projects = {q.seq: (i, q) for i, q in enumerate(questions_of(db, assignment.seq))
                 if q.type is QuestionType.PROJECT}
     if not projects:
         return []
@@ -70,7 +70,7 @@ def grade(db: Session, teacher: User, answer_id: int, score: int, feedback: str)
     answer.score, answer.feedback = score, feedback
     answer.graded_by, answer.graded_at = teacher.seq, now_kst()
     db.commit()
-    index = next(i for i, x in enumerate(questions_of(db, assignment.seq), start=1) if x.seq == q.seq)
+    index = next(i for i, x in enumerate(questions_of(db, assignment.seq)) if x.seq == q.seq)
     enrollment = db.get(Enrollment, sub.enrollment_id)
     assert enrollment is not None
     return _item(db, answer, q, index, enrollment.student_no)

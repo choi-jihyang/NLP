@@ -20,7 +20,7 @@ def test_list_shows_submitted_project_answers_with_signals(client: TestClient):
     items = _project_answer(client, teacher, student, aid, qids)
     assert len(items) == 1
     item = items[0]
-    assert (item["student_name"], item["question_index"], item["points"]) == ("20260001", 4, 35)
+    assert (item["student_name"], item["question_index"], item["points"]) == ("20260001", 3, 35)
     assert item["rubric"] == ["빌림 처리"] and item["score"] is None and "빌림 방식" in item["content"]
     assert item["signals"] == ["답 칸에 640자를 한 번에 붙여넣음"]
 

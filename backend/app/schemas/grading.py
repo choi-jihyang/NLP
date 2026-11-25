@@ -8,7 +8,7 @@ class GradingItem(BaseModel):
     student_name: str
     """학번(student_no)"""
     question_index: int
-    """1부터"""
+    """0부터(화면은 +1, 다른 리포트 응답과 같음)"""
     points: int
     rubric: list[str]
     content: str

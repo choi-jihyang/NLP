@@ -11,10 +11,13 @@ from app.api.routes import (
     me,
     payments,
     plans,
+    reports,
     solve,
     submissions,
 )
 
 api_router = APIRouter(prefix="/api")
-for module in (health, auth, plans, payments, classes, enrollments, me, assignments, solve, submissions, chat, grading):
+MODULES = (health, auth, plans, payments, classes, enrollments, me, assignments, solve, submissions, chat, grading,
+           reports)
+for module in MODULES:
     api_router.include_router(module.router)

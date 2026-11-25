@@ -8,9 +8,10 @@ from app.models.class_room import ClassRoom
 from app.models.enrollment import Enrollment
 from app.models.question import Question
 from app.models.submission import Answer, ConceptCheckItem, Submission
+from app.models.understanding import UnderstandingAnswer, UnderstandingCheck
 from app.models.user import User
 
 __all__ = [
     "Answer", "Assignment", "ChatMessage", "ClassMember", "ClassPayment", "ClassRoom", "ConceptCheckItem",
-    "Enrollment", "PasteEvent", "Question", "Submission", "User",
+    "Enrollment", "PasteEvent", "Question", "Submission", "UnderstandingAnswer", "UnderstandingCheck", "User",
 ]

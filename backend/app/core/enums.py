@@ -111,3 +111,9 @@ class HelpChoice(StrEnum):
     FIRST_HINT = "FIRST_HINT"
     FEEDBACK = "FEEDBACK"
     ORIGINAL = "ORIGINAL"
+
+
+class Confidence(StrEnum):
+    SURE = "SURE"
+    UNSURE = "UNSURE"
+    DONT_KNOW = "DONT_KNOW"
