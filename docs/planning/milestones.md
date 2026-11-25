@@ -52,10 +52,11 @@
   - [ ] `ResponseMode` 대문자 + `OFFER_CHOICES`
   - [ ] `build_from_config`: 고정 규칙 → 정책 지시 → 교수자 지시 → `<과제 설명>` → `<알려 주면 안 되는 값>` ([chat-policy.md](../spec/chat-policy.md))
   - [ ] 인젝션 테스트(과제 설명 · 학생 메시지에 지시 심기 → 고정 규칙 유지)
-- [ ] **[백엔드]** C 실행기 — `feature/c-runner`
-  - [ ] gcc 실행 이미지(격리 옵션 동일: 네트워크 없음 · 메모리 · 시간 · 비root)
-  - [ ] 테스트 모양 `{input, expected_output}`(표준 입력 → 표준 출력), 컴파일 오류 안내 — 모양 · 비교 규칙은 PR #16에서 정함(schema D23)
-  - [ ] 실행기 테스트 이미지 확인 `:latest` 수정(지금 Docker 테스트 4개가 건너뛰어짐)
+- [x] **[백엔드]** C 실행기 — `feature/c-runner` (리뷰 대기)
+  - [x] gcc 실행 이미지(격리 옵션 동일: 네트워크 없음 · 메모리 · 시간 · 비root)
+  - [x] 테스트 모양 `{input, expected_output}`(표준 입력 → 표준 출력), 컴파일 오류 안내 — 모양 · 비교 규칙은 PR #16에서 정함(schema D23)
+  - [x] 실행기 테스트 이미지 확인 — `RUNNER_IMAGE` 설정값으로 확인, `--pull never`(이미지 없으면 503)
+  - [x] 11/18 리뷰 지적: 부모 메모리 읽기 차단(`PR_SET_DUMPABLE=0`) + 테스트
 - [ ] **[백엔드]** ④ 과제 · 문항 — `feature/assignment-api` — ④-1 PR #16 (리뷰 대기), ④-2 남음
   - [x] `assignments` · `questions` 모델(`answer_key` 분리, `public_tests`) — PR #16, 테스트 모양 `{input, expected_output}`(schema D23)
   - [ ] **md 과제 추출** `POST /classes/{id}/assignments/extract` — 정해진 양식(샘플 `docs/spec/samples/c-binary-assignment.md`(PR #14)), 규칙(정규식)으로 파싱, 양식 오류 안내

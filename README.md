@@ -136,15 +136,15 @@ cd frontend && npm run build && npm run lint
 | `RUNNER_MEMORY_MB` | MB | `128` | 컨테이너 메모리 제한 |
 
 ## 코드 실행 (Docker)
-코드 작성 문항은 학생 코드를 격리된 Docker 컨테이너에서 실행한다. 개발 중에는 `CODE_RUNNER=mock`으로 Docker 없이도 된다. 자세히: [docs/spec/integration-contract.md](docs/spec/integration-contract.md#3-코드-실행-coderunner)
+코드 작성 문항은 학생 코드(C · Python)를 격리된 Docker 컨테이너에서 실행한다. 개발 중에는 `CODE_RUNNER=mock`으로 Docker 없이도 된다. 자세히: [docs/spec/integration-contract.md](docs/spec/integration-contract.md#3-코드-실행-coderunner)
 1. [Docker Desktop](https://www.docker.com/products/docker-desktop/)을 설치하고 실행한다.
-2. 실행 이미지를 빌드한다(처음 한 번, `backend/sandbox/harness.py`를 고치면 다시).
+2. 실행 이미지를 빌드한다(처음 한 번, `backend/sandbox/`를 고치면 다시). 빌드할 때만 인터넷이 필요하다(gcc 설치).
    ```bash
    docker build -t thinkguard-runner backend/sandbox
    ```
 3. `backend/.env`에서 `CODE_RUNNER=docker`로 바꾸고 백엔드를 다시 실행한다.
 
-이미지가 있으면 `pytest`가 실제 컨테이너 테스트까지 돌린다(없으면 건너뜀).
+이미지가 있으면 `pytest`가 실제 컨테이너 테스트까지 돌린다(없으면 건너뜀). 이미지가 없는데 `CODE_RUNNER=docker`면 실행 API는 503(`RUNNER_UNAVAILABLE`)을 준다.
 
 ## 실제 LLM 쓰기 (Ollama)
 ```bash
