@@ -108,17 +108,19 @@
 ### 학습 AI 채팅 (학생)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/assignments/{assignment_id}/questions/{question_id}/chat` | S | → `ChatState` | `getChat` |
-| POST | `/assignments/{assignment_id}/questions/{question_id}/chat` | S | `{message, choice?}` → `ChatState`. 붙여넣기는 `/paste-events`(`field = CHAT`)로만 보낸다 | `sendChat` |
+| GET | `/assignments/{assignment_id}/questions/{question_id}/chat` | S | → `ChatState` `{question_id, turns[{role, text, response_mode, trace}], hint_step, max_hint_steps, usage_remaining}`. 자기 대화만 ✅ | `getChat` |
+| POST | `/assignments/{assignment_id}/questions/{question_id}/chat` | S | `{message, choice?}` → `ChatState`. 붙여넣기는 `/paste-events`(`field = CHAT`)로만 보낸다(다른 필드는 거부). `choice`는 직전 AI 답이 `OFFER_CHOICES`일 때만(아니면 `CONFLICT`), 이때 분류는 원래 요청 메시지로 한다 ✅ | `sendChat` |
 
 - 잠김(`FORBIDDEN`): 교수자가 AI를 끈 간단 제작 문항, 개념 확인 중인 문항, 최종 제출한 과제.
 - 완성 답안 요청 + 시도 근거 없음이면 LLM을 부르지 않고 `OFFER_CHOICES` 응답을 준다. 학생이 `choice`(`FIRST_HINT`·`FEEDBACK`·`ORIGINAL`)를 골라 다시 보낸다. `ORIGINAL`이어도 정책은 `HINT_ONLY` 그대로(불변식 I1).
-- 사용량 상한이면 LLM을 부르지 않고 `USAGE_LIMIT`(불변식 I6).
+- 사용량 상한이면 분류기 · LLM을 부르지 않고 `USAGE_LIMIT`(불변식 I6). 사용량 = 이 과제(모든 문항)에서 학생이 보낸 메시지 수.
+- 힌트 단계: `HINT_ONLY` · `NEXT_STEP` 답을 보낼 때마다 +1(최대 `max_hint_steps`), 누출 검사로 막힌 답은 올리지 않는다.
+- LLM에는 최근 `CHAT_HISTORY_TURNS`(기본 8)개만 보낸다. 분류 결과 · 막힌 초안은 🔒 저장만 한다. `trace`는 `DEMO_TRACE=true`일 때만(결정 F).
 
 ### 붙여넣기 기록
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| POST | `/paste-events` | S | `{question_id, field, length, pasted_at}` → `{ok}`. **내용 필드 없음**, 알 수 없는 필드는 거부(불변식 I5). 서버는 이 학생의 그 문항 답(`answers`)에 묶어 저장하고, 답이 없으면 만든다 | `logPaste` |
+| POST | `/paste-events` | S | `{question_id, field, length, pasted_at}` → `{ok}`. **내용 필드 없음**, 알 수 없는 필드는 거부(불변식 I5). 서버는 이 학생의 그 문항 답(`answers`)에 묶어 저장하고, 답이 없으면 만든다 ✅ | `logPaste` |
 
 ### 이해 확인 · 내 리포트 (학생)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |

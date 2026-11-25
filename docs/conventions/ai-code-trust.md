@@ -15,9 +15,9 @@
 | I2 | 분류가 모호하면(uncertain 또는 confidence 미달) LLM을 부르지 않고 "이미 시도한 부분이 있나요?"를 되묻는다 | `tests/test_policy.py`, `tests/test_chat_service.py` |
 | I3 | LLM에 가는 시스템 프롬프트에는 항상 고정 규칙(정답 금지, 시도 지어내기 금지)이 **맨 앞에** 들어간다 | `tests/test_chat_service.py`, `tests/test_prompt_builder.py` |
 | I4 | 시도 근거는 **학생이 보낸 메시지**에서만 찾는다. AI 자신의 이전 답변은 근거가 아니다 | `tests/test_classifier_stub.py` |
-| I5 | 붙여넣기 이벤트에는 길이·시점만 저장되고 내용 컬럼은 없다 | 스키마 리뷰 (구현 시 테스트 추가) |
-| I6 | 사용량 상한에 도달하면 LLM을 부르지 않는다 | 구현 시 테스트 추가 |
-| I7 | 학생은 자기가 참여한 클래스의 과제·대화만 볼 수 있다. 교수자는 자기 클래스만 | `tests/test_access.py`, `tests/test_classes_api.py`, `tests/test_enrollments_api.py`, `tests/test_student_assignment.py` (대화 접근은 ⑥에서 추가) |
+| I5 | 붙여넣기 이벤트에는 길이·시점만 저장되고 내용 컬럼은 없다 | `tests/test_chat_api.py`(컬럼 목록 · `content` 거부), 채팅 · 개념 확인 요청의 `pasted` 거부 |
+| I6 | 사용량 상한에 도달하면 LLM을 부르지 않는다 | `tests/test_chat_api.py::test_usage_limit_stops_llm_and_classifier` |
+| I7 | 학생은 자기가 참여한 클래스의 과제·대화만 볼 수 있다. 교수자는 자기 클래스만 | `tests/test_access.py`, `tests/test_classes_api.py`, `tests/test_enrollments_api.py`, `tests/test_student_assignment.py` `tests/test_chat_api.py`(다른 학생 대화 · 교수자 토큰), `tests/test_submissions.py` |
 | I8 | 학생에게 가는 과제 응답에 정답 · 인정 답안 · 오개념 · 숨김 테스트 · 채점 기준 · 모범 답안 · 확인 문제가 없다(학생 스키마에 필드 자체가 없음) | `tests/test_assignments_api.py`, `tests/test_student_assignment.py` |
 
 > 불변식이 바뀌면 이 표부터 고친다. 표에 "구현 시 테스트 추가"로 남은 항목은 해당 기능 PR에서 테스트와 함께 채운다.

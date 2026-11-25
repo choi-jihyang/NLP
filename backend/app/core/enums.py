@@ -75,3 +75,39 @@ class ConceptStatus(StrEnum):
     CONFIRMED = "CONFIRMED"
     NEEDS_WORK = "NEEDS_WORK"
     UNCLEAR = "UNCLEAR"
+
+
+class ChatRole(StrEnum):
+    STUDENT = "STUDENT"
+    ASSISTANT = "ASSISTANT"
+
+
+class PasteField(StrEnum):
+    ANSWER = "ANSWER"
+    CHAT = "CHAT"
+    CONCEPT_CHECK = "CONCEPT_CHECK"
+
+
+class ResponseMode(StrEnum):
+    """DB·API에는 대문자 문자열로 나간다 (schema.md Enum, api-contract 결정 B)."""
+
+    NEXT_STEP = "NEXT_STEP"
+    """일반 학습 도움: 설정된 단계 안내 정책대로 응답"""
+    HINT_ONLY = "HINT_ONLY"
+    """완성 답안 요청 + 시도 근거 없음 + 도움 방식을 고름: 힌트 위주로만 응답"""
+    ASK_ATTEMPT = "ASK_ATTEMPT"
+    """판단이 모호함: LLM 호출 없이 시도 여부를 되묻는다"""
+    OFF_TOPIC = "OFF_TOPIC"
+    """학습과 무관한 대화: LLM 호출 없이 과제로 돌려보낸다"""
+    USAGE_LIMIT = "USAGE_LIMIT"
+    """사용량 상한: LLM 호출 없이 안내 (I6). 판단은 채팅 service가 분류 전에 한다"""
+    OFFER_CHOICES = "OFFER_CHOICES"
+    """완성 답안 요청 + 시도 근거 없음 + 아직 고르지 않음: LLM 없이 도움 방식 고르기"""
+
+
+class HelpChoice(StrEnum):
+    """OFFER_CHOICES 뒤 학생이 고르는 도움 방식. 어느 것을 골라도 정책은 HINT_ONLY (I1)."""
+
+    FIRST_HINT = "FIRST_HINT"
+    FEEDBACK = "FEEDBACK"
+    ORIGINAL = "ORIGINAL"

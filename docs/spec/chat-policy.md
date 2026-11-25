@@ -1,19 +1,20 @@
 # 학습 AI 채팅 정책
 
 > 상태: **분류 → 정책(도움 방식 고르기 포함) → 프롬프트 조립 → 누출 검사 구현됨**(`services/policy.py`, `services/prompt_builder.py`, `services/chat_service.py`, `leak_guard/`, 테스트 있음).
-> 채팅 API·대화 저장·사용량 상한은 **미구현**(⑥).
+> 채팅 API · 대화 저장 · 사용량 상한 · 잠김도 **구현됨**(`services/chat_api_service.py`, `tests/test_chat_api.py`).
 > 관련: [integration-contract.md](integration-contract.md) · 불변식 [../conventions/ai-code-trust.md](../conventions/ai-code-trust.md)
 
 ## 처리 순서
 ```
-1. 사용량 확인        상한 도달 → USAGE_LIMIT 안내, LLM 호출 안 함     (미구현)
+0. 잠김 확인        최종 제출 후 · 개념 확인 중 · AI 끈 간단 제작
+1. 사용량 확인        상한 도달 → USAGE_LIMIT 안내, 분류기 · LLM 호출 안 함
 2. 분류              classifier.classify(message, history)
 3. 정책 결정          policy.decide(결과, min_confidence)
 4. 고정 응답이면 바로 반환 (LLM 호출 안 함)
 5. 시스템 프롬프트 = AI 설정 프롬프트 + 고정 규칙 + 이번 응답 정책 지시
 6. llm.generate(시스템 프롬프트, history + message)
 7. 누출 검사          leak_guard.check(답변, history) → 걸리면 고정 안내문으로 교체
-8. 저장 후 응답                                                      (미구현)
+8. 저장 후 응답       학생 메시지(🔒 분류 결과) · AI 답(🔒 누출 검사 · 막힌 초안) · 힌트 단계
 ```
 
 ## 정책 분기 (우선순위 위에서부터)

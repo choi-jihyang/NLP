@@ -72,13 +72,13 @@
   - [x] 개념 확인(질문 1개, 고정 문구) · 답 고치러 돌아가기 — **AI 작성 신호로 1개 더**는 NLP ② 결정 후
   - [x] 최종 제출(마감 뒤 불가, 안 낸 문항 있으면 `CONFLICT`)
   - [x] 결과 공개 전 정오·점수·숨김 테스트 결과를 학생 응답에서 빼는 테스트
-- [ ] **[백엔드]** ⑥ 채팅 — `feature/chat-api`
-  - [ ] `chat_messages` 모델, 문항별 대화 조회 · 보내기
-  - [ ] 사용량 상한(I6: 상한이면 LLM 호출 없이 `USAGE_LIMIT`)
-  - [ ] 도움 방식 고르기(`OFFER_CHOICES` → `FIRST_HINT` · `FEEDBACK` · `ORIGINAL`, 정책은 `HINT_ONLY` 유지 — I1)
-  - [ ] 잠김: 개념 확인 중 · 최종 제출 후 · AI 끈 간단 제작 문항
-  - [ ] LLM에는 최근 대화 N개만, 분류 결과·누출 검사 결과 저장
-- [ ] **[백엔드]** 붙여넣기 기록 `POST /paste-events`(길이·시점만, 내용 필드 거부 — I5)
+- [x] **[백엔드]** ⑥ 채팅 — `feature/chat-api` (리뷰 대기, submission-api + assignment-simulate 위에 쌓음)
+  - [x] `chat_messages` 모델, 문항별 대화 조회 · 보내기
+  - [x] 사용량 상한(I6: 상한이면 LLM 호출 없이 `USAGE_LIMIT`)
+  - [x] 도움 방식 고르기(`OFFER_CHOICES` → `FIRST_HINT` · `FEEDBACK` · `ORIGINAL`, 정책은 `HINT_ONLY` 유지 — I1)
+  - [x] 잠김: 개념 확인 중 · 최종 제출 후 · AI 끈 간단 제작 문항
+  - [x] LLM에는 최근 대화 N개만(`CHAT_HISTORY_TURNS`=8), 분류 결과·누출 검사 결과 저장, `DEMO_TRACE`
+- [x] **[백엔드]** 붙여넣기 기록 `POST /paste-events`(길이·시점만, 내용 필드 거부 — I5) — `feature/chat-api`
 - [ ] **[백엔드]** 이해 확인 · 내 리포트 · 교수자 반 리포트 · 간단 제작 채점 · 학생별 기록
 - [ ] **[백엔드]** 요금제 · 결제 목업 `/plans` · `/payments`(실제 PG 연동 없음, 항상 성공) — `/plans` · NEW 결제는 ③에서 구현, 연장(EXTEND) 남음
 
@@ -88,7 +88,7 @@
 - [ ] **[NLP]** 분류기 `classify()` 구현 — 계약 [integration-contract.md](../spec/integration-contract.md) (`is_learning_context` · `requests_complete_answer` · `has_self_attempt_evidence` · `uncertain` · `confidence`)
 - [ ] **[백엔드]** 분류기 교체 확인 — `CLASSIFIER=module` 또는 `http`, 계약 테스트, 모호하면 되묻기(I2)
 - [x] **[NLP]** AI 답변 누출 검사(정답·완성 코드 판별) 구현 — 규칙 기반 `check_leak`, PR #15
-- [ ] **[백엔드]** 누출 검사 연결 — 막히면 초안 대신 안전한 응답, `leak_check` 저장 — `chat_service.reply` 연결 · 막히면 안내문은 PR #15, `leak_check` 저장은 ⑥
+- [x] **[백엔드]** 누출 검사 연결 — 막히면 초안 대신 안전한 응답, `leak_check` 저장 — `chat_service.reply` 연결 · 막히면 안내문은 PR #15, 저장(`leak_blocked` · `blocked_draft`)은 ⑥
 - [ ] **[NLP]** 개념 확인 답변 "AI 작성 점수" 담당·포함 여부 확정(scope.md ②), 하면 구현
 - [ ] **[공통]** 실제 모델로 시연 시나리오 4번(정답 요청 → 힌트만) 통과 확인
 
