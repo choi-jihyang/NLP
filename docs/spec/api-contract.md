@@ -73,15 +73,15 @@
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
 | GET | `/classes/{class_id}/assignments` | T | → `AssignmentSummary[]` `{seq, title, kinds, status, due_at, hint_mode, submitted_count, student_count, todo, results_released}`. `submitted_count`는 ⑦ 전까지 0 ✅ | `listAssignments` |
-| POST | `/classes/{class_id}/assignments/drafts` | T | `{source: "BLANK"}` → `Assignment` (저장 전 초안, `seq: null`, 정책 = 클래스 AI 기본값) ✅. `SAMPLE`은 ④-2(샘플 md 파서)에서 | `createDraftFromSample`, `createBlankDraft` |
-| POST | `/classes/{class_id}/assignments/extract` | T | multipart `file` → `Assignment` 초안. 문항·코드·정답·테스트·배점 추출 | `extractFromFile` |
+| POST | `/classes/{class_id}/assignments/drafts` | T | `{source: "BLANK" \| "SAMPLE"}` → `Assignment` (저장 전 초안, `seq: null`, 정책 = 클래스 AI 기본값). `SAMPLE` = 샘플 md([samples/c-binary-assignment.md](samples/c-binary-assignment.md))를 읽은 C 과제 ✅ | `createDraftFromSample`, `createBlankDraft` |
+| POST | `/classes/{class_id}/assignments/extract` | T | multipart `file`(`.md`, UTF-8, 200KB 이하) → `Assignment` 초안(저장 안 함). 양식: [assignment-md-format.md](assignment-md-format.md). 양식 오류는 `VALIDATION_FAILED`, `message`에 틀린 곳을 줄마다 ✅ | `extractFromFile` |
 | POST | `/classes/{class_id}/assignments` | T | `Assignment` → **201** `Assignment` (새로 저장). 유형별 검증 실패는 `VALIDATION_FAILED` ✅ | `saveAssignment` (id가 `new`) |
 | GET | `/assignments/{assignment_id}` | T | → `Assignment` (정답·숨김 테스트·모범 답안 포함) ✅ | `getAssignment` |
 | PUT | `/assignments/{assignment_id}` | T | `Assignment` → `Assignment`. 배포 전에는 문항을 통째로 교체. **배포 후에는 문항 · `language`가 바뀌면 `CONFLICT`**(같은 문항을 다시 보내는 건 통과), 결과 공개 후에는 모든 수정 `CONFLICT`(schema D24) ✅ | `saveAssignment` |
 | POST | `/assignments/{assignment_id}/publish` | T | → `{invite_code}`. 문항이 없으면 `CONFLICT`, 이미 배포했으면 그대로 ✅ | `publishAssignment` |
 | POST | `/assignments/{assignment_id}/release` | T | → `{results_released: true}` 점수·정답·내 리포트를 학생에게 공개. 배포 전이면 `CONFLICT` ✅ | `releaseResults` |
-| POST | `/assignments/preview` | T | `Assignment` → `{lines[], hint_mode_label}` "학생은 이렇게 경험해요" (프롬프트 원문 아님) | `getPolicyPreview` |
-| POST | `/assignments/prompt-draft` | T | `Assignment` → `{prompt}` 지시문 직접 작성의 시작 문안 | `getPromptDraft` (응답에서 `prompt`를 꺼냄) |
+| POST | `/assignments/preview` | T | `Assignment` → `{lines[], hint_mode_label}` "학생은 이렇게 경험해요" (프롬프트 원문 아님) ✅ | `getPolicyPreview` |
+| POST | `/assignments/prompt-draft` | T | `Assignment` → `{prompt}` 지시문 직접 작성의 시작 문안. 정답 · 숨김 테스트는 넣지 않는다 ✅ | `getPromptDraft` (응답에서 `prompt`를 꺼냄) |
 | POST | `/assignments/simulate` | T | `Assignment` → `SimulationCase[]` `{question_index, message, classification, attempt, leak_blocked, external_signals, response_mode, reply}`. 실제 정책 경로(분류기 · LLM · 누출 검사)로 우회 요청 최대 6개를 보낸다. 도움 방식 고르기가 나오면 `ORIGINAL`을 고른 것으로 한 번 더 보낸다. 분류기 · LLM이 꺼져 있으면 503 ✅ | `simulateAttacks` |
 
 - preview · prompt-draft · simulate는 **저장 전 초안**을 받으므로 과제 id 없는 경로를 쓴다.

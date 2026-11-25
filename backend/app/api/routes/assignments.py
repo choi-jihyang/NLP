@@ -1,13 +1,23 @@
 """교수자: 과제 목록 · 빈 초안 · 저장 · 조회 · 수정 · 배포 · 결과 공개 (④ 설계)."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile
 
 from app.api.deps import DbSession, TeacherUser
 from app.classifier import get_classifier
 from app.core.config import get_settings
 from app.leak_guard import get_leak_guard
 from app.llm import get_llm_provider
-from app.schemas.assignments import AssignmentData, AssignmentSummary, DraftBody, PublishOut, ReleaseOut
+from app.schemas.assignments import (
+    AssignmentData,
+    AssignmentSummary,
+    DraftBody,
+    PreviewOut,
+    PromptDraftOut,
+    PublishOut,
+    ReleaseOut,
+)
+from app.schemas.student_assignments import HINT_MODE_LABEL
+from app.services import assignment_md, policy_text
 from app.services import assignment_service as svc
 from app.services.simulate_service import SimulationCase, simulate
 
@@ -21,7 +31,25 @@ def list_assignments(class_id: int, teacher: TeacherUser, db: DbSession) -> list
 
 @router.post("/classes/{class_id}/assignments/drafts")
 def create_draft(class_id: int, body: DraftBody, teacher: TeacherUser, db: DbSession) -> AssignmentData:
+    if body.source == "SAMPLE":
+        return svc.new_sample_draft(db, teacher, class_id)
     return svc.new_blank_draft(db, teacher, class_id)
+
+
+@router.post("/classes/{class_id}/assignments/extract")
+async def extract_assignment(class_id: int, file: UploadFile, teacher: TeacherUser, db: DbSession) -> AssignmentData:
+    raw = await file.read(assignment_md.MAX_BYTES + 1)
+    return svc.extract_draft(db, teacher, class_id, file.filename or "", raw)
+
+
+@router.post("/assignments/preview")
+def preview_policy(body: AssignmentData, teacher: TeacherUser) -> PreviewOut:
+    return PreviewOut(lines=policy_text.preview_lines(body), hint_mode_label=HINT_MODE_LABEL[body.policy.hint_mode])
+
+
+@router.post("/assignments/prompt-draft")
+def prompt_draft(body: AssignmentData, teacher: TeacherUser) -> PromptDraftOut:
+    return PromptDraftOut(prompt=policy_text.prompt_draft(body))
 
 
 @router.post("/classes/{class_id}/assignments", status_code=201)

@@ -5,5 +5,7 @@ pydantic-settings>=2.4
 httpx>=0.27
 tzdata>=2024.1
 PyJWT>=2.8
+# 과제 파일 올리기(multipart)
+python-multipart>=0.0.9
 # 누출 검사(thinkguard_nlp.leak). backend 폴더에서 설치해야 경로가 맞는다
 -e ../nlp

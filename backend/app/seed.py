@@ -1,7 +1,7 @@
 """시연용 시드 데이터. 실행: cd backend && .venv/bin/python -m app.seed
 
 비밀번호는 시연용 테스트 값이다. 실제 비밀번호를 쓰지 않는다.
-과제·문항 시드는 과제 테이블이 생기는 ④ 과제 API에서 추가한다.
+과제: 샘플 md(docs/spec/samples/c-binary-assignment.md)를 읽어 배포된 C 과제 1개를 넣는다.
 """
 
 from datetime import date
@@ -13,7 +13,9 @@ from app.core.clock import add_years, now_kst, start_of_day_kst
 from app.core.enums import EnrollmentStatus, PaymentKind, PlanCode, Role
 from app.core.plans import PLANS
 from app.core.security import hash_password
-from app.models import ClassMember, ClassPayment, ClassRoom, Enrollment, User
+from app.models import Assignment, ClassMember, ClassPayment, ClassRoom, Enrollment, User
+from app.schemas.ai_policy import AiPolicy
+from app.services import assignment_md, assignment_service
 
 SEED_TEACHER_EMAIL = "teacher@thinkguard.test"
 SEED_TEACHER_PASSWORD = "thinkguard-demo"
@@ -64,7 +66,16 @@ def seed(db: Session, today: date | None = None) -> ClassRoom:
             status=EnrollmentStatus.APPROVED, decided_at=now,
         ))
     db.commit()
+    seed_assignment(db, teacher, klass)
     return klass
+
+
+def seed_assignment(db: Session, teacher: User, klass: ClassRoom) -> Assignment:
+    """샘플 md → 저장 → 배포. 정책은 클래스 AI 기본값."""
+    data = assignment_md.parse(assignment_md.sample_text(), AiPolicy.model_validate(klass.ai_defaults), klass.seq)
+    assignment = assignment_service.create_assignment(db, teacher, klass.seq, data)
+    assignment_service.publish(db, teacher, assignment.seq)
+    return assignment
 
 
 def main() -> None:
@@ -79,7 +90,8 @@ def main() -> None:
             print(e)
             raise SystemExit(1) from e
     students = ", ".join(SEED_STUDENT_NOS)
-    print(f"시드 완료: 교수자 {SEED_TEACHER_EMAIL} / 수업 코드 {klass.invite_code} / 학번 {students}")
+    print(f"시드 완료: 교수자 {SEED_TEACHER_EMAIL} / 수업 코드 {klass.invite_code} / 학번 {students}"
+          " / 배포된 C 과제 1개")
 
 
 if __name__ == "__main__":

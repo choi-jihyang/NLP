@@ -59,12 +59,12 @@
   - [x] 11/18 리뷰 지적: 부모 메모리 읽기 차단(`PR_SET_DUMPABLE=0`) + 테스트
 - [ ] **[백엔드]** ④ 과제 · 문항 — `feature/assignment-api` — ④-1 PR #16 (리뷰 대기), ④-2 남음
   - [x] `assignments` · `questions` 모델(`answer_key` 분리, `public_tests`) — PR #16, 테스트 모양 `{input, expected_output}`(schema D23)
-  - [ ] **md 과제 추출** `POST /classes/{id}/assignments/extract` — 정해진 양식(샘플 `docs/spec/samples/c-binary-assignment.md`(PR #14)), 규칙(정규식)으로 파싱, 양식 오류 안내
-  - [ ] 초안(샘플·빈 과제) · 저장 · 조회 · 배포 · 결과 공개 · 정책 미리보기 · 지시문 초안 — 빈 초안 · 저장 · 조회 · 배포 · 결과 공개는 PR #16. 샘플 초안 · 정책 미리보기 · 지시문 초안 남음
+  - [x] **md 과제 추출** `POST /classes/{id}/assignments/extract` — 정해진 양식(샘플 `docs/spec/samples/c-binary-assignment.md`(PR #14)), 규칙(정규식)으로 파싱, 양식 오류 안내 — `feature/assignment-extract` (리뷰 대기)
+  - [x] 초안(샘플·빈 과제) · 저장 · 조회 · 배포 · 결과 공개 · 정책 미리보기 · 지시문 초안 — 빈 초안 · 저장 · 조회 · 배포 · 결과 공개는 PR #16, 샘플 초안 · 정책 미리보기 · 지시문 초안은 `feature/assignment-extract`
   - [x] 학생처럼 졸라보기(`/assignments/simulate`) — 실제 정책 경로로 우회 요청 실행 — `feature/assignment-simulate` (리뷰 대기)
   - [ ] **[NLP]** 누출 검사가 C 코드를 못 막음(졸라보기로 발견, `test_simulate.py` xfail) — 시연 과제가 C라 우선 수정
   - [x] 학생용 조회에 `answer_key` 값이 하나도 없는지 테스트 — PR #16, 불변식 I8
-  - [ ] 시드에 C 과제(2진수 변환기·덧셈기·뺄셈기) 추가
+  - [x] 시드에 C 과제(2진수 변환기·덧셈기·뺄셈기) 추가 — 샘플 md를 읽어 배포 상태로
 - [x] **[백엔드]** ⑦ 풀이 · 제출 — `feature/submission-api` (리뷰 대기, `feature/c-runner` 위에 쌓음)
   - [x] `submissions` · `answers` · `concept_check_items` 모델, 학생 과제 조회 · 내 제출
   - [x] 공개 테스트 실행 `/run`(C 실행기)
@@ -105,7 +105,7 @@
   - [ ] 리포트 · 채점 · 결과 공개 · 결제
 
 ### 문서
-- [ ] **[백엔드]** md 과제 양식 문서(`docs/spec/`, scope.md ③) — 샘플 md를 기준으로 — 기준 샘플은 PR #14
+- [x] **[백엔드]** md 과제 양식 문서(`docs/spec/`, scope.md ③) — [assignment-md-format.md](../spec/assignment-md-format.md), 기준 샘플은 PR #14
 - [ ] **[공통]** 결정 필요: `AiPolicy` CUSTOM인데 지시문 비어 있음 허용 여부 · 지시문 최대 길이 (PR #7)
 
 ---
