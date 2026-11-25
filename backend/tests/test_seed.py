@@ -71,3 +71,22 @@ def test_seed_has_published_c_assignment_from_sample(db: Session):
     types = [q.type for q in db.scalars(select(Question).order_by(Question.position))]
     assert types == [QuestionType.MULTIPLE_CHOICE, QuestionType.SHORT_ANSWER, QuestionType.CODE,
                      QuestionType.CODE, QuestionType.PROJECT]
+
+
+def test_seed_demo_activity_fills_reports(client, db: Session):
+    from app.models import Assignment, Submission
+
+    seed(db, today=date(2026, 11, 21))
+    assignment = db.scalar(select(Assignment))
+    assert _count(db, Submission) == 3
+    login = client.post("/api/auth/login", json={"email": SEED_TEACHER_EMAIL, "password": SEED_TEACHER_PASSWORD})
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    report = client.get(f"/api/assignments/{assignment.seq}/report", headers=headers).json()
+    assert report["submitted_count"] == 3
+    assert report["dependency"] and report["signals"] and report["supplement"]
+    grading = client.get(f"/api/assignments/{assignment.seq}/grading", headers=headers).json()
+    assert len(grading) == 3 and all(g["score"] is None for g in grading)
+    students = client.get(f"/api/classes/{assignment.class_id}/students", headers=headers).json()
+    record = client.get(f"/api/assignments/{assignment.seq}/students/{students[1]['seq']}/record",
+                        headers=headers).json()
+    assert record["conversation"] and record["conversation"]["turns"]

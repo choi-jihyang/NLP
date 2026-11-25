@@ -15,6 +15,7 @@ from app.core.plans import PLANS
 from app.core.security import hash_password
 from app.models import Assignment, ClassMember, ClassPayment, ClassRoom, Enrollment, User
 from app.schemas.ai_policy import AiPolicy
+from app.seed_demo import seed_demo_activity
 from app.services import assignment_md, assignment_service
 
 SEED_TEACHER_EMAIL = "teacher@thinkguard.test"
@@ -66,7 +67,8 @@ def seed(db: Session, today: date | None = None) -> ClassRoom:
             status=EnrollmentStatus.APPROVED, decided_at=now,
         ))
     db.commit()
-    seed_assignment(db, teacher, klass)
+    assignment = seed_assignment(db, teacher, klass)
+    seed_demo_activity(db, assignment)
     return klass
 
 
@@ -91,7 +93,7 @@ def main() -> None:
             raise SystemExit(1) from e
     students = ", ".join(SEED_STUDENT_NOS)
     print(f"시드 완료: 교수자 {SEED_TEACHER_EMAIL} / 수업 코드 {klass.invite_code} / 학번 {students}"
-          " / 배포된 C 과제 1개")
+          " / 배포된 C 과제 1개(학번 1–3은 예시 풀이 기록, 4는 시연 중 직접 입장)")
 
 
 if __name__ == "__main__":
