@@ -41,13 +41,14 @@ async def reply(
         return ChatReply(decision.fixed_reply, decision.mode, result, used_llm=False)
 
     system = prompt_builder.compose(base_prompt, decision.directive)
-    draft = await llm.generate(system, [*history, ChatTurn(role="student", content=message)])
+    turns = [*history, ChatTurn(role="student", content=message)]
+    draft = await llm.generate(system, turns)
     if not draft.strip():
         # 생각 태그만 내거나 빈 답을 내면 학생에게 빈 말풍선 대신 시도를 묻는 고정 문구를 보낸다
         return ChatReply(policy.ASK_ATTEMPT_REPLY, decision.mode, result, used_llm=True)
 
     # 마지막 필터: 프롬프트가 뚫려도 정답·완성 코드는 학생에게 가지 않는다 (모든 LLM 모드에 적용)
-    check = await leak_guard.check(draft, history)
+    check = await leak_guard.check(draft, turns)  # 이번 학생 메시지까지 넘겨 학생이 보낸 빈칸과 비교한다
     if check.leaked:
         return ChatReply(
             policy.LEAK_BLOCKED_REPLY, decision.mode, result, used_llm=True,

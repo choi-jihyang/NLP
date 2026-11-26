@@ -17,4 +17,4 @@ class LeakCheckResult(BaseModel):
 class LeakGuard(ABC):
     @abstractmethod
     async def check(self, reply: str, history: list[ChatTurn]) -> LeakCheckResult:
-        """LLM 답변 초안과 이전 대화(오래된 순)를 받아 누출 여부를 판정한다."""
+        """LLM 답변 초안과 대화(오래된 순, 마지막은 이번 학생 메시지)를 받아 누출 여부를 판정한다."""

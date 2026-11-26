@@ -86,9 +86,8 @@ def test_leak_guard_receives_current_student_message():
     """학생이 보낸 빈칸과 비교할 수 있도록 누출 검사에는 이번 학생 메시지까지 넘긴다."""
     guard = RecordingGuard()
     history = [ChatTurn(role="student", content="x=3 까지 했어요"), ChatTurn(role="assistant", content="좋아요")]
-    asyncio.run(
-        chat_service.reply("다음은요?", history, "", FixedClassifier(has_self_attempt_evidence=True), MockProvider(), guard)
-    )
+    classifier = FixedClassifier(has_self_attempt_evidence=True)
+    asyncio.run(chat_service.reply("다음은요?", history, "", classifier, MockProvider(), guard))
     draft, checked = guard.calls[0]
     assert draft == MockProvider.DEFAULT_REPLY
     assert checked == [*history, ChatTurn(role="student", content="다음은요?")]
