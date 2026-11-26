@@ -22,12 +22,14 @@
 - [screens.md](planning/screens.md) — 화면 목록·기능 명세, 화면시안 v3 기준 (초안 v3 · 프론트 구현됨)
 - [page_design.html](planning/page_design.html) — 화면시안 v3 (브라우저로 열기)
 - [schema.md](planning/schema.md) — ERD, 테이블, 결정 사항 (초안 v3)
+- [mmbert-results.md](planning/mmbert-results.md) — 기존 mmBERT 평가 결과와 앙상블 실험 기준
 
 **spec**
 - [api-contract.md](spec/api-contract.md) — 화면 ↔ 서버 API 목록, 프론트 함수와 1:1 (초안 v3)
 - [integration-contract.md](spec/integration-contract.md) — 분류기·LLM Provider·코드 실행 계약 (분류기 확정, 코드 실행 구현됨)
 - [chat-policy.md](spec/chat-policy.md) — 분류 → 정책 분기 (구현됨)
 - [error-handling.md](spec/error-handling.md) — 에러 응답 형식 (초안)
+- [mmbert-hierarchical.md](spec/mmbert-hierarchical.md) — mmBERT 대화 분류 학습·평가 명세
 
 ## 문서 상태 표기
 각 문서 맨 위 `상태:` 줄 — **확정**(팀 승인) / **초안**(검토 필요) / **구현됨**(코드·테스트 있음).

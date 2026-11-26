@@ -1,0 +1,75 @@
+import importlib.metadata
+import os
+import subprocess
+import sys
+from huggingface_hub import HfApi
+from transformers import AutoTokenizer
+from mmtrain.data import sha, stable
+
+SEED = 42
+MODEL_ID = 'jhu-clsp/mmBERT-base'
+CHUNK_LENGTH = 8192       # 전체 대화 길이 제한이 아닌, 한 구간의 최대 길이.
+OVERLAP = 256
+WINDOW_BATCH = 2          # 인코더에 동시에 올릴 구간 수. A100/H100에서 smoke 후 4/8 검토.
+RECORD_BATCH = 2          # 한 번에 처리할 학생 발화 샘플 수. 각 샘플의 이전 대화도 전부 유지.
+EFFECTIVE_BATCH = 16      # optimizer 갱신 한 번당 샘플 수. 긴 샘플도 동일한 가중치.
+EPOCHS = 3
+ENCODER_LR = 2e-5
+HEAD_LR = 1e-4
+SAVE_STEPS = 100          # optimizer 포함 수 GB. Drive latest를 원자적으로 교체.
+CLASS_WEIGHTS = True      # train에서만 계산하고 0.5~5로 제한.
+if not 16 <= CHUNK_LENGTH <= 8192 or not 0 <= OVERLAP < CHUNK_LENGTH-8:
+    raise ValueError('구간 길이·overlap 설정을 확인하세요.')
+if min(WINDOW_BATCH,RECORD_BATCH,EFFECTIVE_BATCH,EPOCHS,SAVE_STEPS) < 1:
+    raise ValueError('배치·epoch·저장 주기는 양수여야 합니다.')
+
+pin_path = RUN_DIR/'model_pin.json'
+if pin_path.exists():
+    pin = json.loads(pin_path.read_text(encoding='utf-8'))
+    if pin['model_id'] != MODEL_ID:
+        raise ValueError('모델 변경 시 RUN_NAME도 바꾸세요.')
+else:
+    pin = {'model_id':MODEL_ID,'revision':HfApi().model_info(MODEL_ID).sha}
+    pin_path.write_text(json.dumps(pin,indent=2),encoding='utf-8')
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID,revision=pin['revision'])
+if tokenizer.pad_token_id is None:
+    raise ValueError('Padding token이 필요합니다.')
+config = {'run_dir':str(RUN_DIR),'data_dir':str(DATA_DIR),'model_id':MODEL_ID,'revision':pin['revision'],
+          'seed':SEED,'pad_id':tokenizer.pad_token_id,'chunk_length':CHUNK_LENGTH,'overlap':OVERLAP,
+          'window_batch':WINDOW_BATCH,'record_batch':RECORD_BATCH,'effective_batch':EFFECTIVE_BATCH,
+          'epochs':EPOCHS,'encoder_lr':ENCODER_LR,'head_lr':HEAD_LR,'save_steps':SAVE_STEPS,
+          'class_weights':CLASS_WEIGHTS,'patience':2,
+          'inputs':{p.name:sha(p) for p in sorted(DATA_DIR.iterdir()) if p.is_file()},
+          'versions':VERSIONS,'implementation':{str(p.relative_to(CODE)):sha(p) for p in sorted(CODE.rglob('*.py'))}}
+SCHEDULE_KEYS = ('window_batch','record_batch','save_steps')
+config['identity'] = stable({k:v for k,v in config.items() if k not in SCHEDULE_KEYS})
+CONFIG_PATH = RUN_DIR/'config.json'
+if CONFIG_PATH.exists():
+    previous = json.loads(CONFIG_PATH.read_text(encoding='utf-8'))
+    if previous['identity'] != config['identity']:
+        raise ValueError('실험 설정이 다릅니다. RUN_NAME을 새로 지정하세요.')
+    if previous != config:
+        with (RUN_DIR/'schedule_changes.jsonl').open('a',encoding='utf-8') as stream:
+            stream.write(json.dumps({k:config[k] for k in SCHEDULE_KEYS})+'\n')
+CONFIG_PATH.write_text(json.dumps(config,indent=2),encoding='utf-8')
+del tokenizer
+
+def job(module,*args):
+    environment = dict(os.environ,PYTHONPATH=str(CODE),PYTHONUNBUFFERED='1',TOKENIZERS_PARALLELISM='true')
+    process = subprocess.Popen([sys.executable,'-m',module,str(CONFIG_PATH),*args],cwd=CODE,env=environment,
+                               stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+    try:
+        for line in process.stdout:
+            print(line,end='',flush=True)
+        if process.wait()!=0:
+            raise RuntimeError('처리 실패. 위 오류를 확인하세요. 기존 Drive 파일은 지우지 마세요.')
+    except BaseException:
+        process.terminate()
+        try:
+            process.wait(timeout=20)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+        raise
+
+print('mmBERT full fine-tuning입니다. LoRA가 아닙니다. 토큰 캐시 후 smoke를 실행하세요.')

@@ -1,0 +1,48 @@
+import hashlib
+import json
+import shutil
+import zipfile
+from pathlib import Path
+from google.colab import drive, files
+
+drive.mount('/content/drive')
+PROJECT = Path('/content/drive/MyDrive/ThinkGuard_NLP')
+RUN_NAME = 'studychat_mmbert_hierarchical_v1'
+RUN_DIR = PROJECT / RUN_NAME
+RUN_DIR.mkdir(parents=True, exist_ok=True)
+# 정리한 공유 폴더와 내용이 같은 원래 export 폴더를 기본 경로로 사용합니다.
+SPLITS_DIR = PROJECT / 'studychat_qwen_blind_verify_v1' / 'final'
+DATA_DIR = RUN_DIR / 'inputs'
+DATA_DIR.mkdir(exist_ok=True)
+for split in ('train','valid','test'):
+    name = f'{split}_ok.csv'
+    source, target = SPLITS_DIR/name, DATA_DIR/name
+    if not source.exists():
+        raise FileNotFoundError('CSV가 없습니다. SPLITS_DIR을 확인하세요: '+str(source))
+    if target.exists():
+        if hashlib.sha256(source.read_bytes()).digest() != hashlib.sha256(target.read_bytes()).digest():
+            raise ValueError('원본 CSV가 바뀌었습니다. RUN_NAME을 새로 지정하세요.')
+    else:
+        shutil.copy2(source,target)
+BUNDLE_NAME = 'thinkguard_qwen_verification_bundle.zip'
+BUNDLE = PROJECT/BUNDLE_NAME
+if not BUNDLE.exists():
+    print('이전에 제공한 검증용 ZIP을 업로드하세요:',BUNDLE_NAME)
+    uploaded = files.upload()
+    if set(uploaded) != {BUNDLE_NAME}:
+        raise ValueError('검증용 ZIP 하나를 선택하세요.')
+    BUNDLE.write_bytes(uploaded[BUNDLE_NAME])
+    del uploaded
+with zipfile.ZipFile(BUNDLE) as archive:
+    manifest = json.loads(archive.read('bundle_manifest.json'))
+    expected = manifest['files']['inputs.jsonl.gz']
+    target = DATA_DIR/'inputs.jsonl.gz'
+    if not target.exists():
+        with archive.open('inputs.jsonl.gz') as src, target.with_suffix('.tmp').open('wb') as dst:
+            shutil.copyfileobj(src,dst)
+        target.with_suffix('.tmp').replace(target)
+    with target.open('rb') as stream:
+        if hashlib.file_digest(stream,'sha256').hexdigest() != expected:
+            raise ValueError('원문 해시 불일치')
+print('입력 스냅샷:',DATA_DIR)
+print('모델·결과 저장:',RUN_DIR)

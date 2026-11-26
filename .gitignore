@@ -21,6 +21,8 @@ env/
 
 # Data, models, logs
 data/raw/
+data/local_review/
+thinkguard_75_audited.csv
 checkpoints/
 *.pt
 *.bin

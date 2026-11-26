@@ -1,0 +1,18 @@
+import importlib.metadata
+import subprocess
+import sys
+
+PACKAGES = ['torch','transformers','huggingface-hub','numpy','safetensors','sentencepiece']
+lock = RUN_DIR/'environment_versions.json'
+if lock.exists():
+    pinned = json.loads(lock.read_text(encoding='utf-8'))
+    requirements = [f'{name}=={pinned[name]}' for name in PACKAGES]
+else:
+    # Colab의 CUDA PyTorch는 유지. vLLM 설치와 섞지 말고 새 GPU 런타임에서 실행하세요.
+    requirements = ['transformers>=4.56,<5','huggingface-hub>=0.34,<1',
+                    'numpy>=2,<3','safetensors','sentencepiece']
+subprocess.check_call([sys.executable,'-m','pip','install','-q','--upgrade',*requirements])
+VERSIONS = {name:importlib.metadata.version(name) for name in PACKAGES}
+lock.write_text(json.dumps(VERSIONS,indent=2),encoding='utf-8')
+print('환경 고정:',VERSIONS)
+print('GPU 모델은 자식 프로세스에서 로드하므로 이 셀에서는 GPU 메모리를 사용하지 않습니다.')
