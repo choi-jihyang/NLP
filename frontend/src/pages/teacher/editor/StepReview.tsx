@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 
 import { getPolicyPreview, publishAssignment, saveAssignment, simulateAttacks, type Assignment } from '../../../api/assignments'
+import { LANGUAGE_LABEL } from '../../../api/client'
 import SimulationList from './SimulationList'
 
 type Props = { draft: Assignment; onSaved: (saved: Assignment) => void; onPrev: () => void }
@@ -15,7 +16,7 @@ export default function StepReview({ draft, onSaved, onPrev }: Props) {
     mutationFn: async () => {
       const saved = await saveAssignment(draft)
       onSaved(saved)
-      const { invite_code } = await publishAssignment(saved.id)
+      const { invite_code } = await publishAssignment(saved.seq ?? 0)
       return { saved, invite_code }
     },
   })
@@ -26,7 +27,7 @@ export default function StepReview({ draft, onSaved, onPrev }: Props) {
       <section className="panel stack">
         <h2>{draft.title || '이름 없는 과제'}</h2>
         <div className="row">
-          {[draft.audience, draft.language, draft.course].filter(Boolean).map((t) => (
+          {[draft.audience, LANGUAGE_LABEL[draft.language], draft.course].filter(Boolean).map((t) => (
             <span className="chip" key={t}>{t}</span>
           ))}
           {p.code_line_limit > 0 && <span className="chip acc">힌트 코드 {p.code_line_limit}줄 이내</span>}
@@ -66,10 +67,10 @@ export default function StepReview({ draft, onSaved, onPrev }: Props) {
               </div>
               <span className="chip good">배포됨</span>
             </div>
-            <p>학생에게 수업 코드를 공유하면 바로 과제를 시작할 수 있어요. 학생은 가입 없이 수업 코드와 수업용 ID로 입장해요.</p>
+            <p>학생에게 수업 코드를 공유하면 바로 과제를 시작할 수 있어요. 학생은 가입 없이 수업 코드와 학번으로 입장해요.</p>
             <div className="row">
               <Link className="btn primary" to={base}>클래스로 돌아가기</Link>
-              <Link className="btn" to={`${base}/dashboard?assignment=${deploy.data.saved.id}`}>반 리포트 보기</Link>
+              <Link className="btn" to={`${base}/dashboard?assignment=${deploy.data.saved.seq}`}>반 리포트 보기</Link>
             </div>
           </div>
         ) : (

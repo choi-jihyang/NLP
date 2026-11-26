@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 type Props = {
-  assignmentId: string
+  assignmentId: number
   submitted: number
   total: number
   finalized: boolean

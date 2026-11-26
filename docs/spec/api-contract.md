@@ -2,6 +2,7 @@
 
 > 상태: **초안 v3** — 프론트 화면시안 v3(프로그래밍 과제)와 `frontend/src/api/` 예시 데이터 기준. 팀 확인 전.
 > 공통: 모든 경로는 `/api` 아래. 요청·응답은 JSON, 필드는 snake_case, Enum 값은 대문자 문자열([../planning/schema.md](../planning/schema.md)).
+> id 필드: 모든 PK는 `seq`(숫자)로 주고받는다(schema.md D20). FK는 `class_id`·`student_id`처럼 원래 이름 + 숫자. 이 문서의 `id`·`{id, …}` 표기는 각 API 구현 PR에서 `seq`로 고친다.
 > 에러 형식은 [error-handling.md](error-handling.md). 실제 스펙은 서버를 띄운 뒤 `http://localhost:8000/docs`(Swagger)에서 확인하고, 이 문서와 다르면 이 문서를 고친다.
 > 응답 타입의 필드 목록은 `frontend/src/api/<도메인>.ts`의 타입과 같다. 백엔드 Pydantic 스키마는 그 이름을 그대로 쓴다.
 
@@ -42,101 +43,107 @@
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
 | GET | `/health` | 공개 | → `{status, llm_provider, classifier}` ✅ 구현됨 | `getHealth` |
-| POST | `/auth/signup` | 공개 | `{name, email, password}` → `{access_token, user}` 교수자만 가입. 비밀번호 8자 이상. 오류: `EMAIL_TAKEN` | `signup` |
-| POST | `/auth/login` | 공개 | `{email, password}` → `{access_token, user}` | `login` |
+| POST | `/auth/signup` | 공개 | `{name, email, password}` → **201** `{access_token, user{seq, name, email, role}}` 교수자만 가입. 이름 1–100자, 이메일은 소문자로 저장, 비밀번호 8–128자. 오류: `EMAIL_TAKEN`, `VALIDATION_FAILED` ✅ 구현됨 | `signup` |
+| POST | `/auth/login` | 공개 | `{email, password}` → `{access_token, user{seq, name, email, role}}`. 실패는 이유와 상관없이 `INVALID_CREDENTIALS`. 교수자 토큰 12시간 ✅ 구현됨 | `login` |
 
 ### 클래스 · 참여
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/classes` | T | → `ClassInfo[]` | `listClasses` |
-| POST | `/classes` | T | `{name, plan, starts_on}` → `ClassInfo` (수업 코드 발급, 학생 수 상한 = 요금제 상한). `starts_on`은 오늘 이후 날짜(`YYYY-MM-DD`), 시작 = 그날 00:00 KST, 만료 = 시작 + 1년. `ClassInfo`에 `starts_at`·`expires_at` 포함 | `createClass` |
-| GET | `/classes/{class_id}/ai-defaults` | T | → `AiPolicy` 새 과제에 미리 채울 정책 | `getAiDefaults` |
-| PUT | `/classes/{class_id}/ai-defaults` | T | `AiPolicy` → `AiPolicy` (`prompt_mode`는 항상 `FORM`, 이미 만든 과제에는 적용 안 함) | `saveAiDefaults` |
-| GET | `/classes/{class_id}` | T | → `ClassInfo` (`invite_code` 포함) | `getClass` |
-| GET | `/classes/{class_id}/students` | T | → `{id, student_no}[]` 참여 중인 학생 | `listStudents` |
-| GET | `/me/classes` | S | → `MyClass[]` (참여 클래스 + 과제별 상태 `IN_PROGRESS`·`FINALIZED`·`RELEASED`) | `listMyClasses` |
-| POST | `/enrollments` | 공개 | `{invite_code, student_no}` → `{class_id, class_name, status: APPROVED\|PENDING, access_token}` (결정 A). 명단에서 사용 중(`is_use`)이거나 입장 방식이 `OPEN`이면 바로 `APPROVED`, 아니면 참여 요청(`PENDING`). 오류: `INVITE_CODE_INVALID`, `CLASS_NOT_STARTED`, `CLASS_FULL`, `CLASS_EXPIRED`, 내보낸 학번이면 `FORBIDDEN` | `joinClass` |
-| GET | `/enrollments/{class_id}/me` | S | → `{status: PENDING\|APPROVED\|REJECTED\|REMOVED}` 참여 요청이 수락됐는지 확인 | `getMyEnrollment` |
-| POST | `/enrollments/{class_id}/consent` | S | → `{ok}` 기록 열람·붙여넣기 기록 안내 동의 | `acceptConsent` |
-| GET | `/classes/{class_id}/join-requests` | T | → `{id, student_no, requested_at}[]` 기다리는 참여 요청 | `listJoinRequests` |
-| POST | `/classes/{class_id}/join-requests/{request_id}` | T | `{approve: bool}` → `{ok}`. 수락할 때 정원이 차 있으면 `CLASS_FULL` | `decideJoinRequest` |
-| DELETE | `/classes/{class_id}/students/{student_id}` | T | → `{ok}` 학생 내보내기. **제출·대화 기록은 남기고** 학생의 과제·AI 접근만 막는다. 같은 학번으로 다시 입장 불가 | `removeStudent` |
-| GET | `/classes/{class_id}/roster` | T | → `{join_mode: APPROVAL\|OPEN, roster: {student_no, is_use}[]}` 입장 방식과 미리 넣어 둔 학번 명단 | `getRosterSettings` |
-| PUT | `/classes/{class_id}/roster` | T | 같은 모양 → 같은 모양. 명단에서 빼면 지우지 않고 `is_use = false`(이미 수락된 학생은 그대로). 이미 요청한 학생이 사용 중인 명단에 있으면 저장할 때 바로 수락 | `saveRosterSettings` |
+| GET | `/classes` | T | → `ClassInfo[]` 내 클래스만. `ClassInfo` = `{seq, name, invite_code, plan, student_limit, student_count, starts_at, expires_at}` ✅ | `listClasses` |
+| POST | `/classes` | T | `{name, starts_on, payment_seq}` → **201** `ClassInfo`. 결제(NEW, 미사용)로 개설: 요금제·상한은 결제에서 복사, 시작 = `starts_on` 00:00 KST(오늘 이후), 만료 = 시작 + 1년, 수업 코드 `TG-1234` 발급. 오류: `CONFLICT`(남의·이미 쓴 결제), `VALIDATION_FAILED` ✅ | `createClass` |
+| GET | `/classes/{class_id}` | T | → `ClassInfo` ✅ | `getClass` |
+| GET | `/classes/{class_id}/ai-defaults` | T | → `AiPolicy` 새 과제에 미리 채울 정책 ✅ | `getAiDefaults` |
+| PUT | `/classes/{class_id}/ai-defaults` | T | `AiPolicy` → `AiPolicy` (`prompt_mode`는 항상 `FORM`, 이미 만든 과제에는 적용 안 함) ✅ | `saveAiDefaults` |
+| GET | `/classes/{class_id}/students` | T | → `{seq, student_no}[]` 승인된 학생(`seq` = 학생 계정) ✅ | `listStudents` |
+| GET | `/me/classes` | S | → `{class_id, class_name, student_no, enrollment_status, assignments}[]` 승인·대기 중인 클래스. `assignments`는 ④ 과제 API 전까지 `[]` ✅ | `listMyClasses` |
+| POST | `/enrollments` | 공개(학생 토큰 있으면 사용) | `{invite_code, student_no}` → `{class_id, class_name, status: APPROVED\|PENDING, access_token \| null, reentry_ticket \| null}`. 명단에서 사용 중(`is_use`)이거나 `OPEN`이면 바로 `APPROVED`, 아니면 `PENDING`. **다시 입장**: 이미 입장한 학번이 토큰 없이(또는 다른 계정으로) 오면 토큰 대신 `reentry_ticket`만 준다(`access_token: null`, `status: PENDING`). 원래 참여 상태는 그대로(schema D21). 오류: `INVITE_CODE_INVALID`, `CLASS_NOT_STARTED`, `CLASS_EXPIRED`, `CLASS_FULL`, `ALREADY_ENROLLED`(같은 클래스 다른 학번), 내보낸 학번·교수자 토큰이면 `FORBIDDEN` ✅ | `joinClass` |
+| POST | `/enrollments/reentry` | 공개 | `{ticket}` → `{status, access_token \| null}`. 교수자 수락 전이면 `{status: PENDING, access_token: null}`, 수락 뒤 토큰을 **한 번** 준다. 거절·없는 티켓 · 내보낸 학생은 `NOT_FOUND` ✅ | `claimReentry` |
+| GET | `/enrollments/{class_id}/me` | S | → `{status}` 참여 요청이 수락됐는지 확인 ✅ | `getMyEnrollment` |
+| POST | `/enrollments/{class_id}/consent` | S | → `{ok}` 기록 열람·붙여넣기 기록 안내 동의(승인된 참여만) ✅ | `acceptConsent` |
+| GET | `/classes/{class_id}/join-requests` | T | → `{seq, student_no, requested_at, is_reentry}[]` 기다리는 참여 요청(`seq` = 참여). `is_reentry` = 다시 입장 요청(티켓 대기 중) ✅ | `listJoinRequests` |
+| POST | `/classes/{class_id}/join-requests/{seq}` | T | `{approve: bool}` → `{status}`. 처음 요청 수락 시 정원이 차 있으면 `CLASS_FULL`. 다시 입장 요청은 참여 상태·정원을 바꾸지 않고, 수락하면 티켓으로 토큰을 받을 수 있게, 거절하면 티켓 무효 ✅ | `decideJoinRequest` |
+| DELETE | `/classes/{class_id}/students/{student_id}` | T | → `{ok}` 학생 내보내기. **제출·대화 기록은 남기고** 과제·AI 접근만 막는다. 같은 학번으로 다시 입장 불가 ✅ | `removeStudent` |
+| GET | `/classes/{class_id}/roster` | T | → `{join_mode: APPROVAL\|OPEN, roster: {student_no, is_use}[]}` ✅ | `getRosterSettings` |
+| PUT | `/classes/{class_id}/roster` | T | 같은 모양 → 같은 모양. 목록에서 빠진 학번은 지우지 않고 `is_use = false`(이미 수락된 학생은 그대로). 사용 중인 명단 학번의 **처음** 참여 요청은 저장할 때 자동 수락(다시 입장 요청은 교수자만 수락). 같은 학번이 여러 번 오면 하나라도 사용이면 사용 ✅ | `saveRosterSettings` |
 
 - 시작 전(`starts_at` 이전) 클래스는 교수자 준비(과제 만들기·명단)만 되고, 학생 입장은 `CLASS_NOT_STARTED`.
+- 남의 클래스는 `FORBIDDEN`, 없는 클래스는 `NOT_FOUND`(불변식 I7).
 
 ### 과제 만들기 (교수자)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/classes/{class_id}/assignments` | T | → `AssignmentSummary[]` | `listAssignments` |
-| POST | `/classes/{class_id}/assignments/drafts` | T | `{source: "SAMPLE" \| "BLANK"}` → `Assignment` (저장 전 초안, `id: "new"`) | `createDraftFromSample`, `createBlankDraft` |
-| POST | `/classes/{class_id}/assignments/extract` | T | multipart `file` → `Assignment` 초안. 문항·코드·정답·테스트·배점 추출 | `extractFromFile` |
-| POST | `/classes/{class_id}/assignments` | T | `Assignment` → `Assignment` (새로 저장) | `saveAssignment` (id가 `new`) |
-| GET | `/assignments/{assignment_id}` | T | → `Assignment` (정답·숨김 테스트·모범 답안 포함) | `getAssignment` |
-| PUT | `/assignments/{assignment_id}` | T | `Assignment` → `Assignment` (결정 D) | `saveAssignment` |
-| POST | `/assignments/{assignment_id}/publish` | T | → `{invite_code}` | `publishAssignment` |
-| POST | `/assignments/{assignment_id}/release` | T | → `{results_released: true}` 점수·정답·내 리포트를 학생에게 공개 | `releaseResults` |
-| POST | `/assignments/preview` | T | `Assignment` → `{lines[], hint_mode_label}` "학생은 이렇게 경험해요" (프롬프트 원문 아님) | `getPolicyPreview` |
-| POST | `/assignments/prompt-draft` | T | `Assignment` → `{prompt}` 지시문 직접 작성의 시작 문안 | `getPromptDraft` (응답에서 `prompt`를 꺼냄) |
-| POST | `/assignments/simulate` | T | `Assignment` → `SimulationCase[]` 우회 요청을 보내 본 결과 | `simulateAttacks` |
+| GET | `/classes/{class_id}/assignments` | T | → `AssignmentSummary[]` `{seq, title, kinds, status, due_at, hint_mode, submitted_count, student_count, todo, results_released}`. `submitted_count`는 ⑦ 전까지 0 ✅ | `listAssignments` |
+| POST | `/classes/{class_id}/assignments/drafts` | T | `{source: "BLANK" \| "SAMPLE"}` → `Assignment` (저장 전 초안, `seq: null`, 정책 = 클래스 AI 기본값). `SAMPLE` = 샘플 md([samples/c-binary-assignment.md](samples/c-binary-assignment.md))를 읽은 C 과제 ✅ | `createDraftFromSample`, `createBlankDraft` |
+| POST | `/classes/{class_id}/assignments/extract` | T | multipart `file`(`.md`, UTF-8, 200KB 이하) → `Assignment` 초안(저장 안 함). 양식: [assignment-md-format.md](assignment-md-format.md). 양식 오류는 `VALIDATION_FAILED`, `message`에 틀린 곳을 줄마다 ✅ | `extractFromFile` |
+| POST | `/classes/{class_id}/assignments` | T | `Assignment` → **201** `Assignment` (새로 저장). 유형별 검증 실패는 `VALIDATION_FAILED` ✅ | `saveAssignment` (id가 `new`) |
+| GET | `/assignments/{assignment_id}` | T | → `Assignment` (정답·숨김 테스트·모범 답안 포함) ✅ | `getAssignment` |
+| PUT | `/assignments/{assignment_id}` | T | `Assignment` → `Assignment`. 배포 전에는 문항을 통째로 교체. **배포 후에는 문항 · `language`가 바뀌면 `CONFLICT`**(같은 문항을 다시 보내는 건 통과), 결과 공개 후에는 모든 수정 `CONFLICT`(schema D24) ✅ | `saveAssignment` |
+| POST | `/assignments/{assignment_id}/publish` | T | → `{invite_code}`. 문항이 없으면 `CONFLICT`, 이미 배포했으면 그대로 ✅ | `publishAssignment` |
+| POST | `/assignments/{assignment_id}/release` | T | → `{results_released: true}` 점수·정답·내 리포트를 학생에게 공개. 배포 전이면 `CONFLICT` ✅ | `releaseResults` |
+| POST | `/assignments/preview` | T | `Assignment` → `{lines[], hint_mode_label}` "학생은 이렇게 경험해요" (프롬프트 원문 아님) ✅ | `getPolicyPreview` |
+| POST | `/assignments/prompt-draft` | T | `Assignment` → `{prompt}` 지시문 직접 작성의 시작 문안. 정답 · 숨김 테스트는 넣지 않는다 ✅ | `getPromptDraft` (응답에서 `prompt`를 꺼냄) |
+| POST | `/assignments/simulate` | T | `Assignment` → `SimulationCase[]` `{question_index, message, classification, attempt, leak_blocked, external_signals, response_mode, reply}`. 실제 정책 경로(분류기 · LLM · 누출 검사)로 우회 요청 최대 6개를 보낸다. 도움 방식 고르기가 나오면 `ORIGINAL`을 고른 것으로 한 번 더 보낸다. 분류기 · LLM이 꺼져 있으면 503 ✅ | `simulateAttacks` |
 
 - preview · prompt-draft · simulate는 **저장 전 초안**을 받으므로 과제 id 없는 경로를 쓴다.
 - `Assignment.policy`(`AiPolicy`)에 `usage_limit`(학생 1명 · 이 과제 AI 메시지 수, 기본 30)를 둔다.
-- 코드 작성 문항 테스트는 지금처럼 `tests[{call, expected, hidden}]` 한 배열로 주고받는다. 서버가 저장할 때 공개(`public_tests`)와 숨김(`answer_key.hidden_tests`)으로 나누고, 교수자 조회 때 다시 합쳐 돌려준다([schema.md](../planning/schema.md) D17).
+- 코드 작성 문항 테스트는 `tests[{input, expected_output, hidden}]`(표준 입력 → 표준 출력, schema D23) 한 배열로 주고받는다. 서버가 저장할 때 공개(`public_tests`)와 숨김(`answer_key.hidden_tests`)으로 나누고, 교수자 조회 때 다시 합쳐 돌려준다([schema.md](../planning/schema.md) D17).
 - `custom_prompt`를 써도 고정 규칙(정답·완성 코드 금지, 시도 지어내기 금지, 누출 검사)은 항상 붙는다(불변식 I3).
 
 ### 풀이 · 제출 (학생)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/assignments/{assignment_id}/solve` | S | → `StudentAssignment` | `getStudentAssignment` |
-| GET | `/assignments/{assignment_id}/submission` | S | → `Submission` (없으면 만든다) | `getMySubmission` |
-| POST | `/assignments/{assignment_id}/questions/{question_id}/run` | S | `{code}` → `TestResult[]` **공개 테스트만** | `runPublicTests` |
-| PUT | `/assignments/{assignment_id}/answers/{question_id}` | S | `{content}` → `Submission`. 처음 내는 문항이고 힌트 0단계면 `AWAITING_CHECK`, 아니면 `SUBMITTED` | `submitAnswer` |
-| POST | `/assignments/{assignment_id}/answers/{question_id}/concept-check` | S | `{reply, elapsed_ms}` → `Submission`. 붙여넣기는 `/paste-events`(`field = CONCEPT_CHECK`)로만 보낸다 | `answerConceptCheck` |
-| DELETE | `/assignments/{assignment_id}/answers/{question_id}/concept-check` | S | → `Submission` 답 고치러 돌아가기(`DRAFT`). 추가 질문 단계에서는 `CONFLICT` | `cancelConceptCheck` |
-| POST | `/assignments/{assignment_id}/submission/finalize` | S | → `Submission` 최종 제출. 안 낸 문항이 있으면 `CONFLICT` | `finalizeSubmission` |
+| GET | `/assignments/{assignment_id}/solve` | S | → `StudentAssignment` `{seq, title, course, language, due_at, hint_mode, hint_mode_label, max_hint_steps, external_signal_enabled, questions[{seq, type, points, prompt, code, choices, starter_code, ai_help, ai_enabled, public_tests[{input, expected_output}], hidden_test_count}]}`. 승인된 참여 + 배포된 과제만, 아니면 `FORBIDDEN`(초안 · 없는 과제 포함). 🔒 값 없음(I8) ✅ | `getStudentAssignment` |
+| GET | `/assignments/{assignment_id}/submission` | S | → `Submission` `{assignment_id, answers{문항 seq: AnswerState}, finalized, results_released}` (없으면 만든다). `AnswerState` = `{question_id, content, status, submitted_at, submit_count, hint_step, concept_check{questions[], answered} \| null}` ✅ | `getMySubmission` |
+| POST | `/assignments/{assignment_id}/questions/{question_id}/run` | S | `{code}` → `{ok, error, results[{input, expected_output, actual_output, passed, error}]}` **공개 테스트만**. 컴파일 오류면 `ok: false` + `error`. 코드 작성 문항이 아니면 `CONFLICT`, 실행기 없으면 `RUNNER_UNAVAILABLE` ✅ | `runPublicTests` |
+| PUT | `/assignments/{assignment_id}/answers/{question_id}` | S | `{content}` → `Submission`. 처음 내는 문항이고 힌트 0단계면(`concept_check_enabled`일 때) `AWAITING_CHECK`, 아니면 `SUBMITTED`. 제출할 때 자동 채점(🔒 저장만). 객관식은 선택지 번호(`'0'`부터) ✅ | `submitAnswer` |
+| POST | `/assignments/{assignment_id}/answers/{question_id}/concept-check` | S | `{reply, elapsed_ms}` → `Submission`. 붙여넣기는 `/paste-events`(`field = CONCEPT_CHECK`)로만 보낸다(다른 필드는 거부). 기다리는 질문이 없으면 `CONFLICT` ✅ | `answerConceptCheck` |
+| DELETE | `/assignments/{assignment_id}/answers/{question_id}/concept-check` | S | → `Submission` 답 고치러 돌아가기(`DRAFT`). 추가 질문 단계에서는 `CONFLICT`. 다시 제출하면 같은 질문이 이어진다 ✅ | `cancelConceptCheck` |
+| POST | `/assignments/{assignment_id}/submission/finalize` | S | → `Submission` 최종 제출. 안 낸 문항(개념 확인 대기 포함)이 있으면 `CONFLICT`, 마감 뒤 `CONFLICT` ✅ | `finalizeSubmission` |
 
-- 최종 제출 뒤 답 제출·개념 확인·채팅은 `ALREADY_SUBMITTED`.
+- 최종 제출 뒤 답 제출·개념 확인·테스트 실행·채팅은 `ALREADY_SUBMITTED`. 마감 뒤 제출은 `CONFLICT`(결정 C).
+- **채점**(제출 때, 🔒 `answers`에만): 객관식 = 번호 일치, 출력 예측 = 정답 · 인정 답안과 비교(앞뒤 · 줄 끝 공백 무시), 코드 작성 = 공개 + 숨김 테스트 전체 실행 후 **통과 비율만큼 점수(내림)**, 간단 제작 = 교수자 채점. 감점: `PER_STEP` 힌트 단계마다 −1, `PRACTICE` 힌트를 받았으면 0점.
+- 개념 확인 질문은 지금 **유형별 고정 문구**다. AI 작성 점수(scope ②)가 정해지면 점수가 0.7 이상일 때 질문을 하나 더 붙인다(코드 자리 있음).
 - **결과 공개 전 학생 응답에는 정오·점수·숨김 테스트 결과를 넣지 않는다.** `AnswerState`에 해당 필드 자체가 없다.
 
 ### 학습 AI 채팅 (학생)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/assignments/{assignment_id}/questions/{question_id}/chat` | S | → `ChatState` | `getChat` |
-| POST | `/assignments/{assignment_id}/questions/{question_id}/chat` | S | `{message, choice?}` → `ChatState`. 붙여넣기는 `/paste-events`(`field = CHAT`)로만 보낸다 | `sendChat` |
+| GET | `/assignments/{assignment_id}/questions/{question_id}/chat` | S | → `ChatState` `{question_id, turns[{role, text, response_mode, trace}], hint_step, max_hint_steps, usage_remaining}`. 자기 대화만 ✅ | `getChat` |
+| POST | `/assignments/{assignment_id}/questions/{question_id}/chat` | S | `{message, choice?}` → `ChatState`. 붙여넣기는 `/paste-events`(`field = CHAT`)로만 보낸다(다른 필드는 거부). `choice`는 직전 AI 답이 `OFFER_CHOICES`일 때만(아니면 `CONFLICT`), 이때 분류는 원래 요청 메시지로 한다 ✅ | `sendChat` |
 
 - 잠김(`FORBIDDEN`): 교수자가 AI를 끈 간단 제작 문항, 개념 확인 중인 문항, 최종 제출한 과제.
 - 완성 답안 요청 + 시도 근거 없음이면 LLM을 부르지 않고 `OFFER_CHOICES` 응답을 준다. 학생이 `choice`(`FIRST_HINT`·`FEEDBACK`·`ORIGINAL`)를 골라 다시 보낸다. `ORIGINAL`이어도 정책은 `HINT_ONLY` 그대로(불변식 I1).
-- 사용량 상한이면 LLM을 부르지 않고 `USAGE_LIMIT`(불변식 I6).
+- 사용량 상한이면 분류기 · LLM을 부르지 않고 `USAGE_LIMIT`(불변식 I6). 사용량 = 이 과제(모든 문항)에서 학생이 보낸 메시지 수.
+- 힌트 단계: `HINT_ONLY` · `NEXT_STEP` 답을 보낼 때마다 +1(최대 `max_hint_steps`), 누출 검사로 막힌 답은 올리지 않는다.
+- LLM에는 최근 `CHAT_HISTORY_TURNS`(기본 8)개만 보낸다. 분류 결과 · 막힌 초안은 🔒 저장만 한다. `trace`는 `DEMO_TRACE=true`일 때만(결정 F).
 
 ### 붙여넣기 기록
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| POST | `/paste-events` | S | `{question_id, field, length, pasted_at}` → `{ok}`. **내용 필드 없음**, 알 수 없는 필드는 거부(불변식 I5). 서버는 이 학생의 그 문항 답(`answers`)에 묶어 저장하고, 답이 없으면 만든다 | `logPaste` |
+| POST | `/paste-events` | S | `{question_id, field, length, pasted_at}` → `{ok}`. **내용 필드 없음**, 알 수 없는 필드는 거부(불변식 I5). 서버는 이 학생의 그 문항 답(`answers`)에 묶어 저장하고, 답이 없으면 만든다 ✅ | `logPaste` |
 
 ### 이해 확인 · 내 리포트 (학생)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/assignments/{assignment_id}/understanding-check` | S | → `UnderstandingCheck` (최종 제출 후에만) | `getUnderstandingCheck` |
-| POST | `/assignments/{assignment_id}/understanding-check` | S | `{explanation, answers[{question_id, value, confidence}]}` → `{submitted_at}`. 정오는 돌려주지 않음 | `submitUnderstandingCheck` |
-| GET | `/assignments/{assignment_id}/my-report` | S | → `{released: false, assignment_title}` 또는 `{released: true, …MyReport}` | `getMyReport` |
+| GET | `/assignments/{assignment_id}/understanding-check` | S | → `UnderstandingCheck` `{explain_prompt, explain_code, items[{question_id, type, prompt, code, choices}], submitted}` (최종 제출 후에만, 아니면 `CONFLICT`). 확인 문제의 정답은 없음. `variant_enabled`가 꺼져 있으면 `items: []` ✅ | `getUnderstandingCheck` |
+| POST | `/assignments/{assignment_id}/understanding-check` | S | `{explanation, answers[{question_id, value, confidence}]}` → `{submitted_at}`. 정오는 돌려주지 않음. 한 번만(두 번째는 `CONFLICT`), 목록에 없는 문항은 `VALIDATION_FAILED` ✅ | `submitUnderstandingCheck` |
+| GET | `/assignments/{assignment_id}/my-report` | S | → `{released: false, assignment_title}` 또는 `{released: true, …MyReport}`. 문장 칸은 규칙 기반 ✅ | `getMyReport` |
 
 ### 리포트 · 채점 (교수자)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/assignments/{assignment_id}/report` | T | → `AssignmentReport` | `getAssignmentReport` |
-| GET | `/assignments/{assignment_id}/grading` | T | → `GradingItem[]` 간단 제작 답안 | `getGradingList` |
-| PUT | `/answers/{answer_id}/grade` | T | `{score, feedback}` → `GradingItem`. `0 ≤ score ≤ points` | `gradeAnswer` |
-| GET | `/assignments/{assignment_id}/students/{student_id}/record` | T | → `StudentRecord` | `getStudentRecord` |
+| GET | `/assignments/{assignment_id}/report` | T | → `AssignmentReport` 최종 제출한 학생 기준. 확인 문제가 없는 문항의 `variant_rate`(과제 전체에 없으면 `alone_variant_rate`)는 `null` — 화면은 "확인 문제 없음". 문장 칸(오개념 note · supplement · cause)은 과제 파일 오개념 표 · 확인 문제 결과로 만든 규칙 기반 문장 ✅ | `getAssignmentReport` |
+| GET | `/assignments/{assignment_id}/grading` | T | → `GradingItem[]` `{answer_id, student_name(학번), question_index(0부터), points, rubric, content, signals, score, feedback}` 제출된 간단 제작 답안. `signals` = 붙여넣기 길이로 계산한 참고 신호 ✅ | `getGradingList` |
+| PUT | `/answers/{answer_id}/grade` | T | `{score, feedback}` → `GradingItem`. `0 ≤ score ≤ points`(아니면 `VALIDATION_FAILED`). 간단 제작 · 제출된 답만(아니면 `CONFLICT`), 남의 클래스 `FORBIDDEN`. 결과 공개 뒤에도 가능(결정 D) ✅ | `gradeAnswer` |
+| GET | `/assignments/{assignment_id}/students/{student_id}/record` | T | → `StudentRecord` 이 반 학생만(없으면 `NOT_FOUND`). `conversation`은 힌트를 가장 많이 받은 문항의 대화 ✅ | `getStudentRecord` |
 
 - 외부 AI 참고 신호·개념 확인 AI 작성 신호는 **교수자 응답에만** 있고, 점수를 바꾸지 않는다.
 
 ### 요금제 · 결제 (목업)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/plans` | 공개 | → `Plan[]` `{code, name, student_limit, price}` | `listPlans` |
-| POST | `/payments` | T | `{plan, kind: NEW\|EXTEND, class_id}` → `{payment_id, amount, period_end}` | `payMock` |
+| GET | `/plans` | 공개 | → `Plan[]` `{code, name, student_limit, price}` ✅ | `listPlans` |
+| POST | `/payments` | T | `{plan, kind: "NEW"}` → **201** `{payment_seq, plan, student_limit, amount}` 클래스 미연결 이용권(schema D22). `{plan, kind: "EXTEND", class_id}` → **201** `{…, class_id, expires_at}` 내 클래스 1년 연장 · 요금제 변경(지금 학생 수보다 작으면 `CONFLICT`, 남의 클래스 `FORBIDDEN`). `class_id`는 EXTEND에만 ✅ | `payMock` |
 
 - **실제 결제 대행(PG) 연동 코드는 넣지 않는다.** 항상 성공으로 처리한다.
 - 요금제(수익화 기획 기준, 클래스 하나 · 1년): `SMALL` 학생 50명 이하 90,000원 / `MEDIUM` 100명 이하 150,000원 / `LARGE` 200명 이하 250,000원. 기능은 같고 학생 수 상한만 다르다. 학생은 무료.

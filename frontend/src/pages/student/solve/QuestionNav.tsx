@@ -15,9 +15,9 @@ export default function QuestionNav({ questions, answers, current, onSelect }: P
   return (
     <nav className="qnav" aria-label="문항 이동">
       {questions.map((q, i) => {
-        const status = answers[q.id]?.status ?? 'DRAFT'
+        const status = answers[q.seq]?.status ?? 'DRAFT'
         return (
-          <button key={q.id} className="qn" aria-current={i === current} aria-label={`문항 ${i + 1} · ${LABEL[status]}`} onClick={() => onSelect(i)}>
+          <button key={q.seq} className="qn" aria-current={i === current} aria-label={`문항 ${i + 1} · ${LABEL[status]}`} onClick={() => onSelect(i)}>
             {i + 1}
             <span className={`dot ${DOT[status]}`} />
           </button>

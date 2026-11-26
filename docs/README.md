@@ -28,6 +28,7 @@
 - [integration-contract.md](spec/integration-contract.md) — 분류기·LLM Provider·코드 실행 계약 (분류기 확정, 코드 실행 구현됨)
 - [chat-policy.md](spec/chat-policy.md) — 분류 → 정책 분기 (구현됨)
 - [error-handling.md](spec/error-handling.md) — 에러 응답 형식 (초안)
+- [assignment-md-format.md](spec/assignment-md-format.md) — md 과제 파일 양식 (구현됨)
 
 ## 문서 상태 표기
 각 문서 맨 위 `상태:` 줄 — **확정**(팀 승인) / **초안**(검토 필요) / **구현됨**(코드·테스트 있음).

@@ -10,7 +10,7 @@ from app.classifier.base import ClassificationResult, Classifier
 from app.schemas.chat import ChatTurn
 
 
-def _load(path: str) -> Callable[..., Any]:
+def load_function(path: str) -> Callable[..., Any]:
     """'패키지.모듈:함수' 문자열로 함수를 불러온다."""
     module_name, _, func_name = path.partition(":")
     if not func_name:
@@ -20,7 +20,7 @@ def _load(path: str) -> Callable[..., Any]:
 
 class ModuleClassifier(Classifier):
     def __init__(self, path: str):
-        self._fn = _load(path)
+        self._fn = load_function(path)
 
     async def classify(self, message: str, history: list[ChatTurn]) -> ClassificationResult:
         history_dicts = [t.model_dump() for t in history]
