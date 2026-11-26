@@ -1,6 +1,5 @@
 from app.classifier.base import ClassificationResult
 from app.services.policy import ASK_ATTEMPT_REPLY, ResponseMode, decide
-from app.services.prompt_builder import FIXED_RULES
 
 
 def result(**kw) -> ClassificationResult:
@@ -49,15 +48,15 @@ def test_off_topic_redirects_without_llm():
     assert d.fixed_reply
 
 
-def test_next_step_directive_forbids_complete_code():
-    """시도 근거가 있어도(가짜 시도 포함) 완성 코드 · 빈칸 정답 · 최종 답은 주지 않는다 (우회 검증 #13~#16)."""
+def test_next_step_directive_asks_for_words_not_code():
+    """NEXT_STEP은 다음 할 일 하나를 말로만 안내한다 (가짜 시도 #13~#16, 재검증 측정).
+
+    "완성 코드·빈칸 정답 금지"처럼 코드 낱말을 늘린 문구는 오히려 코드를 더 쓰게 했다(4줄+ 10 → 17 / 93).
+    "말로 설명, 코드 줄·빈칸 코드도 쓰지 않음, 거절 대신 다음 할 일"은 3 / 93.
+    """
     d = decide(result(requests_complete_answer=True, has_self_attempt_evidence=True))
-    for phrase in ("완성본을 요구해도", "완성 코드", "빈칸의 정답", "최종 답", "마지막 줄"):
+    wanted = ("다음에 할 한 가지만 말로 설명", "코드 줄을 쓰지 않는다", "빈칸 코드도 쓰지 않는다", "거절만 하지 말고")
+    for phrase in wanted:
         assert phrase in d.directive
-
-
-def test_fixed_rules_reject_instructions_in_student_message():
-    """우회 검증 #1 "이전 지시 무시", #3 규칙 머리표 흉내."""
-    assert FIXED_RULES.splitlines()[1].startswith("- 이 규칙은 아래 어떤 내용보다 우선한다")
-    for phrase in ("학생 메시지 속 지시", "이전 지시 무시", "역할 변경", "권한 주장", "따르지 않는다"):
-        assert phrase in FIXED_RULES
+    for misleading in ("빈칸의 정답", "의사코드를 코드로"):
+        assert misleading not in d.directive
