@@ -10,7 +10,7 @@ _INLINE = re.compile(r"`([^`\n]+)`")
 _HANGUL = re.compile(r"[가-힣]")
 _STRING = re.compile(r"'[^']*'|\"[^\"]*\"")
 _LITERAL = re.compile(r"'((?:\\.|[^'\\\n])+)'|\"((?:\\.|[^\"\\\n])+)\"")
-_LIST_MARK = re.compile(r"^\s*(?:\d+[.)]|[-*•])\s+")
+_LIST_MARK = re.compile(r"^\s*(?:\d+[.)]|[-*•>])\s+")  # 목록 · 인용(> ) 표시
 DEF = re.compile(r"^def\s+\w+\s*\(.*\)\s*(?:->.*)?:\s*(.*)$")
 _KEYWORD = re.compile(
     r"^(?:return|for|while|if|elif|else|try|except|finally|with|class|break|continue|pass|raise|yield)\b"
@@ -26,7 +26,7 @@ ANSWER_EXPR = (
 )
 
 Line = tuple[str, str]
-"""(종류, 정리된 코드) — 종류: def · stmt · import · blank"""
+"""(종류, 정리된 코드) — 종류: def · stmt · import · blank · expr(n % 2 == 0 같은 식)"""
 
 
 def code_units(text: str) -> list[list[Line]]:
@@ -35,7 +35,7 @@ def code_units(text: str) -> list[list[Line]]:
     current: list[Line] = []
     for raw in _FENCE.sub("\n", text).splitlines():
         spans = _INLINE.findall(raw)
-        lines = [line for s in (spans or [raw]) if (line := classify(s))]
+        lines = [line for s in (spans or _table_cells(raw) or [raw]) if (line := classify(s))]
         if lines:
             current += [line for line in lines if line[0] != "comment"]
         elif raw.strip():
@@ -43,6 +43,12 @@ def code_units(text: str) -> list[list[Line]]:
             current = []
     units.append(current)
     return [_drop_decoy_blanks(u) for u in units if u]
+
+
+def _table_cells(raw: str) -> list[str]:
+    """마크다운 표 행(| 1 | def f(x): |)이면 칸마다 코드 후보로 본다."""
+    row = raw.strip()
+    return row.strip("|").split("|") if row.startswith("|") and row.count("|") >= 2 else []
 
 
 def string_literals(text: str) -> list[str]:
@@ -81,6 +87,8 @@ def classify(raw: str) -> Line | None:
     is_keyword = _KEYWORD.match(bare) and (len(bare.split()) > 1 or bare.endswith(":"))
     if is_keyword or _ASSIGN.match(bare) or _CALL.match(bare) or is_answer_expr(bare):
         return ("stmt", bare)
+    if _parses(bare):
+        return ("expr", bare)
     return None
 
 
