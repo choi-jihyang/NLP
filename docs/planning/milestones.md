@@ -48,37 +48,39 @@
   - [x] **학생 입장** `POST /enrollments`: 수업 코드 + 학번 → 학생 계정 · 학생 토큰(클래스 만료까지). `CLASS_NOT_STARTED` · `CLASS_FULL` · `CLASS_EXPIRED` · 내보낸 학번 `FORBIDDEN` — 다시 입장은 대기 티켓(교수자 수락 후 토큰, schema D21)
   - [x] 참여 상태 확인 · 기록 동의 · 참여 요청 목록 · 수락·거절 · 학생 내보내기 · 학생 목록 · `/me/classes`
   - [x] 권한 테스트(I7): 남의 클래스 · 다른 학생 데이터 접근 → `FORBIDDEN`
-- [ ] **[백엔드]** ⑤ 프롬프트 조립 — `feature/prompt-builder`
-  - [ ] `ResponseMode` 대문자 + `OFFER_CHOICES`
-  - [ ] `build_from_config`: 고정 규칙 → 정책 지시 → 교수자 지시 → `<과제 설명>` → `<알려 주면 안 되는 값>` ([chat-policy.md](../spec/chat-policy.md))
-  - [ ] 인젝션 테스트(과제 설명 · 학생 메시지에 지시 심기 → 고정 규칙 유지)
-- [ ] **[백엔드]** C 실행기 — `feature/c-runner`
-  - [ ] gcc 실행 이미지(격리 옵션 동일: 네트워크 없음 · 메모리 · 시간 · 비root)
-  - [ ] 테스트 모양 `{input, expected_output}`(표준 입력 → 표준 출력), 컴파일 오류 안내 — 모양 · 비교 규칙은 PR #16에서 정함(schema D23)
-  - [ ] 실행기 테스트 이미지 확인 `:latest` 수정(지금 Docker 테스트 4개가 건너뛰어짐)
+- [x] **[백엔드]** ⑤ 프롬프트 조립 — `feature/prompt-builder` (리뷰 대기)
+  - [x] `ResponseMode` 대문자 + `OFFER_CHOICES` · `USAGE_LIMIT`, `HelpChoice`
+  - [x] `build_from_config`: 고정 규칙 → 정책 지시 → 교수자 지시 → `<과제 설명>` → `<알려 주면 안 되는 값>` ([chat-policy.md](../spec/chat-policy.md))
+  - [x] 인젝션 테스트(과제 설명 · 교수자 지시 · 정답 값에 지시·태그 심기 → 고정 규칙 유지, 블록 탈출 불가)
+- [x] **[백엔드]** C 실행기 — `feature/c-runner` (리뷰 대기)
+  - [x] gcc 실행 이미지(격리 옵션 동일: 네트워크 없음 · 메모리 · 시간 · 비root)
+  - [x] 테스트 모양 `{input, expected_output}`(표준 입력 → 표준 출력), 컴파일 오류 안내 — 모양 · 비교 규칙은 PR #16에서 정함(schema D23)
+  - [x] 실행기 테스트 이미지 확인 — `RUNNER_IMAGE` 설정값으로 확인, `--pull never`(이미지 없으면 503)
+  - [x] 11/18 리뷰 지적: 부모 메모리 읽기 차단(`PR_SET_DUMPABLE=0`) + 테스트
 - [ ] **[백엔드]** ④ 과제 · 문항 — `feature/assignment-api` — ④-1 PR #16 (리뷰 대기), ④-2 남음
   - [x] `assignments` · `questions` 모델(`answer_key` 분리, `public_tests`) — PR #16, 테스트 모양 `{input, expected_output}`(schema D23)
-  - [ ] **md 과제 추출** `POST /classes/{id}/assignments/extract` — 정해진 양식(샘플 `docs/spec/samples/c-binary-assignment.md`(PR #14)), 규칙(정규식)으로 파싱, 양식 오류 안내
-  - [ ] 초안(샘플·빈 과제) · 저장 · 조회 · 배포 · 결과 공개 · 정책 미리보기 · 지시문 초안 — 빈 초안 · 저장 · 조회 · 배포 · 결과 공개는 PR #16. 샘플 초안 · 정책 미리보기 · 지시문 초안 남음
-  - [ ] 학생처럼 졸라보기(`/assignments/simulate`) — 실제 정책 경로로 우회 요청 실행
+  - [x] **md 과제 추출** `POST /classes/{id}/assignments/extract` — 정해진 양식(샘플 `docs/spec/samples/c-binary-assignment.md`(PR #14)), 규칙(정규식)으로 파싱, 양식 오류 안내 — `feature/assignment-extract` (리뷰 대기)
+  - [x] 초안(샘플·빈 과제) · 저장 · 조회 · 배포 · 결과 공개 · 정책 미리보기 · 지시문 초안 — 빈 초안 · 저장 · 조회 · 배포 · 결과 공개는 PR #16, 샘플 초안 · 정책 미리보기 · 지시문 초안은 `feature/assignment-extract`
+  - [x] 학생처럼 졸라보기(`/assignments/simulate`) — 실제 정책 경로로 우회 요청 실행 — `feature/assignment-simulate` (리뷰 대기)
+  - [ ] **[NLP]** 누출 검사가 C 코드를 못 막음(졸라보기로 발견, `test_simulate.py` xfail) — 시연 과제가 C라 우선 수정
   - [x] 학생용 조회에 `answer_key` 값이 하나도 없는지 테스트 — PR #16, 불변식 I8
-  - [ ] 시드에 C 과제(2진수 변환기·덧셈기·뺄셈기) 추가
-- [ ] **[백엔드]** ⑦ 풀이 · 제출 — `feature/submission-api`
-  - [ ] `submissions` · `answers` 모델, 학생 과제 조회 · 내 제출
-  - [ ] 공개 테스트 실행 `/run`(C 실행기)
-  - [ ] 문항 제출(다시 제출 · 제출 횟수) · 자동 채점(객관식 · 출력 예측 · 코드 숨김 테스트)
-  - [ ] 개념 확인(질문 1개 + AI 작성 신호 높으면 1개 더) · 답 고치러 돌아가기
-  - [ ] 최종 제출(마감 뒤 불가, 안 낸 문항 있으면 `CONFLICT`)
-  - [ ] 결과 공개 전 정오·점수·숨김 테스트 결과를 학생 응답에서 빼는 테스트
-- [ ] **[백엔드]** ⑥ 채팅 — `feature/chat-api`
-  - [ ] `chat_messages` 모델, 문항별 대화 조회 · 보내기
-  - [ ] 사용량 상한(I6: 상한이면 LLM 호출 없이 `USAGE_LIMIT`)
-  - [ ] 도움 방식 고르기(`OFFER_CHOICES` → `FIRST_HINT` · `FEEDBACK` · `ORIGINAL`, 정책은 `HINT_ONLY` 유지 — I1)
-  - [ ] 잠김: 개념 확인 중 · 최종 제출 후 · AI 끈 간단 제작 문항
-  - [ ] LLM에는 최근 대화 N개만, 분류 결과·누출 검사 결과 저장
-- [ ] **[백엔드]** 붙여넣기 기록 `POST /paste-events`(길이·시점만, 내용 필드 거부 — I5)
-- [ ] **[백엔드]** 이해 확인 · 내 리포트 · 교수자 반 리포트 · 간단 제작 채점 · 학생별 기록
-- [ ] **[백엔드]** 요금제 · 결제 목업 `/plans` · `/payments`(실제 PG 연동 없음, 항상 성공) — `/plans` · NEW 결제는 ③에서 구현, 연장(EXTEND) 남음
+  - [x] 시드에 C 과제(2진수 변환기·덧셈기·뺄셈기) 추가 — 샘플 md를 읽어 배포 상태로
+- [x] **[백엔드]** ⑦ 풀이 · 제출 — `feature/submission-api` (리뷰 대기, `feature/c-runner` 위에 쌓음)
+  - [x] `submissions` · `answers` · `concept_check_items` 모델, 학생 과제 조회 · 내 제출
+  - [x] 공개 테스트 실행 `/run`(C 실행기)
+  - [x] 문항 제출(다시 제출 · 제출 횟수) · 자동 채점(객관식 · 출력 예측 · 코드 숨김 테스트, 코드는 통과 비율만큼)
+  - [x] 개념 확인(질문 1개, 고정 문구) · 답 고치러 돌아가기 — **AI 작성 신호로 1개 더**는 NLP ② 결정 후
+  - [x] 최종 제출(마감 뒤 불가, 안 낸 문항 있으면 `CONFLICT`)
+  - [x] 결과 공개 전 정오·점수·숨김 테스트 결과를 학생 응답에서 빼는 테스트
+- [x] **[백엔드]** ⑥ 채팅 — `feature/chat-api` (리뷰 대기, submission-api + assignment-simulate 위에 쌓음)
+  - [x] `chat_messages` 모델, 문항별 대화 조회 · 보내기
+  - [x] 사용량 상한(I6: 상한이면 LLM 호출 없이 `USAGE_LIMIT`)
+  - [x] 도움 방식 고르기(`OFFER_CHOICES` → `FIRST_HINT` · `FEEDBACK` · `ORIGINAL`, 정책은 `HINT_ONLY` 유지 — I1)
+  - [x] 잠김: 개념 확인 중 · 최종 제출 후 · AI 끈 간단 제작 문항
+  - [x] LLM에는 최근 대화 N개만(`CHAT_HISTORY_TURNS`=8), 분류 결과·누출 검사 결과 저장, `DEMO_TRACE`
+- [x] **[백엔드]** 붙여넣기 기록 `POST /paste-events`(길이·시점만, 내용 필드 거부 — I5) — `feature/chat-api`
+- [x] **[백엔드]** 이해 확인 · 내 리포트 · 교수자 반 리포트 · 간단 제작 채점 · 학생별 기록 — `feature/backend-m2`. 문장 칸은 규칙 기반(PR 논의)
+- [x] **[백엔드]** 요금제 · 결제 목업 `/plans` · `/payments`(실제 PG 연동 없음, 항상 성공) — `/plans` · NEW 결제는 ③, 연장(EXTEND)은 `feature/payment-extend` (리뷰 대기)
 
 ### 모델 연결 (11/25까지)
 - [x] **[NLP]** Qwen 버전·크기 확정(7B~8B 권장), 시연 PC에서 `ollama pull` · 응답 속도 측정 — `qwen3:8b`, think 끔 4.1초(M2 Pro) — PR #12
@@ -86,24 +88,25 @@
 - [ ] **[NLP]** 분류기 `classify()` 구현 — 계약 [integration-contract.md](../spec/integration-contract.md) (`is_learning_context` · `requests_complete_answer` · `has_self_attempt_evidence` · `uncertain` · `confidence`)
 - [ ] **[백엔드]** 분류기 교체 확인 — `CLASSIFIER=module` 또는 `http`, 계약 테스트, 모호하면 되묻기(I2)
 - [x] **[NLP]** AI 답변 누출 검사(정답·완성 코드 판별) 구현 — 규칙 기반 `check_leak`, PR #15
-- [ ] **[백엔드]** 누출 검사 연결 — 막히면 초안 대신 안전한 응답, `leak_check` 저장 — `chat_service.reply` 연결 · 막히면 안내문은 PR #15, `leak_check` 저장은 ⑥
+- [x] **[백엔드]** 누출 검사 연결 — 막히면 초안 대신 안전한 응답, `leak_check` 저장 — `chat_service.reply` 연결 · 막히면 안내문은 PR #15, 저장(`leak_blocked` · `blocked_draft`)은 ⑥
 - [ ] **[NLP]** 개념 확인 답변 "AI 작성 점수" 담당·포함 여부 확정(scope.md ②), 하면 구현
 - [ ] **[공통]** 실제 모델로 시연 시나리오 4번(정답 요청 → 힌트만) 통과 확인
 
 ### 프론트 연결
-- [ ] **[프론트]** `client.ts`: 토큰 저장 · `Authorization: Bearer` · 에러 `{code, message}`로 분기 — 로그인 API는 PR #10에서 사용 가능(가입은 201)
-- [ ] **[프론트]** 타입 변경: id → `seq: number`, `alias` → `student_no`, 명단 `{student_no, is_use}[]`, 클래스 개설 `starts_on`, `AiPolicy.usage_limit`, 개념 확인·채팅 요청 `pasted` 제거
-- [ ] **[프론트]** 클래스 개설 화면에 시작 날짜 선택
-- [ ] **[프론트]** 과제 파일 올리기: `.md`만 받고 실제 파일 전송(`multipart`)
-- [ ] **[프론트]** 백엔드 API가 생기는 순서대로 `api/<도메인>.ts`의 mock → 실제 호출 교체, 교체한 mock 코드 삭제
-  - [ ] 인증 · 클래스 · 참여 · 명단
-  - [ ] 과제 만들기 · 추출 · 배포
-  - [ ] 풀이 · 제출 · 테스트 실행 · 개념 확인 · 이해 확인
-  - [ ] 채팅 · 붙여넣기
-  - [ ] 리포트 · 채점 · 결과 공개 · 결제
+- [x] **[프론트]** `client.ts`: 토큰 저장(탭마다 sessionStorage) · `Authorization: Bearer` · 에러 `{code, message}` → `ApiError` — `feature/backend-m2`
+- [x] **[프론트]** 타입 변경: 백엔드 모양 그대로 — id → `seq: number`, `alias` → `student_no`, 명단 `{student_no, is_use}[]`, 클래스 개설 `{name, starts_on, payment_seq}`, `AiPolicy.usage_limit`, 테스트 `{input, expected_output}`, 언어 대문자(`LANGUAGE_LABEL`로 표시), 개념 확인·채팅 요청 `pasted` 제거(붙여넣기는 `/paste-events`)
+- [x] **[프론트]** 클래스 개설 화면에 시작 날짜 선택(오늘 이후, 요금제 화면에서 결제했으면 그 이용권 사용)
+- [x] **[프론트]** 과제 파일 올리기: `.md`만 받고 실제 파일 전송(`multipart`)
+- [x] **[프론트]** `api/<도메인>.ts`의 mock → 실제 호출 교체, mock 코드 삭제
+  - [x] 인증 · 클래스 · 참여 · 명단
+  - [x] 과제 만들기 · 추출 · 배포
+  - [x] 풀이 · 제출 · 테스트 실행 · 개념 확인 · 이해 확인
+  - [x] 채팅 · 붙여넣기
+  - [x] 리포트 · 채점 · 결과 공개 · 결제
+- [x] **[공통]** 실제 브라우저로 교수자 · 학생 화면 점검(시드 + Docker 실행기): 페이지 오류 0, 학생 흐름(입장 → C 테스트 실행 → 컴파일 오류 → 통과 → AI 도움 고르기 → 제출) 통과
 
 ### 문서
-- [ ] **[백엔드]** md 과제 양식 문서(`docs/spec/`, scope.md ③) — 샘플 md를 기준으로 — 기준 샘플은 PR #14
+- [x] **[백엔드]** md 과제 양식 문서(`docs/spec/`, scope.md ③) — [assignment-md-format.md](../spec/assignment-md-format.md), 기준 샘플은 PR #14
 - [ ] **[공통]** 결정 필요: `AiPolicy` CUSTOM인데 지시문 비어 있음 허용 여부 · 지시문 최대 길이 (PR #7)
 
 ---

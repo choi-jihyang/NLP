@@ -9,7 +9,7 @@ import AssignmentCard from './AssignmentCard'
 
 /** 클래스 상세: 수업 코드, 과제 목록, 학생 목록 */
 export default function ClassDetailPage() {
-  const { classId = '' } = useParams()
+  const classId = Number(useParams().classId)
   const cls = useQuery({ queryKey: ['class', classId], queryFn: () => getClass(classId) })
   const assignments = useQuery({ queryKey: ['assignments', classId], queryFn: () => listAssignments(classId) })
   const students = useQuery({ queryKey: ['students', classId], queryFn: () => listStudents(classId) })
@@ -42,11 +42,11 @@ export default function ClassDetailPage() {
       <QueryState isPending={assignments.isPending} error={assignments.error} />
       {assignments.data?.map((a) => (
         <AssignmentCard
-          key={a.id}
+          key={a.seq}
           assignment={a}
           basePath={base}
-          releasing={release.isPending && release.variables === a.id}
-          onRelease={() => release.mutate(a.id)}
+          releasing={release.isPending && release.variables === a.seq}
+          onRelease={() => release.mutate(a.seq)}
         />
       ))}
       {release.error && <p className="error-text">{release.error.message}</p>}
@@ -60,8 +60,8 @@ export default function ClassDetailPage() {
         </div>
         <div className="row">
           {students.data?.map((s) => (
-            <Link key={s.id} className="btn sm" to={`${base}/students/${s.id}?assignment=a1`}>
-              {s.alias}
+            <Link key={s.seq} className="btn sm" to={`${base}/students/${s.seq}?assignment=a1`}>
+              {s.student_no}
             </Link>
           ))}
         </div>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import type { DependencyRow, SignalRow } from '../../../api/reports'
 import { SignalLevel } from '../../../components/SignalLevel'
 
-type Props = { dependency: DependencyRow[] | null; signals: SignalRow[] | null; recordPath: (studentId: string) => string }
+type Props = { dependency: DependencyRow[] | null; signals: SignalRow[] | null; recordPath: (studentId: number) => string }
 
 /** 의존 위험 학생 · 외부 AI 참고 신호 표 */
 export default function StudentTables({ dependency, signals, recordPath }: Props) {

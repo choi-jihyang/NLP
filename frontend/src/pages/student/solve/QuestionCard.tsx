@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import type { ConceptReply, StudentQuestion, TestResult, AnswerState } from '../../../api/submissions'
+import type { AnswerState, ConceptReply, RunResult, StudentQuestion } from '../../../api/submissions'
 import type { PasteField } from '../../../api/pasteEvents'
 import { AnswerInput } from '../../../components/AnswerInput'
 import { CodeBlock } from '../../../components/CodeBlock'
@@ -17,7 +17,7 @@ type Props = {
   finalized: boolean
   busy: boolean
   onDraftChange: (value: string) => void
-  onRun: (code: string) => Promise<TestResult[]>
+  onRun: (code: string) => Promise<RunResult>
   onSubmit: (value: string) => void
   onConceptAnswer: (body: ConceptReply) => void
   onConceptCancel: () => void
@@ -27,7 +27,8 @@ type Props = {
 /** 왼쪽 문항 카드: 문제, 답 입력, 공개 테스트 실행, 제출, 제출 전 개념 확인 */
 export default function QuestionCard(props: Props) {
   const { index, question: q, answer, draft, finalized, busy, onDraftChange, onRun, onSubmit, onPaste } = props
-  const [runResults, setRunResults] = useState<TestResult[] | null>(null)
+  const [runResults, setRunResults] = useState<RunResult | null>(null)
+  const [runError, setRunError] = useState<string | null>(null)
   const checking = answer.status === 'AWAITING_CHECK'
   const editable = !finalized && !checking
   const submitted = answer.status === 'SUBMITTED'
@@ -49,7 +50,7 @@ export default function QuestionCard(props: Props) {
         </span>
       )}
       <AnswerInput
-        id={`answer-${q.id}`}
+        id={`answer-${q.seq}`}
         type={q.type}
         choices={q.choices}
         value={finalized ? answer.content : draft}
@@ -57,10 +58,11 @@ export default function QuestionCard(props: Props) {
         disabled={!editable}
         onPaste={onPaste('ANSWER')}
       />
+      {editable && runError && <p className="error-text">{runError}</p>}
       {editable && runResults && (
         <div className="stack" style={{ gap: 6 }}>
           <span className="label">실행 결과 · 공개 테스트</span>
-          <TestResults results={runResults} />
+          <TestResults run={runResults} />
         </div>
       )}
       {checking && answer.concept_check && (
@@ -76,7 +78,16 @@ export default function QuestionCard(props: Props) {
       {editable && (
         <div className="row">
           {q.type === 'CODE' && (
-            <button className="btn" disabled={busy || !hasAnswer} onClick={async () => setRunResults(await onRun(draft))}>
+            <button className="btn" disabled={busy || !hasAnswer} onClick={async () => {
+                setRunError(null)
+                try {
+                  setRunResults(await onRun(draft))
+                } catch (e) {
+                  // 실행기(Docker)가 꺼져 있으면 503 RUNNER_UNAVAILABLE — 학생에게 안내만 하고 화면은 그대로
+                  setRunResults(null)
+                  setRunError(e instanceof Error ? e.message : '코드를 실행하지 못했어요.')
+                }
+              }}>
               공개 테스트 실행
             </button>
           )}

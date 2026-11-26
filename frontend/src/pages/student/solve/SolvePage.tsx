@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 
-import { getStudentAssignment } from '../../../api/submissions'
+import { LANGUAGE_LABEL } from '../../../api/client'
+import { getStudentAssignment, type AnswerState } from '../../../api/submissions'
 import { formatDue } from '../../../components/format'
 import { QueryState } from '../../../components/QueryState'
 import { useChat } from '../../../hooks/useChat'
@@ -16,9 +17,9 @@ import QuestionNav from './QuestionNav'
 
 /** 학생: 과제 풀이 (왼쪽 문항 · 오른쪽 학습 AI) */
 export default function SolvePage() {
-  const { assignmentId = '' } = useParams()
+  const assignmentId = Number(useParams().assignmentId)
   const [params, setParams] = useSearchParams()
-  const [drafts, setDrafts] = useState<Record<string, string>>({})
+  const [drafts, setDrafts] = useState<Record<number, string>>({})
   const [debug, setDebug] = useState(false)
 
   const assignment = useQuery({ queryKey: ['student-assignment', assignmentId], queryFn: () => getStudentAssignment(assignmentId) })
@@ -27,18 +28,21 @@ export default function SolvePage() {
   const questions = assignment.data?.questions ?? []
   const index = Math.min(Number(params.get('q') ?? 0) || 0, Math.max(questions.length - 1, 0))
   const q = questions[index]
-  const qid = q?.id ?? ''
+  const qid = q?.seq ?? null
   const { chat, send } = useChat(assignmentId, qid)
   const paste = usePasteLog(qid, assignment.data?.external_signal_enabled ?? false)
 
-  if (!assignment.data || !submission || !q) {
+  if (!assignment.data || !submission || !q || qid == null) {
     return <QueryState isPending={assignment.isPending || query.isPending} error={assignment.error ?? query.error} />
   }
   const a = assignment.data
-  const answer = submission.answers[qid]
+  // 아직 손대지 않은 문항은 서버에 답이 없다 → 시작 코드로 시작하는 빈 답
+  const answer: AnswerState = submission.answers[qid] ?? {
+    question_id: qid, content: '', status: 'DRAFT', submitted_at: null, submit_count: 0, hint_step: 0, concept_check: null,
+  }
   const draft = drafts[qid] ?? (answer.content || q.starter_code)
   const busy = submit.isPending || conceptCheck.isPending || cancelCheck.isPending || finalize.isPending || run.isPending
-  const submittedCount = questions.filter((x) => submission.answers[x.id]?.status === 'SUBMITTED').length
+  const submittedCount = questions.filter((x) => submission.answers[x.seq]?.status === 'SUBMITTED').length
   const finalized = submission.finalized
 
   return (
@@ -46,7 +50,7 @@ export default function SolvePage() {
       <div className="sbar">
         <h2>{a.title}</h2>
         <span className="note">
-          {a.course} · {a.language} · 마감 {formatDue(a.due_at)}
+          {a.course} · {LANGUAGE_LABEL[a.language]} · 마감 {formatDue(a.due_at)}
         </span>
         <label className="check">
           <input type="checkbox" checked={debug} onChange={(e) => setDebug(e.target.checked)} />

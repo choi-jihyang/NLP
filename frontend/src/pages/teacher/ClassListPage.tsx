@@ -16,14 +16,14 @@ export default function ClassListPage() {
       </div>
       <QueryState isPending={classes.isPending} error={classes.error} />
       {classes.data?.map((c) => (
-        <div className="acard" key={c.id}>
+        <div className="acard" key={c.seq}>
           <div className="stack" style={{ gap: 6 }}>
             <h3>{c.name}</h3>
             <span className="note">
               학생 {c.student_count} / {c.student_limit}명 · {c.plan} · 수업 코드 <span className="mono">{c.invite_code}</span>
             </span>
           </div>
-          <Link className="btn" to={`/teacher/classes/${c.id}`}>열기</Link>
+          <Link className="btn" to={`/teacher/classes/${c.seq}`}>열기</Link>
         </div>
       ))}
     </div>

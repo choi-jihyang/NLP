@@ -17,7 +17,6 @@ export function AppLayout({ subtitle, nav }: Props) {
             <h1>ThinkGuard</h1>
             <span>{subtitle}</span>
           </Link>
-          <span className="chip warn" title="백엔드 API가 생기면 api/ 함수만 실제 호출로 바뀌어요">예시 데이터로 보는 중</span>
           <nav className="tabs">
             {nav.map((n) => (
               <NavLink key={n.to} to={n.to} end className={({ isActive }) => `tab${isActive ? ' active' : ''}`}>

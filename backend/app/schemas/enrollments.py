@@ -1,6 +1,7 @@
 """학생 입장 · 참여 요청 · 내 클래스 요청/응답. id 필드는 seq(숫자)."""
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -70,4 +71,19 @@ class MyClassOut(BaseModel):
     class_name: str
     student_no: str
     enrollment_status: EnrollmentStatus
-    assignments: list[dict[str, object]] = Field(default_factory=list)  # ④ 과제 API에서 채움
+    assignments: list["MyAssignmentOut"] = Field(default_factory=list)  # 승인된 클래스의 배포된 과제
+
+
+class MyAssignmentOut(BaseModel):
+    """학생 "내 과제" 한 줄. 점수는 결과 공개 뒤에만(score_text)."""
+
+    seq: int
+    title: str
+    language: str
+    status: Literal["IN_PROGRESS", "FINALIZED", "RELEASED"]
+    due_at: datetime | None
+    hint_mode: str
+    hint_mode_label: str
+    submitted: int
+    total: int
+    score_text: str | None

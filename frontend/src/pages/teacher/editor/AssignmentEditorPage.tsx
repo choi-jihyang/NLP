@@ -11,7 +11,9 @@ import StepReview from './StepReview'
 
 /** 교수자: 과제 만들기 · 고치기 (불러오기 → 문항 · 채점 → AI 도움 정책 → 확인 · 배포) */
 export default function AssignmentEditorPage() {
-  const { classId = '', assignmentId } = useParams()
+  const { classId: classParam, assignmentId: assignmentParam } = useParams()
+  const classId = Number(classParam)
+  const assignmentId = assignmentParam ? Number(assignmentParam) : undefined
   const { draft, query, loaded, load, update, updatePolicy, updateQuestion, setQuestions } = useAssignmentDraft(classId, assignmentId)
   const [step, setStep] = useState(1)
   const [fileName, setFileName] = useState<string | null>(null)
@@ -33,9 +35,9 @@ export default function AssignmentEditorPage() {
           fileName={fileName}
           error={load.error}
           onChange={update}
-          onFile={(name) => {
-            setFileName(name)
-            load.mutate({ kind: 'FILE', fileName: name })
+          onFile={(file) => {
+            setFileName(file.name)
+            load.mutate({ kind: 'FILE', file })
           }}
           onSample={() => {
             setFileName(null)
@@ -52,7 +54,7 @@ export default function AssignmentEditorPage() {
         <StepQuestions questions={draft.questions} onChange={updateQuestion} onReplace={setQuestions} onPrev={() => go(1)} onNext={() => go(3)} />
       )}
       {step === 3 && <StepPolicy draft={draft} onChange={updatePolicy} onPrev={() => go(2)} onNext={() => go(4)} />}
-      {step === 4 && <StepReview draft={draft} onSaved={(saved) => update({ id: saved.id })} onPrev={() => go(3)} />}
+      {step === 4 && <StepReview draft={draft} onSaved={(saved) => update({ seq: saved.seq, questions: saved.questions })} onPrev={() => go(3)} />}
     </div>
   )
 }

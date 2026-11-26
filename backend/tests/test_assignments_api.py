@@ -73,8 +73,8 @@ def test_draft_list_and_release(client: TestClient):
     klass = api_class(client, teacher)
     draft = client.post(f"/api/classes/{klass['seq']}/assignments/drafts", json={"source": "BLANK"}, headers=teacher)
     assert draft.status_code == 200 and draft.json()["seq"] is None and draft.json()["language"] == "C"
-    assert client.post(f"/api/classes/{klass['seq']}/assignments/drafts", json={"source": "SAMPLE"},
-                       headers=teacher).status_code == 400  # ④-2에서
+    assert client.post(f"/api/classes/{klass['seq']}/assignments/drafts", json={"source": "UNKNOWN"},
+                       headers=teacher).status_code == 400  # SAMPLE은 test_assignment_md.py
     aid = client.post(f"/api/classes/{klass['seq']}/assignments", json=ASSIGNMENT, headers=teacher).json()["seq"]
     assert client.post(f"/api/assignments/{aid}/release", headers=teacher).status_code == 409
     client.post(f"/api/assignments/{aid}/publish", headers=teacher)

@@ -36,17 +36,17 @@ export default function AssignmentCard({ assignment: a, basePath, releasing, onR
       </div>
       <div className="row">
         {a.status !== 'DRAFT' && (
-          <Link className="btn sm" to={`${basePath}/dashboard?assignment=${a.id}`}>리포트</Link>
+          <Link className="btn sm" to={`${basePath}/dashboard?assignment=${a.seq}`}>리포트</Link>
         )}
         {a.todo?.includes('채점') && (
-          <Link className="btn sm" to={`${basePath}/assignments/${a.id}/grading`}>채점</Link>
+          <Link className="btn sm" to={`${basePath}/assignments/${a.seq}/grading`}>채점</Link>
         )}
         {a.status !== 'DRAFT' && !a.results_released && (
           <button className="btn sm" disabled={releasing} onClick={onRelease} title="점수·정답·내 리포트를 학생에게 공개해요">
             결과 공개
           </button>
         )}
-        <Link className="btn sm" to={`${basePath}/assignments/${a.id}/edit`}>
+        <Link className="btn sm" to={`${basePath}/assignments/${a.seq}/edit`}>
           {a.status === 'DRAFT' ? '이어서 작성' : '설정'}
         </Link>
       </div>

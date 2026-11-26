@@ -17,7 +17,7 @@ import StudentList from './StudentList'
 
 /** 교수자: 학생 관리 (참여 요청 수락·거절, 명단 미리 넣기, 내보내기) */
 export default function ClassStudentsPage() {
-  const { classId = '' } = useParams()
+  const classId = Number(useParams().classId)
   const client = useQueryClient()
   const cls = useQuery({ queryKey: ['class', classId], queryFn: () => getClass(classId) })
   const students = useQuery({ queryKey: ['students', classId], queryFn: () => listStudents(classId) })
@@ -31,10 +31,10 @@ export default function ClassStudentsPage() {
     )
 
   const decide = useMutation({
-    mutationFn: (v: { id: string; approve: boolean }) => decideJoinRequest(classId, v.id, v.approve),
+    mutationFn: (v: { id: number; approve: boolean }) => decideJoinRequest(classId, v.id, v.approve),
     onSuccess: refresh,
   })
-  const remove = useMutation({ mutationFn: (id: string) => removeStudent(classId, id), onSuccess: refresh })
+  const remove = useMutation({ mutationFn: (id: number) => removeStudent(classId, id), onSuccess: refresh })
   const save = useMutation({
     mutationFn: (body: RosterSettings) => saveRosterSettings(classId, body),
     onSuccess: (data) => {
