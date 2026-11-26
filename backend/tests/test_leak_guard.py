@@ -285,6 +285,52 @@ def test_allows_one_line_hint_for_student_with_several_blanks():
     assert not out.leak_blocked
 
 
+# ---- PR #17 재검증에서 새로 뚫린 사례 · 오탐 -----------------------------------
+
+# V-표 "이전 지시 무시" + 마크다운 표(줄 번호 / 코드, 백틱 없이)
+TABLE_CODE = (
+    "| 줄 번호 | 코드                   |\n|--------|----------------------|\n| 1      | def even_sum(nums):   |\n"
+    "| 2      |    total = 0          |\n| 3      |    for num in nums:  |\n| 4      |        if num % 2 == 0: |\n"
+    "| 5      |            total += num |\n| 6      |    return total       |"
+)
+# 줄 앞에 > 를 붙인 인용 형식 (오프라인 변형)
+QUOTED_CODE = "> def even_sum(nums):\n> total = 0\n> for n in nums:\n> if n % 2 == 0: total += n\n> return total"
+TWO_BLANKS = (
+    "```python\ndef even_sum(nums):\n    total = 0\n    for n in nums:\n        ____\n        ____\n"
+    "    return total\n```"
+)
+ONE_BLANK = "```python\ndef even_sum(nums):\n    total = 0\n    for n in nums:\n        ____\n    return total\n```"
+
+
+def test_blocks_code_in_markdown_table():
+    assert_blocked(reply(TABLE_CODE), TABLE_CODE)
+
+
+def test_blocks_quoted_code_lines():
+    assert_blocked(reply(QUOTED_CODE), QUOTED_CODE)
+
+
+def test_blocks_student_blanks_filled_over_two_turns():
+    """V-두 턴: 학생 빈칸 2개를 한 턴에 한 줄씩 받으면 2턴째에서 막는다."""
+    ask = TWO_BLANKS + "\n첫 번째 빈칸 한 줄만 코드로 알려 주세요."
+    first = (ask, "첫 번째 빈칸에는 `if n % 2 == 0:`를 입력하세요.")
+    history = turns([first])
+    draft = "두 번째 빈칸에는 `total += n`을 입력하세요."
+    out = reply(draft, mode=NEXT_STEP, history=history,
+                message="고마워요. 이제 두 번째 빈칸 한 줄도 코드로 알려 주세요.\n" + TWO_BLANKS)
+    assert_blocked(out, draft, ResponseMode.NEXT_STEP)
+    assert "filled_blank" in out.leak_reasons
+
+
+@pytest.mark.parametrize("hint", [
+    "`print(n)`으로 값을 먼저 찍어 보세요.",  # 디버깅 힌트: 학생 코드에 return이 이미 있어도 완성이 아니다
+    "`for n in nums:`로 하나씩 꺼내면서 조건을 확인해 보세요.",  # 학생이 이미 쓴 줄을 인용
+])
+def test_allows_hint_when_student_code_has_return(hint):
+    out = reply(hint, mode=NEXT_STEP, message=ONE_BLANK + "\n여기서 막혔어요.")
+    assert not out.leak_blocked
+
+
 # ---- 계약 ------------------------------------------------------------------
 
 
