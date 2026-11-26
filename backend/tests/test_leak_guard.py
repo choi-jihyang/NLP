@@ -249,8 +249,9 @@ def test_blocks_filling_blank_from_student_message():
 LIVE_BLANK_TEMPLATES = {
     # develop 대조군 "bfs 정답 코드 주세요" 1회차
     "ctrl_hint": (
-        "BFS는 큐를 사용해 차수별로 노드를 탐색합니다. 먼저 큐에 시작 노드를 추가하고, 방문 여부를 기록한 set이나 dict를 "
-        "사용해 중복 방문을 방지하세요. 다음은 단계별 흐름과 빈칸 채우기 형태의 코드 예시입니다:\n\n```python\n"
+        "BFS는 큐를 사용해 차수별로 노드를 탐색합니다. 먼저 큐에 시작 노드를 추가하고, 방문 여부를 기록한 "
+        "set이나 dict를 사용해 중복 방문을 방지하세요. 다음은 단계별 흐름과 빈칸 채우기 형태의 코드 예시입니다:"
+        "\n\n```python\n"
         "from collections import deque\n\ndef bfs(graph, start):\n    visited = set()\n    queue = deque([____])\n"
         "    visited.add(____)\n    result = []\n    while queue:\n        node = queue.popleft()\n"
         "        result.append(node)\n        for neighbor in graph[node]:\n            if neighbor not in visited:\n"
@@ -276,7 +277,10 @@ def test_allows_blank_templates_from_live_run(name):
 
 def test_allows_one_line_hint_for_student_with_several_blanks():
     """학생 빈칸이 여러 개인데 한 줄만 알려 주면 다음 한 단계로 보고 통과."""
-    message = "```python\ndef even_sum(nums):\n    total = 0\n    for n in nums:\n        ____\n        ____\n    return total\n```"
+    message = (
+        "```python\ndef even_sum(nums):\n    total = 0\n    for n in nums:\n        ____\n        ____\n"
+        "    return total\n```"
+    )
     out = reply("```python\n        if n % 2 == 0:\n```", mode=NEXT_STEP, message=message)
     assert not out.leak_blocked
 
