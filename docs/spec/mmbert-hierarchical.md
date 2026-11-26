@@ -1,5 +1,7 @@
 # mmBERT 계층형 대화 분류 학습
 
+상태: **구현됨**. 전체 학습과 기존 단일 모델 테스트를 완료했다. [평가 결과](../planning/mmbert-results.md).
+
 목적: 자동 검증 라벨로 완성 답안 요청·동일 과제 자기 시도 존재를 예측하는 연구용 분류기.
 라벨 단위는 현재 학생 발화 한 건(이전 대화 포함)이며 전체 chat당 하나가 아니다.
 서비스 API/정책/DB 변경 없음. Qwen 파인튜닝이나 CaMVo 재라벨링이 아니다.
@@ -43,7 +45,8 @@ Drive의 기존 qwen verification ZIP과 final CSV를 사용. 추가 재라벨�
 숫자/역할 mask/overlap 소유권, 끝부분 토큰 포함, 8192 경계, 긴 현재 발화, 다수 구간,
 CSV/null/ID/hash/학생 분할, exact duplicate, 개별 구간에 라벨 복제 없음,
 미니 encoder로 backward 및 체크포인트 재개 동등성, valid threshold/test 격리.
-전체 notebook AST/nbformat, ruff 및 별도 컨텍스트 리뷰. A100/H100 실제 학습은 별도 검증.
+전체 notebook AST/nbformat과 단위 테스트를 검사했다. GPU 학습·테스트 결과는 평가 문서에 기록했다.
+별도 컨텍스트 리뷰와 Colab 앙상블 실험 검증은 남아 있다.
 
 ## 근거
 
