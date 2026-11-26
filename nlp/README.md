@@ -20,15 +20,20 @@ nlp/
 - **confidence**: 정책에 실제로 쓰인 라벨들의 판단 여유(임계값에서 떨어진 정도) 중 최솟값이다. 백엔드 기본값(`CLASSIFIER_MIN_CONFIDENCE=0.5`)에서는 valid 기준 약 9%가 되묻기(ASK_ATTEMPT)로 간다. `uncertain`은 항상 false다.
 
 ### 써 보기
-1. 공유받은 `best_model` 폴더를 `nlp/models/bge_m3_en_ko/`로 넣는다. 안에 `thinkguard.json`, `model.safetensors`, 토크나이저 파일이 있어야 한다. 다른 위치에 두려면 `THINKGUARD_MODEL_DIR`를 지정한다.
-2. 설치와 테스트
+1. 설치와 테스트
    ```bash
    cd nlp
    python -m venv .venv && source .venv/bin/activate        # Windows: .venv\Scripts\activate
    pip install -e ".[model,server,dev]"
    pytest -q tests                                          # 계약 형식 테스트 (모델 없이)
+   ```
+2. 모델 받기 — Hugging Face [`7b7hom/ThinkGuard`](https://huggingface.co/7b7hom/ThinkGuard) (공개, 약 2.3GB)
+   ```bash
+   hf download 7b7hom/ThinkGuard --local-dir models/bge_m3_en_ko   # nlp 폴더에서
    python -c "from thinkguard_nlp.classifier import classify; print(classify('BFS 함수 전체 코드 짜줘', []))"
    ```
+   - 안에 `thinkguard.json`, `model.safetensors`, 토크나이저 파일이 있어야 한다. 다른 위치에 두려면 `THINKGUARD_MODEL_DIR`를 지정한다.
+   - `model.safetensors` SHA-256: `a4e0f58d8b22afeec96adbfffc740dbbb1e3ea9225c012e9860e185b8d4b682d`
 3. 백엔드에 붙이기 ([연동 계약](../docs/spec/integration-contract.md))
    - **module**: `cd backend && .venv/bin/pip install -e "../nlp[model]"` 후 `backend/.env`에 `CLASSIFIER=module`
    - **http**: `cd nlp && uvicorn server:app --port 8001` 후 `backend/.env`에 `CLASSIFIER=http`
