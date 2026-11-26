@@ -38,7 +38,7 @@ class ResponseMode(StrEnum):     NEXT_STEP, HINT_ONLY, ASK_ATTEMPT, OFF_TOPIC, U
 class HelpChoice(StrEnum):       FIRST_HINT, FEEDBACK, ORIGINAL
 class PasteField(StrEnum):       ANSWER, CHAT, CONCEPT_CHECK
 ```
-> `ResponseMode`는 지금 `backend/app/services/policy.py`가 소문자이고 `OFFER_CHOICES`가 없다. 채팅 API 구현 PR에서 맞춘다(api-contract 결정 B).
+> `ResponseMode` · `HelpChoice`는 `backend/app/services/policy.py`에 대문자로 구현됨(api-contract 결정 B, prompt-builder PR).
 
 ## ERD
 ```mermaid
@@ -388,7 +388,7 @@ class AnswerKey(BaseModel):
 - 클래스 개설 화면: 시작 날짜 선택 칸 (화면 담당)
 - `frontend/src/api/assignments.ts`: `AiPolicy`에 `usage_limit` 추가 (화면 담당)
 - `frontend/src/api/classes.ts`·`enrollments.ts`: `alias` → `student_no`, 명단 `roster`를 `{student_no, is_use}[]`로, 클래스 개설에 `starts_on` (화면 담당)
-- `backend/app/services/policy.py`: `ResponseMode` 대문자 + `OFFER_CHOICES` (채팅 API PR)
+- ~~`backend/app/services/policy.py`: `ResponseMode` 대문자 + `OFFER_CHOICES`~~ — prompt-builder PR에서 완료
 - `backend/app/runner/`: 언어별 실행 이미지·명령 추가 (지금은 Python만) — 실행 API PR
 - `scope.md`: 확인 필요 ① → "여러 언어 지원"으로 정리
 - `frontend/src/api/`: 개념 확인·채팅 요청에서 `pasted` 빼기, 붙여넣기는 `logPaste`로만 (화면 담당)

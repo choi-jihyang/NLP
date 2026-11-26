@@ -4,7 +4,6 @@ import { Link, useSearchParams } from 'react-router-dom'
 
 import { listClasses, type ClassInfo } from '../../api/classes'
 import { listPlans, payMock, type PlanCode } from '../../api/plans'
-import { formatDate } from '../../components/format'
 import { QueryState } from '../../components/QueryState'
 import ExtendList from './plans/ExtendList'
 import PlanCard from './plans/PlanCard'
@@ -18,7 +17,7 @@ export default function PlansPage() {
   const [code, setCode] = useState<PlanCode>('SMALL')
   const pay = useMutation({ mutationFn: payMock })
   const extend = useMutation({
-    mutationFn: (c: ClassInfo) => payMock({ plan: c.plan, kind: 'EXTEND', class_id: c.id }),
+    mutationFn: (c: ClassInfo) => payMock({ plan: c.plan, kind: 'EXTEND', class_id: c.seq }),
     onSuccess: () => client.invalidateQueries({ queryKey: ['classes'] }),
   })
 
@@ -54,10 +53,10 @@ export default function PlansPage() {
           <div className="deploy">
             <b>결제가 완료됐어요 (목업)</b>
             <span className="note">
-              {pay.data.amount.toLocaleString('ko-KR')}원 · {formatDate(pay.data.period_end)}까지
+              {pay.data.amount.toLocaleString('ko-KR')}원 · 클래스를 개설한 날부터 1년
             </span>
             <div className="row">
-              <Link className="btn primary" to={`/teacher/classes/new?plan=${code}`}>이 요금제로 클래스 개설</Link>
+              <Link className="btn primary" to={`/teacher/classes/new?plan=${pay.data.plan}&payment=${pay.data.payment_seq}`}>이 요금제로 클래스 개설</Link>
             </div>
           </div>
         ) : (
@@ -65,7 +64,7 @@ export default function PlansPage() {
             <button
               className="btn primary"
               disabled={pay.isPending}
-              onClick={() => pay.mutate({ plan: code, kind: 'NEW', class_id: null })}
+              onClick={() => pay.mutate({ plan: code, kind: 'NEW' })}
             >
               결제하기 (목업)
             </button>
@@ -76,7 +75,7 @@ export default function PlansPage() {
       </section>
       <ExtendList
         classes={classes.data ?? []}
-        busyId={extend.isPending ? (extend.variables?.id ?? null) : null}
+        busyId={extend.isPending ? (extend.variables?.seq ?? null) : null}
         onExtend={(c) => extend.mutate(c)}
       />
       {extend.error && <p className="error-text">{extend.error.message}</p>}

@@ -23,7 +23,7 @@ export default function StepQuestions({ questions, onChange, onReplace, onPrev, 
       </p>
       {questions.map((q, i) => (
         <QuestionEditor
-          key={q.id}
+          key={q.seq ?? q.key ?? i}
           index={i}
           question={q}
           onChange={(patch) => onChange(i, patch)}

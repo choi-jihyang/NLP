@@ -30,7 +30,7 @@ export default function SimulationList({ cases, questions, custom }: Props) {
       })}
       <p className="note">
         {blocked}개의 답변 초안이 정답이나 완성 코드를 담고 있어 차단되었고, {signals}개의 메시지에서 외부 AI 의심 신호가 잡혔어요. 정상적인 힌트 요청은 그대로 전달됐어요.
-        {custom && ' 예시 데이터에서는 직접 쓴 지시문의 말투가 응답 문장에 반영되지 않아요.'}
+        {custom && ' 직접 쓴 지시문이 적용된 결과예요(고정 규칙 · 누출 검사는 그대로).'}
       </p>
     </div>
   )

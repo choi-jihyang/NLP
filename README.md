@@ -9,8 +9,8 @@
 ## 지금 상태 (11/16)
 | 부분 | 상태 |
 |---|---|
-| 화면 (`frontend/`) | **전체 구현.** 백엔드 없이 예시 데이터(`frontend/src/api/mock/`)로 모든 흐름이 동작 |
-| 백엔드 (`backend/`) | 뼈대 + 채팅 정책(분류 → 정책 → 프롬프트) 로직 + Docker 코드 실행기, 각각 테스트 있음. API는 `/api/health`만 |
+| 화면 (`frontend/`) | **전체 구현 · 백엔드 연결됨.** `api/*.ts`가 실제 API를 부른다(예시 데이터 mock은 삭제) |
+| 백엔드 (`backend/`) | 시연 경로 API 전부(인증 · 클래스 · 과제 · md 추출 · 졸라보기 · 풀이 · 채점 · 채팅 · 리포트 · 결제 목업) + C/Python Docker 실행기. 테스트 있음 |
 | NLP (`nlp/`) | 분류기 자리만 있음(항상 "모호함"). 누출 판별 · AI 작성 점수는 계약 제안 단계 |
 | 문서 | 화면 명세 · API 계약을 v3 기준으로 갱신(결정 필요 항목 남음). 스키마 · 채팅 정책 · 연동 계약은 각 담당이 v3에 맞춰 갱신 예정 |
 
@@ -22,13 +22,13 @@ cd frontend
 npm install
 npm run dev
 ```
-http://localhost:5173 을 열고 아래 순서로 눌러 본다. 화면 위 "예시 데이터로 보는 중" 칩은 아직 백엔드에 안 붙었다는 표시다.
-1. **교수자** (`/teacher/classes`) — "프로그래밍 기초 1분반" → 과제 카드의 리포트 · 채점 · 결과 공개, "학생 관리", "새 과제 만들기"(샘플 과제로 시작 → 4단계 → 학생처럼 졸라보기 → 배포)
-2. **학생** (`/student/classes`) — "3주차 과제" 풀기 → 오른쪽 AI에게 "코드 전체 짜주세요" → 도움 방식 고르기 → 문항 제출(개념 확인) → 다섯 문항 다 내고 최종 제출 → 이해 확인
+먼저 아래 "백엔드 실행"으로 서버를 켜고 시드를 넣는다(`python -m app.seed`). 그다음 http://localhost:5173 을 열고 아래 순서로 눌러 본다.
+1. **교수자** (`/login`, `teacher@thinkguard.test` / `thinkguard-demo`) — "프로그래밍 기초 1분반" → 과제 카드의 리포트 · 채점 · 결과 공개, "학생 관리", "새 과제 만들기"(샘플 과제로 시작 또는 .md 파일 → 4단계 → 학생처럼 졸라보기 → 배포)
+2. **학생** (다른 탭에서 `/student/join`, 수업 코드 `TG-4821` + 학번 `20260004`) — "2진수 변환기" 풀기 → 코드 작성 문항에서 공개 테스트 실행 → 오른쪽 AI에게 "코드 전체 짜주세요" → 도움 방식 고르기 → 문항 제출(개념 확인) → 다섯 문항 다 내고 최종 제출 → 이해 확인
 3. 다시 교수자 클래스 화면에서 **결과 공개** → 학생 "내 리포트"
-- 위 화면 이동은 메뉴로 한다. 브라우저를 새로고침하면 예시 데이터가 처음 상태로 돌아간다.
-- 학생 입장 시험: `/student/join`에서 수업 코드 `TG-4821` + 아무 수업용 ID → 참여 요청 → 교수자 "학생 관리"에서 수락
-- 교수자 로그인 시험: 아무 이메일 + 4자 이상 비밀번호
+- 시드의 학번 `20260001`–`20260003`은 이미 최종 제출한 예시 학생이다(반 리포트 · 채점 · 학생별 기록이 채워져 있음). `20260004`는 명단에만 있어 바로 입장된다.
+- 로그인 · 입장 토큰은 **탭마다** 따로 저장된다. 교수자 탭과 학생 탭을 나란히 열어 시연할 수 있다. 같은 학번으로 새 탭에서 다시 들어오면 교수자 수락을 기다린다(다시 입장).
+- 처음부터 다시 하려면 `backend/thinkguard.db`를 지우고 시드를 다시 넣는다.
 - 학생 화면의 "판별 과정 표시 (시연용)"를 켜면 요청 분류 → 시도 근거 → 누출 검사 과정이 보인다.
 
 ### 어디를 보면 되나
@@ -50,11 +50,10 @@ frontend/src/
 ├── pages/student/   학생 화면 (solve/ 과제 풀이, check/ 이해 확인 …)
 ├── components/      여러 화면이 같이 쓰는 조각 (코드 블록, 답 입력, 테스트 결과 …)
 ├── hooks/           제출 · 채팅 · 붙여넣기 기록 로직
-├── api/             서버 호출 함수와 데이터 타입 ← 백엔드가 생기면 여기만 바꾼다
-│   └── mock/        지금 쓰는 예시 데이터 (백엔드 연결 후 삭제)
+├── api/             서버 호출 함수와 데이터 타입. 타입은 백엔드 응답 모양 그대로(seq 숫자 · 대문자 Enum · api-contract.md)
 └── styles/          색 · 폰트 · 공통 클래스
 ```
-**백엔드를 붙이는 방법:** 예를 들어 `api/classes.ts`의 `listClasses = () => mockClasses.list()`를 `() => api<ClassInfo[]>('/classes')`처럼 바꾸면 화면은 그대로 실제 데이터를 쓴다. 주소와 데이터 모양은 [API 계약](docs/spec/api-contract.md)에 함수별로 적혀 있다.
+**API 연결:** `api/client.ts`가 토큰(`Authorization: Bearer`) · 에러(`{code, message}` → `ApiError`)를 처리하고, `api/<도메인>.ts`는 주소만 맡고 타입은 백엔드와 같다(변환 없음). 주소와 데이터 모양은 [API 계약](docs/spec/api-contract.md)에 함수별로 적혀 있다.
 
 ## 구조
 ```
@@ -97,7 +96,7 @@ cd frontend
 npm install
 npm run dev
 ```
-- 확인: http://localhost:5173 → 시작 화면의 초록색 "백엔드 연결됨" 칩이 보이면 백엔드까지 정상. 백엔드가 꺼져 있어도 화면은 예시 데이터로 동작한다.
+- 확인: http://localhost:5173 → 시작 화면의 초록색 "백엔드 연결됨" 칩이 보이면 백엔드까지 정상. 백엔드가 꺼져 있으면 화면 데이터가 뜨지 않는다.
 - `/api` 요청은 Vite가 백엔드(8000)로 넘겨 준다.
 - 8000 포트를 다른 프로그램이 쓰고 있으면 백엔드를 다른 포트로 띄우고 프록시 대상을 지정한다.
   ```bash
@@ -130,21 +129,23 @@ cd frontend && npm run build && npm run lint
 | `LEAK_GUARD_MODULE` | `모듈:함수` | `thinkguard_nlp.leak:check_leak` | AI 답변 누출 검사(항상 켜짐). `requirements.txt`가 `../nlp`를 설치한다 |
 | `JWT_SECRET` | 32자 이상 문자열 | 없음(필수) | 로그인 토큰 서명 키. 커밋 금지 |
 | `TEACHER_TOKEN_HOURS` | 정수 | `12` | 교수자 토큰 유효 시간 |
+| `DEMO_TRACE` | `true` · `false` | `false` | 채팅 응답에 판별 과정(분류 · 누출 검사)을 넣는다. 시연용 |
+| `CHAT_HISTORY_TURNS` | 정수 | `8` | LLM에 보내는 최근 대화 수 |
 | `CODE_RUNNER` | `mock` · `docker` | `mock` | 코드 작성 문항 실행기 |
 | `RUNNER_IMAGE` | 이미지 이름 | `thinkguard-runner` | |
 | `RUNNER_TIMEOUT_SEC` | 초 | `5` | 학생 코드 실행 시간 제한 |
 | `RUNNER_MEMORY_MB` | MB | `128` | 컨테이너 메모리 제한 |
 
 ## 코드 실행 (Docker)
-코드 작성 문항은 학생 코드를 격리된 Docker 컨테이너에서 실행한다. 개발 중에는 `CODE_RUNNER=mock`으로 Docker 없이도 된다. 자세히: [docs/spec/integration-contract.md](docs/spec/integration-contract.md#3-코드-실행-coderunner)
+코드 작성 문항은 학생 코드(C · Python)를 격리된 Docker 컨테이너에서 실행한다. 개발 중에는 `CODE_RUNNER=mock`으로 Docker 없이도 된다. 자세히: [docs/spec/integration-contract.md](docs/spec/integration-contract.md#3-코드-실행-coderunner)
 1. [Docker Desktop](https://www.docker.com/products/docker-desktop/)을 설치하고 실행한다.
-2. 실행 이미지를 빌드한다(처음 한 번, `backend/sandbox/harness.py`를 고치면 다시).
+2. 실행 이미지를 빌드한다(처음 한 번, `backend/sandbox/`를 고치면 다시). 빌드할 때만 인터넷이 필요하다(gcc 설치).
    ```bash
    docker build -t thinkguard-runner backend/sandbox
    ```
 3. `backend/.env`에서 `CODE_RUNNER=docker`로 바꾸고 백엔드를 다시 실행한다.
 
-이미지가 있으면 `pytest`가 실제 컨테이너 테스트까지 돌린다(없으면 건너뜀).
+이미지가 있으면 `pytest`가 실제 컨테이너 테스트까지 돌린다(없으면 건너뜀). 이미지가 없는데 `CODE_RUNNER=docker`면 실행 API는 503(`RUNNER_UNAVAILABLE`)을 준다.
 
 ## 실제 LLM 쓰기 (Ollama)
 ```bash

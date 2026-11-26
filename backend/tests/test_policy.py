@@ -1,5 +1,7 @@
+import pytest
+
 from app.classifier.base import ClassificationResult
-from app.services.policy import ASK_ATTEMPT_REPLY, ResponseMode, decide
+from app.services.policy import ASK_ATTEMPT_REPLY, OFFER_CHOICES_REPLY, HelpChoice, ResponseMode, decide
 
 
 def result(**kw) -> ClassificationResult:
@@ -13,11 +15,31 @@ def result(**kw) -> ClassificationResult:
     return ClassificationResult(**(base | kw))
 
 
-def test_complete_answer_without_attempt_is_hint_only():
+def test_complete_answer_without_attempt_offers_choices_without_llm():
     d = decide(result(requests_complete_answer=True))
+    assert d.mode is ResponseMode.OFFER_CHOICES
+    assert d.fixed_reply == OFFER_CHOICES_REPLY
+    assert d.directive is None
+
+
+@pytest.mark.parametrize("choice", list(HelpChoice))
+def test_any_choice_stays_hint_only(choice):
+    """I1: 무엇을 골라도(ORIGINAL 포함) 정책은 힌트만."""
+    d = decide(result(requests_complete_answer=True), choice=choice)
     assert d.mode is ResponseMode.HINT_ONLY
     assert d.fixed_reply is None
-    assert "정답" in d.directive
+    assert "정답" in d.directive and "힌트만" in d.directive
+
+
+def test_choice_is_ignored_outside_answer_request():
+    assert decide(result(), choice=HelpChoice.ORIGINAL).mode is ResponseMode.NEXT_STEP
+    assert decide(result(uncertain=True), choice=HelpChoice.ORIGINAL).mode is ResponseMode.ASK_ATTEMPT
+
+
+def test_modes_are_uppercase_strings():
+    assert {m.value for m in ResponseMode} == {
+        "NEXT_STEP", "HINT_ONLY", "ASK_ATTEMPT", "OFF_TOPIC", "USAGE_LIMIT", "OFFER_CHOICES",
+    }
 
 
 def test_complete_answer_with_attempt_gets_next_step():

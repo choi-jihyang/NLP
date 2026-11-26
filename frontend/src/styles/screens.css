@@ -36,7 +36,7 @@
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
 .dot.done { background: var(--accent); }
 .dot.wait { background: var(--warn); }
-.qtext { font-size: 1.02rem; }
+.qtext { font-size: 1.02rem;  white-space: pre-line; }
 
 /* 학습 AI 채팅 */
 .ai { display: flex; flex-direction: column; height: 640px; max-height: 82vh; padding: 0; overflow: hidden; position: relative; }

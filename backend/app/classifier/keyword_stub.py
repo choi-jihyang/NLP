@@ -5,9 +5,13 @@ import re
 from app.classifier.base import ClassificationResult, Classifier
 from app.schemas.chat import ChatTurn
 
+_PLEASE = r"(줘|주세요|주실래요|줄래|주시겠어요|달라)"
+"""반말 · 존댓말 요청 어미 (예: 짜줘 · 짜주세요)"""
 _ANSWER_REQUEST = re.compile(
-    r"정답|답\s*(만|좀|을)?\s*(빨리\s*)?(알려|줘)|풀어\s*줘|전체\s*풀이|다\s*풀어|그냥\s*알려"
-    r"|대신\s*(써|풀어|짜)|써\s*줘|(전체|완성된?)\s*코드|코드\s*(다\s*)?(짜|작성해)\s*줘"
+    r"정답|답\s*(만|좀|을)?\s*(빨리\s*)?(알려|" + _PLEASE + r")|풀어\s*" + _PLEASE
+    + r"|전체\s*풀이|다\s*풀어|그냥\s*알려"
+    r"|대신\s*(써|풀어|짜)|써\s*" + _PLEASE + r"|(전체|완성된?)\s*코드|코드\s*(전체|전부|통째로)"
+    r"|코드\s*(다\s*)?(짜|작성해)\s*" + _PLEASE
 )
 _HELP_REQUEST = re.compile(r"힌트|어떻게\s*시작|모르겠|막혔|다음\s*(엔|단계)|뭘\s*해야|뭐야|뭔가요|의미|무슨\s*뜻|왜")
 _ATTEMPT = re.compile(

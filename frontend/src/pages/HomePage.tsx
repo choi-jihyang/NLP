@@ -29,7 +29,7 @@ export default function HomePage() {
       </div>
       <div className="row" style={{ marginTop: 18 }}>
         {health.isPending && <span className="chip">백엔드 확인 중…</span>}
-        {health.isError && <span className="chip warn">백엔드 미연결 · 화면은 예시 데이터로 동작해요</span>}
+        {health.isError && <span className="chip warn">백엔드에 연결할 수 없어요 · backend 서버를 켜 주세요</span>}
         {health.data && (
           <span className="chip good">
             백엔드 연결됨 · LLM {health.data.llm_provider} · 분류기 {health.data.classifier}

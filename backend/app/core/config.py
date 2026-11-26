@@ -25,6 +25,11 @@ class Settings(BaseSettings):
 
     leak_guard_module: str = "thinkguard_nlp.leak:check_leak"
 
+    demo_trace: bool = False
+    """시연용: 채팅 응답에 판별 과정(trace)을 채운다(api-contract 결정 F). 학생 실사용에서는 끈다"""
+    chat_history_turns: int = 8
+    """LLM에 보내는 최근 대화 수(전부 저장, 프롬프트에는 일부만)"""
+
     code_runner: Literal["mock", "docker"] = "mock"
     runner_image: str = "thinkguard-runner"
     runner_timeout_sec: float = 5.0

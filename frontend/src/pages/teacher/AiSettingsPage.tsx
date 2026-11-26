@@ -10,7 +10,7 @@ import PolicyOptions from './editor/policy/PolicyOptions'
 
 /** 교수자: 이 클래스에서 새로 만드는 과제에 미리 채울 AI 도움 정책 */
 export default function AiSettingsPage() {
-  const { classId = '' } = useParams()
+  const classId = Number(useParams().classId)
   const client = useQueryClient()
   const key = ['ai-defaults', classId]
   const saved = useQuery({ queryKey: key, queryFn: () => getAiDefaults(classId) })

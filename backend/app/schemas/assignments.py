@@ -140,14 +140,23 @@ class AssignmentSummary(BaseModel):
     status: Literal["DRAFT", "OPEN", "CLOSED"]
     due_at: datetime | None
     hint_mode: HintMode | None
-    submitted_count: int = 0  # ⑦ 제출 API 전까지 0
+    submitted_count: int = 0  # 최종 제출한 학생 수
     student_count: int
     todo: str | None = None
     results_released: bool
 
 
 class DraftBody(BaseModel):
-    source: Literal["BLANK"]  # SAMPLE은 ④-2(샘플 md 파서)에서
+    source: Literal["BLANK", "SAMPLE"]  # SAMPLE = docs/spec/samples/c-binary-assignment.md를 읽은 초안
+
+
+class PreviewOut(BaseModel):
+    lines: list[str]
+    hint_mode_label: str
+
+
+class PromptDraftOut(BaseModel):
+    prompt: str
 
 
 class PublishOut(BaseModel):

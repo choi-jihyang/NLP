@@ -105,8 +105,9 @@ async def generate(system_prompt: str, messages: list[ChatTurn]) -> str
 
 ## 3. 코드 실행 (CodeRunner)
 
-> 상태: **구현됨** (`backend/app/runner/`, `backend/sandbox/`, 테스트 있음). 채점·실행 API 연결은 미구현.
+> 상태: **구현됨 — C · Python** (`backend/app/runner/`, `backend/sandbox/`, 테스트 있음). 채점·실행 API 연결은 ⑦에서.
 > 2026-11-17 결정: 코드 작성 문항은 **Docker 컨테이너**에서 실행한다. 숨김 테스트를 학생에게 보내지 않기 위해 서버에서 돌린다.
+> 11/25: 테스트 모양을 모든 언어 `{input, expected_output}`(표준 입력 → 표준 출력, schema D23)으로 바꾸고 C(gcc)를 추가했다.
 
 ```
 backend/app/runner/                CODE_RUNNER=
@@ -114,23 +115,26 @@ backend/app/runner/                CODE_RUNNER=
   mock.py                             mock   (기본, 실행 없이 모두 통과)
   docker.py                           docker (컨테이너 실행)
 backend/sandbox/
-  Dockerfile                         실행 이미지 (python:3.12-slim + 일반 사용자)
-  harness.py                         컨테이너 안에서 실행·비교
+  Dockerfile                         실행 이미지 (python:3.12-slim + gcc + 일반 사용자)
+  harness.py                         컨테이너 안에서 컴파일·실행·비교
 ```
 
 ### 인터페이스
 ```python
-async def run(code: str, tests: list[TestCase]) -> RunResult
+async def run(language: Language, code: str, tests: list[IOCase]) -> RunResult
 ```
 | 타입 | 필드 |
 |---|---|
-| `TestCase` | `call` (호출식, 예 `sum_even([1, 2, 3, 4])`), `expected` (기대값) |
-| `TestResult` | `call`, `actual` (반환값 repr, 오류면 null, 최대 1000자), `passed`, `error` (예 `ZeroDivisionError: division by zero`) |
-| `RunResult` | `ok` (false면 문법 오류·시간 초과 등으로 실행 못 함), `error`, `results` |
+| `IOCase` | `input` (표준 입력), `expected_output` (기대 표준 출력) |
+| `RunCaseResult` | `input`, `actual_output` (실제 표준 출력, 최대 1000자, 시간 초과면 null), `passed`, `error` (예 `실행 시간 초과 (5초)`, `Segmentation fault (잘못된 메모리 접근)`, `프로그램이 종료 코드 1로 끝났어요`) |
+| `RunResult` | `ok` (false면 컴파일 오류 · 지원하지 않는 언어로 실행 못 함), `error` (컴파일 오류면 `컴파일 오류:\n<gcc 메시지>`), `results` |
 
-- **비교 방식**: `expected`를 Python 리터럴로 읽어 값으로 비교한다(`6`, `'ab'`, `[1, 2]`). 리터럴이 아니면 문자열로 비교한다(`ab` ↔ 반환값 `'ab'`도 통과).
+- **언어**: `C`(gcc, `-std=c11 -O1 -lm`), `PYTHON`. `JAVA` · `JAVASCRIPT`는 아직 없음 → `ok=false`, Docker를 부르지 않는다.
+- **비교**: 각 줄 끝 공백과 마지막 줄바꿈은 무시하고 비교한다(D23). `\r\n`은 `\n`으로 본다. 줄 안의 공백은 비교한다.
+- **종료 코드**: 0이 아니어도 출력이 맞으면 통과, `error`에 종료 코드를 적는다. 신호로 죽으면(세그폴트 · 메모리) 실패.
+- **시간 제한**: 테스트마다 `RUNNER_TIMEOUT_SEC`. 한 테스트가 시간을 넘어도 나머지 테스트는 돈다. 컨테이너 전체는 컴파일 15초 + 테스트 수 × 제한 + 여유 10초.
 - **숨김 테스트 구분은 호출하는 service가 한다.** 실행기는 받은 테스트를 모두 돌린다. 학생에게 공개 테스트 결과만 보내는 것은 service·API 책임이다.
-- Docker를 쓸 수 없으면 `RunnerUnavailableError` → API는 503(`RUNNER_UNAVAILABLE`)으로 응답한다.
+- Docker를 쓸 수 없거나 **이미지가 없으면** `RunnerUnavailableError` → API는 503(`RUNNER_UNAVAILABLE`). `--pull never`라서 이미지가 없을 때 Docker Hub에서 받으려 하지 않는다.
 
 ### 격리 (DockerRunner)
 | 제한 | 값 |
@@ -138,33 +142,37 @@ async def run(code: str, tests: list[TestCase]) -> RunResult
 | 네트워크 | `--network none` |
 | 메모리 | `RUNNER_MEMORY_MB` (기본 128MB, 스왑 없음) |
 | CPU · 프로세스 | `--cpus 0.5`, `--pids-limit 64` |
-| 파일 시스템 | `--read-only`, `/tmp`만 16MB 쓰기 가능 |
+| 파일 시스템 | `--read-only`, `/tmp`만 32MB 쓰기 가능(`exec` 허용 — 컴파일 결과 실행, `nosuid` · `nodev`, `mode=1777`) |
 | 권한 | root 아닌 사용자, `--cap-drop ALL`, `no-new-privileges` |
-| 시간 | `RUNNER_TIMEOUT_SEC` (기본 5초). 넘으면 컨테이너 강제 종료 |
+| 이미지 | `--pull never` (없으면 503) |
+| 시간 | 위 "시간 제한". 넘으면 컨테이너 강제 종료 |
 
 ### harness 안의 구조
-학생 코드는 컨테이너 안에서도 **별도 자식 프로세스**로 돈다.
-- 자식에게는 `code`와 `call`만 보낸다. **기대값은 자식에게 가지 않는다** → 학생 코드가 숨김 테스트 기대값을 읽을 수 없다.
-- 통과 판정은 부모가 한다 → 학생 코드가 가짜 결과를 출력하고 종료해도 통과가 되지 않는다.
-- 학생 코드의 `print` 출력은 버린다.
+학생 프로그램은 컨테이너 안에서도 **테스트마다 별도 자식 프로세스**로 돈다.
+- 자식에게는 **그 테스트의 `input`만** 표준 입력으로 준다. 기대 출력은 부모만 가진다.
+- 부모는 시작하자마자 `prctl(PR_SET_DUMPABLE, 0)`을 호출한다. 같은 사용자인 자식이 `/proc/<부모>/mem`에서 기대값을 읽거나 `/proc/<부모>/fd/1`로 가짜 결과를 쓰는 우회를 막는다(11/18 리뷰에서 실제로 뚫리는 것을 확인).
+- 통과 판정은 부모가 한다 → 학생 프로그램이 가짜 결과 JSON을 출력해도 그 테스트의 "실제 출력"일 뿐이다.
+- 자식 출력은 `/tmp` 파일로 받아 앞 64KB만 읽는다 → 출력 폭탄이 부모 메모리를 채우지 못한다. 자식은 새 세션으로 띄워 손자 프로세스까지 한 번에 끝낸다.
 
 ### 시연 PC 준비
 ```bash
 docker build -t thinkguard-runner backend/sandbox
 ```
-`backend/.env`에서 `CODE_RUNNER=docker`. Docker Desktop이 켜져 있어야 한다.
+`backend/.env`에서 `CODE_RUNNER=docker`. Docker Desktop이 켜져 있어야 한다. `harness.py`를 고치면 다시 빌드한다.
 
 ### 수용 기준
 1. `CODE_RUNNER` 값만 바꿔 mock ↔ docker 전환, 코드 수정 없음.
-2. 컨테이너 안에서 인터넷 연결·파일 쓰기가 막힌다.
-3. 무한 루프는 시간 제한 안에 끝나고 `ok=false`, "실행 시간 초과".
-4. 학생 코드가 결과를 위조하거나 기대값을 읽을 수 없다.
+2. 컨테이너 안에서 인터넷 연결·`/tmp` 밖 파일 쓰기가 막힌다.
+3. 무한 루프는 테스트별 시간 제한 안에 끝나고 "실행 시간 초과".
+4. 학생 코드가 결과를 위조하거나 기대값을 읽을 수 없다(부모 메모리 · 부모 출력 통로 포함).
+5. C 컴파일 오류는 `ok=false`와 gcc 메시지(서버 경로 없이)로 알려 준다.
+6. 이미지가 없으면 받지 않고 `RUNNER_UNAVAILABLE`.
 
 ### 테스트
 | 파일 | 다루는 것 |
 |---|---|
-| `backend/tests/test_harness.py` | 비교 방식, 예외·문법 오류, print 무시, 결과 위조 방지, 기대값 비공개, 시간 초과 (Docker 없이) |
-| `backend/tests/test_runner.py` | Mock, 격리 옵션, Docker 없음 처리 / 실제 컨테이너: 실행·네트워크 차단·쓰기 차단·시간 초과 (이미지 없으면 건너뜀) |
+| `backend/tests/test_harness.py` | C · Python 입출력 비교, 줄 끝 공백 규칙, 컴파일 오류, 세그폴트 · 종료 코드, 시간 초과, 출력 폭탄, 결과 위조, **부모 메모리 · 출력 통로 차단**(리눅스 일반 사용자에서만) — Docker 없이, C는 gcc 필요 |
+| `backend/tests/test_runner.py` | Mock, 격리 옵션, Docker 없음 · 이미지 없음 → `RunnerUnavailableError`, 미지원 언어 / 실제 컨테이너: C 실행 · 네트워크 차단 · 쓰기 차단 · 시간 초과 · 부모 메모리 차단 (이미지 없으면 건너뜀) |
 
 ---
 

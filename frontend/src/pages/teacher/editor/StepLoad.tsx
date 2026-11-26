@@ -1,4 +1,5 @@
-import type { Assignment, ProgrammingLanguage } from '../../../api/assignments'
+import type { Assignment, Language } from '../../../api/assignments'
+import { LANGUAGE_LABEL } from '../../../api/client'
 import { typeSummary, totalPoints } from './questionText'
 
 type Props = {
@@ -8,13 +9,13 @@ type Props = {
   fileName: string | null
   error: Error | null
   onChange: (patch: Partial<Assignment>) => void
-  onFile: (fileName: string) => void
+  onFile: (file: File) => void
   onSample: () => void
   onBlank: () => void
   onNext: () => void
 }
 
-const LANGUAGES: ProgrammingLanguage[] = ['Python', 'Java', 'C', 'JavaScript']
+const LANGUAGES: Language[] = ['C', 'PYTHON', 'JAVA', 'JAVASCRIPT']
 const AUDIENCES = ['대학 1학년', '대학 2학년', '비전공 교양', '고등학교 정보', '코딩 테스트 준비반']
 
 /** STEP 1. 과목·대상·언어를 적고 과제 파일을 불러온다 */
@@ -41,9 +42,9 @@ export default function StepLoad({ draft, loaded, loading, fileName, error, onCh
         </label>
         <label className="field">
           <span className="label">언어 · 코드 실행 채점에 쓰여요</span>
-          <select className="inp" value={draft.language} onChange={(e) => onChange({ language: e.target.value as ProgrammingLanguage })}>
+          <select className="inp" value={draft.language} onChange={(e) => onChange({ language: e.target.value as Language })}>
             {LANGUAGES.map((l) => (
-              <option key={l}>{l}</option>
+              <option key={l} value={l}>{LANGUAGE_LABEL[l]}{l === 'C' || l === 'PYTHON' ? '' : ' (코드 실행 미지원)'}</option>
             ))}
           </select>
         </label>
@@ -64,8 +65,8 @@ export default function StepLoad({ draft, loaded, loading, fileName, error, onCh
       <p className="note">퀴즈, 출력 예측, 코드 작성, 간단 제작 같은 문항 유형은 다음 단계에서 문항마다 정해요.</p>
       <label className="drop">
         <strong>과제 파일 올리기</strong>
-        <span className="note">PDF, HWP, 마크다운, .py · .ipynb · 눌러서 선택</span>
-        <input type="file" accept=".pdf,.hwp,.md,.py,.ipynb,.txt" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0].name)} />
+        <span className="note">정해진 양식의 마크다운(.md) · 눌러서 선택</span>
+        <input type="file" accept=".md,.markdown,.txt" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
       </label>
       <div className="row">
         <span className="note">파일이 없나요?</span>
@@ -87,7 +88,7 @@ export default function StepLoad({ draft, loaded, loading, fileName, error, onCh
         </div>
       )}
       {error && <p className="error-text">{error.message}</p>}
-      <p className="note">예시 데이터에서는 어떤 파일을 올려도 샘플 과제(반복문과 리스트 5문항, Python)를 불러와요.</p>
+      <p className="note">정해진 양식(docs/spec/assignment-md-format.md)의 .md 파일만 읽어요. 양식이 다르면 틀린 곳을 알려 줘요.</p>
       <div className="spread">
         <span />
         <button className="btn primary" disabled={!loaded || loading} onClick={onNext}>문항 확인하기</button>

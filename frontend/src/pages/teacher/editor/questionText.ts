@@ -14,7 +14,8 @@ let seq = 0
 export function newQuestion(type: QuestionType): Question {
   seq += 1
   return {
-    id: `new-${Date.now()}-${seq}`,
+    seq: null,
+    key: `new-${Date.now()}-${seq}`,
     type,
     points: type === 'PROJECT' ? 20 : type === 'CODE' ? 10 : 5,
     prompt: '',
@@ -24,7 +25,7 @@ export function newQuestion(type: QuestionType): Question {
     accepted_answers: [],
     misconceptions: {},
     starter_code: '',
-    tests: type === 'CODE' ? [{ call: '', expected: '', hidden: false }] : [],
+    tests: type === 'CODE' ? [{ input: '', expected_output: '', hidden: false }] : [],
     rubric: type === 'PROJECT' ? [''] : [],
     model_answer: '',
     ai_help: true,

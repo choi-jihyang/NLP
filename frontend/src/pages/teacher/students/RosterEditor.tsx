@@ -4,12 +4,14 @@ import type { JoinMode, RosterSettings } from '../../../api/enrollments'
 
 type Props = { settings: RosterSettings; saving: boolean; onSave: (body: RosterSettings) => void }
 
-/** 입장 방식 + 수업 전에 미리 넣어 두는 학생 명단 (한 줄에 수업용 ID 하나) */
+/** 입장 방식 + 수업 전에 미리 넣어 두는 학생 명단 (한 줄에 학번 하나) */
 export default function RosterEditor({ settings, saving, onSave }: Props) {
   const [mode, setMode] = useState<JoinMode>(settings.join_mode)
-  const [text, setText] = useState(settings.roster.join('\n'))
+  // 사용 중인 학번만 보여 준다. 줄에서 빼고 저장하면 서버가 지우지 않고 is_use = false로 둔다(schema D15)
+  const active = settings.roster.filter((m) => m.is_use).map((m) => m.student_no)
+  const [text, setText] = useState(active.join('\n'))
   const roster = text.split(/[\n,]/).map((s) => s.trim()).filter(Boolean)
-  const changed = mode !== settings.join_mode || roster.join('\n') !== settings.roster.join('\n')
+  const changed = mode !== settings.join_mode || roster.join('\n') !== active.join('\n')
 
   return (
     <section className="panel stack">
@@ -24,7 +26,7 @@ export default function RosterEditor({ settings, saving, onSave }: Props) {
           : '수업 코드를 아는 학생은 누구나 바로 들어와요. 명단은 참고용으로만 남아요.'}
       </p>
       <label className="field">
-        <span className="label">미리 넣어 둘 수업용 ID · 한 줄에 하나 (쉼표로 구분해도 돼요)</span>
+        <span className="label">미리 넣어 둘 학번 · 한 줄에 하나 (쉼표로 구분해도 돼요)</span>
         <textarea
           className="inp mono"
           style={{ minHeight: 140 }}
@@ -34,7 +36,7 @@ export default function RosterEditor({ settings, saving, onSave }: Props) {
         />
       </label>
       <div className="row">
-        <button className="btn primary" disabled={!changed || saving} onClick={() => onSave({ join_mode: mode, roster })}>
+        <button className="btn primary" disabled={!changed || saving} onClick={() => onSave({ join_mode: mode, roster: roster.map((student_no) => ({ student_no, is_use: true })) })}>
           저장
         </button>
         <span className="note">명단 {roster.length}명 · 이미 요청한 학생이 명단에 있으면 저장할 때 바로 받아 줘요.</span>

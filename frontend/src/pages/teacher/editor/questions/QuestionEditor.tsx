@@ -22,7 +22,7 @@ const GRADING = {
 /** 문항 하나 편집: 공통(문제·코드·배점) + 유형별 정답·채점 */
 export default function QuestionEditor({ index, question: q, onChange, onRemove }: Props) {
   const grading = GRADING[q.type]
-  const isNew = q.id.startsWith('new-')
+  const isNew = q.seq == null
 
   return (
     <div className="item">

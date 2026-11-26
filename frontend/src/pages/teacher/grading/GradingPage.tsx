@@ -7,12 +7,14 @@ import GradeCard from './GradeCard'
 
 /** 교수자: 간단 제작 문항 직접 채점 */
 export default function GradingPage() {
-  const { classId = '', assignmentId = '' } = useParams()
+  const { classId: classParam, assignmentId: assignmentParam } = useParams()
+  const classId = Number(classParam)
+  const assignmentId = Number(assignmentParam)
   const client = useQueryClient()
   const key = ['grading', assignmentId]
   const list = useQuery({ queryKey: key, queryFn: () => getGradingList(assignmentId) })
   const grade = useMutation({
-    mutationFn: (v: { answerId: string; score: number; feedback: string }) => gradeAnswer(v.answerId, { score: v.score, feedback: v.feedback }),
+    mutationFn: (v: { answerId: number; score: number; feedback: string }) => gradeAnswer(v.answerId, { score: v.score, feedback: v.feedback }),
     onSuccess: (saved: GradingItem) =>
       client.setQueryData<GradingItem[]>(key, (old) => old?.map((g) => (g.answer_id === saved.answer_id ? saved : g))),
   })

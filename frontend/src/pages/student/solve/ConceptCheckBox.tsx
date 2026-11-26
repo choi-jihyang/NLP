@@ -17,7 +17,6 @@ type Props = {
  */
 export default function ConceptCheckBox({ check, busy, onAnswer, onCancel, onPaste }: Props) {
   const [reply, setReply] = useState('')
-  const [pasted, setPasted] = useState(false)
   const [startedAt] = useState(() => Date.now())
   const followUp = check.answered > 0
   const question = check.questions[check.answered]
@@ -41,16 +40,13 @@ export default function ConceptCheckBox({ check, busy, onAnswer, onCancel, onPas
         placeholder="한두 문장으로 본인 말로 적어 주세요"
         value={reply}
         onChange={(e) => setReply(e.target.value)}
-        onPaste={(e) => {
-          setPasted(true)
-          onPaste(e.clipboardData.getData('text').length)
-        }}
+        onPaste={(e) => onPaste(e.clipboardData.getData('text').length)}
       />
       <div className="row">
         <button
           className="btn primary"
           disabled={busy || tooShort}
-          onClick={() => onAnswer({ reply: reply.trim(), pasted, elapsed_ms: Date.now() - startedAt })}
+          onClick={() => onAnswer({ reply: reply.trim(), elapsed_ms: Date.now() - startedAt })}
         >
           답하고 제출
         </button>
