@@ -50,10 +50,10 @@ frontend/src/
 ├── pages/student/   학생 화면 (solve/ 과제 풀이, check/ 이해 확인 …)
 ├── components/      여러 화면이 같이 쓰는 조각 (코드 블록, 답 입력, 테스트 결과 …)
 ├── hooks/           제출 · 채팅 · 붙여넣기 기록 로직
-├── api/             서버 호출 함수와 데이터 타입. 백엔드 응답(seq · 대문자 Enum)을 화면 타입(id 문자열)으로 바꾼다
+├── api/             서버 호출 함수와 데이터 타입. 타입은 백엔드 응답 모양 그대로(seq 숫자 · 대문자 Enum · api-contract.md)
 └── styles/          색 · 폰트 · 공통 클래스
 ```
-**API 연결:** `api/client.ts`가 토큰(`Authorization: Bearer`) · 에러(`{code, message}` → `ApiError`)를 처리하고, `api/<도메인>.ts`가 주소와 모양 변환을 맡는다. 주소와 데이터 모양은 [API 계약](docs/spec/api-contract.md)에 함수별로 적혀 있다.
+**API 연결:** `api/client.ts`가 토큰(`Authorization: Bearer`) · 에러(`{code, message}` → `ApiError`)를 처리하고, `api/<도메인>.ts`는 주소만 맡고 타입은 백엔드와 같다(변환 없음). 주소와 데이터 모양은 [API 계약](docs/spec/api-contract.md)에 함수별로 적혀 있다.
 
 ## 구조
 ```

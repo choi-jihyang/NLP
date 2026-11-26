@@ -30,12 +30,18 @@ export default function PairChart({ stats }: Props) {
               </div>
               <span>{s.correct_rate}%</span>
             </div>
-            <div className="barrow" aria-label={`확인 문제 정답률 ${s.variant_rate}%`}>
-              <div className="bar">
-                <i className="alone" style={{ width: `${s.variant_rate}%` }} />
+            {s.variant_rate === null ? (
+              <div className="barrow" aria-label="확인 문제 없음">
+                <span className="note">확인 문제 없음</span>
               </div>
-              <span>{s.variant_rate}%</span>
-            </div>
+            ) : (
+              <div className="barrow" aria-label={`확인 문제 정답률 ${s.variant_rate}%`}>
+                <div className="bar">
+                  <i className="alone" style={{ width: `${s.variant_rate}%` }} />
+                </div>
+                <span>{s.variant_rate}%</span>
+              </div>
+            )}
           </div>
         </div>
       ))}

@@ -94,8 +94,8 @@
 
 ### 프론트 연결
 - [x] **[프론트]** `client.ts`: 토큰 저장(탭마다 sessionStorage) · `Authorization: Bearer` · 에러 `{code, message}` → `ApiError` — `feature/backend-m2`
-- [x] **[프론트]** 타입 변경 — **화면 타입은 그대로 두고 `api/*.ts` 안에서 변환**(seq ↔ id, `student_no` ↔ `alias`, 명단 is_use, 언어 표기, 테스트 `{input, expected_output}` ↔ `{call, expected}`), `pasted`는 `/paste-events`로. 화면 타입 이름 정리는 PR 논의
-- [ ] **[프론트]** 클래스 개설 화면에 시작 날짜 선택 — 지금은 오늘 시작으로 고정(api에서)
+- [x] **[프론트]** 타입 변경: 백엔드 모양 그대로 — id → `seq: number`, `alias` → `student_no`, 명단 `{student_no, is_use}[]`, 클래스 개설 `{name, starts_on, payment_seq}`, `AiPolicy.usage_limit`, 테스트 `{input, expected_output}`, 언어 대문자(`LANGUAGE_LABEL`로 표시), 개념 확인·채팅 요청 `pasted` 제거(붙여넣기는 `/paste-events`)
+- [x] **[프론트]** 클래스 개설 화면에 시작 날짜 선택(오늘 이후, 요금제 화면에서 결제했으면 그 이용권 사용)
 - [x] **[프론트]** 과제 파일 올리기: `.md`만 받고 실제 파일 전송(`multipart`)
 - [x] **[프론트]** `api/<도메인>.ts`의 mock → 실제 호출 교체, mock 코드 삭제
   - [x] 인증 · 클래스 · 참여 · 명단

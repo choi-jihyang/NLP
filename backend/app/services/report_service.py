@@ -304,7 +304,7 @@ def assignment_report(db: Session, teacher: User, assignment_id: int) -> Assignm
         qc = [sd.checks[q.seq] for sd in d.students if q.seq in sd.checks]
         stats.append(QuestionStat(
             question_index=i, type_label=TYPE_LABEL[q.type], correct_rate=correct_rate,
-            variant_rate=_pct(sum(c.is_correct for c in qc), len(qc)),
+            variant_rate=_pct(sum(c.is_correct for c in qc), len(qc)) if d.keys[q.seq].variant else None,
             avg_hint_steps=round(sum(a.hint_step for a in qa) / len(qa), 1) if qa else 0.0,
         ))
         m = _mistakes(d, i, q)
@@ -334,7 +334,8 @@ def assignment_report(db: Session, teacher: User, assignment_id: int) -> Assignm
         assignment_id=assignment.seq, title=assignment.title, submitted_count=len(d.students),
         student_count=approved_count(db, assignment.class_id),
         assisted_correct_rate=_pct(sum(bool(a.is_correct) for a in graded), len(graded)),
-        alone_variant_rate=_pct(sum(u.is_correct for u in checks), len(checks)),
+        alone_variant_rate=(_pct(sum(u.is_correct for u in checks), len(checks))
+                            if any(k.variant for k in d.keys.values()) else None),
         concept_check_ok_rate=_pct(len(ok), len(answered)),
         question_stats=stats, mistakes=mistakes, supplement=_supplement(d, mistakes),
         dependency=dependency, signals=signal_rows,

@@ -10,9 +10,9 @@ import StudentTables from './StudentTables'
 
 /** 교수자: 과제별 반 리포트 */
 export default function DashboardPage() {
-  const { classId = '' } = useParams()
+  const classId = Number(useParams().classId)
   const [params] = useSearchParams()
-  const assignmentId = params.get('assignment') ?? 'a1'
+  const assignmentId = Number(params.get('assignment'))
   const report = useQuery({ queryKey: ['report', assignmentId], queryFn: () => getAssignmentReport(assignmentId) })
   const assignment = useQuery({ queryKey: ['assignment', assignmentId], queryFn: () => getAssignment(assignmentId) })
 
@@ -46,8 +46,17 @@ export default function DashboardPage() {
         </div>
         <div className="fig alert">
           <span className="label">혼자 푼 확인 문제 정답률</span>
-          <b>{r.alone_variant_rate}%</b>
-          <span className="note">원문제보다 {r.assisted_correct_rate - r.alone_variant_rate}%p 낮아요</span>
+          {r.alone_variant_rate === null ? (
+            <>
+              <b>—</b>
+              <span className="note">이 과제에는 확인 문제가 없었어요</span>
+            </>
+          ) : (
+            <>
+              <b>{r.alone_variant_rate}%</b>
+              <span className="note">원문제보다 {r.assisted_correct_rate - r.alone_variant_rate}%p 낮아요</span>
+            </>
+          )}
         </div>
         {p.concept_check_enabled && (
           <div className="fig">

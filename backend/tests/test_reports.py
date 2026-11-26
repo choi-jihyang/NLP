@@ -91,6 +91,8 @@ def test_assignment_report_numbers_and_misconception_rows(client: TestClient, ru
     assert picked["note"] == "자리값을 왼쪽부터 읽음" and picked["correct"] is False
     assert r["supplement"]["question_index"] == 0 and "자리값" in r["supplement"]["summary"]
     assert [s["question_index"] for s in r["question_stats"]] == [0, 1, 2, 3]
+    # 확인 문제가 없는 문항(코드 작성 · 간단 제작)은 0%가 아니라 null
+    assert [s["variant_rate"] for s in r["question_stats"]] == [0, 100, None, None]
 
 
 def test_report_is_teacher_own_class_only(client: TestClient):

@@ -10,7 +10,7 @@ import CheckItemCard from './CheckItemCard'
 
 /** 학생: 과제를 다 낸 뒤 AI 없이 하는 이해 확인 */
 export default function UnderstandingCheckPage() {
-  const { assignmentId = '' } = useParams()
+  const assignmentId = Number(useParams().assignmentId)
   const check = useQuery({ queryKey: ['understanding', assignmentId], queryFn: () => getUnderstandingCheck(assignmentId) })
   const submission = useQuery({ queryKey: ['submission', assignmentId], queryFn: () => getMySubmission(assignmentId) })
   const [explanation, setExplanation] = useState('')

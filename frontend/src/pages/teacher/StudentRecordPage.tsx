@@ -9,17 +9,19 @@ import { TracePipe } from '../../components/TracePipe'
 
 /** 교수자: 학생 한 명의 과제 기록 */
 export default function StudentRecordPage() {
-  const { classId = '', studentId = '' } = useParams()
+  const { classId: classParam, studentId: studentParam } = useParams()
+  const classId = Number(classParam)
+  const studentId = Number(studentParam)
   const [params] = useSearchParams()
   const navigate = useNavigate()
-  const assignmentId = params.get('assignment') ?? 'a1'
+  const assignmentId = Number(params.get('assignment'))
   const record = useQuery({ queryKey: ['record', assignmentId, studentId], queryFn: () => getStudentRecord(assignmentId, studentId) })
   const students = useQuery({ queryKey: ['students', classId], queryFn: () => listStudents(classId) })
   const base = `/teacher/classes/${classId}`
 
   if (!record.data) return <QueryState isPending={record.isPending} error={record.error} />
   const r = record.data
-  const name = students.data?.find((s) => s.id === studentId)?.alias ?? r.student_name
+  const name = students.data?.find((s) => s.seq === studentId)?.student_no ?? r.student_name
 
   return (
     <div className="stack">
@@ -30,7 +32,7 @@ export default function StudentRecordPage() {
         <label className="field" style={{ width: 160 }}>
           <select className="inp" aria-label="학생 선택" value={studentId} onChange={(e) => navigate(`${base}/students/${e.target.value}?assignment=${assignmentId}`)}>
             {students.data?.map((s) => (
-              <option key={s.id} value={s.id}>{s.alias}</option>
+              <option key={s.seq} value={s.seq}>{s.student_no}</option>
             ))}
           </select>
         </label>
@@ -76,6 +78,7 @@ export default function StudentRecordPage() {
           </table>
         </div>
       </section>
+      {r.conversation ? (
       <section className="panel sec">
         <h3>문항 {r.conversation.question_index + 1} 대화 요약</h3>
         {r.conversation.turns.map((t, i) => (
@@ -86,6 +89,12 @@ export default function StudentRecordPage() {
         ))}
         <p className="note">{r.conversation.note}</p>
       </section>
+      ) : (
+        <section className="panel sec">
+          <h3>대화 요약</h3>
+          <p className="note">이 학생은 이 과제에서 AI 도움을 쓰지 않았어요.</p>
+        </section>
+      )}
     </div>
   )
 }

@@ -13,7 +13,7 @@ const STATUS: Record<ConceptStatus, { label: string; tone: string }> = {
 
 /** 학생: 과제 뒤 내 리포트 (개념별 상태 · 오개념 · 다음에 볼 것) */
 export default function MyReportPage() {
-  const { assignmentId = '' } = useParams()
+  const assignmentId = Number(useParams().assignmentId)
   const report = useQuery({ queryKey: ['my-report', assignmentId], queryFn: () => getMyReport(assignmentId) })
   if (!report.data) return <QueryState isPending={report.isPending} error={report.error} />
   const r = report.data

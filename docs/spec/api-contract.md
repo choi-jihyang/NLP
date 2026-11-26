@@ -132,7 +132,7 @@
 ### 리포트 · 채점 (교수자)
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
-| GET | `/assignments/{assignment_id}/report` | T | → `AssignmentReport` 최종 제출한 학생 기준. 문장 칸(오개념 note · supplement · cause)은 과제 파일 오개념 표 · 확인 문제 결과로 만든 규칙 기반 문장 ✅ | `getAssignmentReport` |
+| GET | `/assignments/{assignment_id}/report` | T | → `AssignmentReport` 최종 제출한 학생 기준. 확인 문제가 없는 문항의 `variant_rate`(과제 전체에 없으면 `alone_variant_rate`)는 `null` — 화면은 "확인 문제 없음". 문장 칸(오개념 note · supplement · cause)은 과제 파일 오개념 표 · 확인 문제 결과로 만든 규칙 기반 문장 ✅ | `getAssignmentReport` |
 | GET | `/assignments/{assignment_id}/grading` | T | → `GradingItem[]` `{answer_id, student_name(학번), question_index(0부터), points, rubric, content, signals, score, feedback}` 제출된 간단 제작 답안. `signals` = 붙여넣기 길이로 계산한 참고 신호 ✅ | `getGradingList` |
 | PUT | `/answers/{answer_id}/grade` | T | `{score, feedback}` → `GradingItem`. `0 ≤ score ≤ points`(아니면 `VALIDATION_FAILED`). 간단 제작 · 제출된 답만(아니면 `CONFLICT`), 남의 클래스 `FORBIDDEN`. 결과 공개 뒤에도 가능(결정 D) ✅ | `gradeAnswer` |
 | GET | `/assignments/{assignment_id}/students/{student_id}/record` | T | → `StudentRecord` 이 반 학생만(없으면 `NOT_FOUND`). `conversation`은 힌트를 가장 많이 받은 문항의 대화 ✅ | `getStudentRecord` |

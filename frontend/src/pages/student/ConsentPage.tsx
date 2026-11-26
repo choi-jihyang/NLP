@@ -10,7 +10,7 @@ export default function ConsentPage() {
   const [params] = useSearchParams()
   const [declined, setDeclined] = useState(false)
   const mutation = useMutation({
-    mutationFn: () => acceptConsent(params.get('class') ?? 'c1'),
+    mutationFn: () => acceptConsent(Number(params.get('class'))),
     onSuccess: () => navigate('/student/classes'),
   })
 

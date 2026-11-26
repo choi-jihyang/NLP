@@ -1,23 +1,23 @@
-import type { HintMode, ProgrammingLanguage, Question, TestCase } from './assignments'
-import { del, get, langToUi, nid, post, put, sid, type BackendLanguage } from './client'
-import { logPaste } from './pasteEvents'
+import type { HintMode, Question } from './assignments'
+import { del, get, post, put, type Language } from './client'
 
-/** 학생에게 보내는 문항. 정답·모범 답안·숨김 테스트 입력·확인 문제는 빠진다 */
-export type StudentQuestion = Omit<
-  Question,
-  'answer' | 'accepted_answers' | 'misconceptions' | 'model_answer' | 'tests' | 'variant' | 'rubric'
-> & {
-  public_tests: TestCase[]
+/** 학생에게 보내는 공개 테스트 (숨김 테스트는 개수만) */
+export type PublicTest = { input: string; expected_output: string }
+
+/** 학생에게 보내는 문항. 정답·모범 답안·숨김 테스트·확인 문제·채점 기준은 빠진다(불변식 I8) */
+export type StudentQuestion = Pick<Question, 'type' | 'points' | 'prompt' | 'code' | 'choices' | 'starter_code' | 'ai_help'> & {
+  seq: number
+  public_tests: PublicTest[]
   hidden_test_count: number
   /** 이 문항에서 AI 도움을 쓸 수 있는지 */
   ai_enabled: boolean
 }
 
 export type StudentAssignment = {
-  id: string
+  seq: number
   title: string
   course: string
-  language: ProgrammingLanguage
+  language: Language
   due_at: string | null
   hint_mode: HintMode
   hint_mode_label: string
@@ -26,16 +26,19 @@ export type StudentAssignment = {
   questions: StudentQuestion[]
 }
 
-/** 공개 테스트 실행 결과 한 건. `call` = 표준 입력, `expected` = 기대 출력 */
-export type TestResult = {
-  call: string
-  expected: string
-  actual: string
+/** 공개 테스트 실행 결과 한 건 */
+export type RunCaseResult = {
+  input: string
+  expected_output: string
+  /** 시간 초과면 null */
+  actual_output: string | null
   passed: boolean
-  hidden: boolean
-  /** 컴파일 오류 · 시간 초과 · 세그폴트 등 */
-  error?: string | null
+  /** 실행 시간 초과 · Segmentation fault · 종료 코드 등 */
+  error: string | null
 }
+
+/** 공개 테스트 실행. ok=false면 컴파일 오류 등으로 돌리지 못함(error에 gcc 메시지) */
+export type RunResult = { ok: boolean; error: string | null; results: RunCaseResult[] }
 
 /**
  * 제출 전 개념 확인. 힌트 없이 처음 낸 문항에서 내 코드에 쓴 개념을 묻는다.
@@ -51,120 +54,49 @@ export type AnswerStatus = 'DRAFT' | 'AWAITING_CHECK' | 'SUBMITTED'
 
 /** 학생이 보는 내 답. 정오·점수·숨김 테스트 결과는 교수자가 결과를 공개하기 전까지 오지 않는다 */
 export type AnswerState = {
-  question_id: string
+  question_id: number
   content: string
   status: AnswerStatus
   submitted_at: string | null
+  submit_count: number
   hint_step: number
   concept_check: ConceptCheck | null
 }
 
+/** 붙여넣기 여부는 여기 싣지 않고 /paste-events(field = CONCEPT_CHECK)로 따로 보낸다(불변식 I5) */
 export type ConceptReply = {
   reply: string
-  /** 붙여넣기 여부와 답하는 데 걸린 시간. 붙여 넣은 내용은 따로 저장하지 않는다 */
-  pasted: boolean
   elapsed_ms: number
 }
 
 export type Submission = {
-  assignment_id: string
-  answers: Record<string, AnswerState>
+  assignment_id: number
+  /** 문항 seq → 내 답. 아직 손대지 않은 문항은 없다(화면은 시작 코드로 시작) */
+  answers: Record<number, AnswerState>
   /** 최종 제출하면 답이 잠기고 AI 없이 이해 확인으로 넘어간다 */
   finalized: boolean
   /** 교수자가 결과를 공개했는지. 공개 전에는 점수·정답을 보여주지 않는다 */
   results_released: boolean
 }
 
-// ---------- 백엔드 모양 ↔ 화면 모양 ----------
+const base = (assignmentId: number) => `/assignments/${assignmentId}`
 
-type StudentQuestionOut = Omit<StudentQuestion, 'id' | 'public_tests'> & {
-  seq: number
-  public_tests: { input: string; expected_output: string }[]
-}
-type StudentAssignmentOut = Omit<StudentAssignment, 'id' | 'language' | 'questions'> & {
-  seq: number
-  language: BackendLanguage
-  questions: StudentQuestionOut[]
-}
-type AnswerStateOut = Omit<AnswerState, 'question_id'> & { question_id: number; submit_count: number }
-type SubmissionOut = { assignment_id: number; answers: Record<string, AnswerStateOut>; finalized: boolean; results_released: boolean }
-type RunOut = {
-  ok: boolean
-  error: string | null
-  results: { input: string; expected_output: string; actual_output: string | null; passed: boolean; error: string | null }[]
-}
-
-/** 아직 손대지 않은 문항은 서버에 답이 없다 → 시작 코드가 든 빈 답(DRAFT)으로 채운다(화면은 모든 문항의 답을 기대) */
-const starters = new Map<string, Record<string, string>>()
-
-const toSubmission = async (s: SubmissionOut): Promise<Submission> => {
-  const aid = sid(s.assignment_id)
-  if (!starters.has(aid)) {
-    const a = await getStudentAssignment(aid)
-    starters.set(aid, Object.fromEntries(a.questions.map((q) => [q.id, q.starter_code])))
-  }
-  const blank = (qid: string): AnswerState => ({
-    question_id: qid, content: starters.get(aid)?.[qid] ?? '', status: 'DRAFT', submitted_at: null, hint_step: 0,
-    concept_check: null,
-  })
-  const answers: Record<string, AnswerState> = Object.fromEntries(
-    Object.keys(starters.get(aid) ?? {}).map((qid) => [qid, blank(qid)]),
-  )
-  for (const [qid, a] of Object.entries(s.answers)) answers[qid] = { ...a, question_id: sid(a.question_id) }
-  return { assignment_id: aid, finalized: s.finalized, results_released: s.results_released, answers }
-}
-
-const base = (assignmentId: string) => `/assignments/${nid(assignmentId)}`
-
-export async function getStudentAssignment(assignmentId: string): Promise<StudentAssignment> {
-
-  const { seq, language, questions, ...a } = await get<StudentAssignmentOut>(`${base(assignmentId)}/solve`)
-  return {
-    ...a,
-    id: sid(seq),
-    language: langToUi(language),
-    questions: questions.map(({ seq: qseq, public_tests, ...q }) => ({
-      ...q,
-      id: sid(qseq),
-      public_tests: public_tests.map((t) => ({ call: t.input, expected: t.expected_output, hidden: false })),
-    })),
-  }
-}
-export const getMySubmission = async (assignmentId: string) =>
-  toSubmission(await get<SubmissionOut>(`${base(assignmentId)}/submission`))
-/** 제출 전에 공개 테스트만 실행해 본다. 컴파일 오류면 모든 줄의 error에 gcc 메시지가 들어간다 */
-export const runPublicTests = async (assignmentId: string, questionId: string, code: string): Promise<TestResult[]> => {
-  const r = await post<RunOut>(`${base(assignmentId)}/questions/${nid(questionId)}/run`, { code })
-  return r.results.map((t) => ({
-    call: t.input,
-    expected: t.expected_output,
-    actual: t.actual_output ?? t.error ?? r.error ?? '',
-    passed: t.passed,
-    hidden: false,
-    error: t.error ?? r.error,
-  }))
-}
+export const getStudentAssignment = (assignmentId: number) => get<StudentAssignment>(`${base(assignmentId)}/solve`)
+export const getMySubmission = (assignmentId: number) => get<Submission>(`${base(assignmentId)}/submission`)
+/** 제출 전에 공개 테스트만 실행해 본다 */
+export const runPublicTests = (assignmentId: number, questionId: number, code: string) =>
+  post<RunResult>(`${base(assignmentId)}/questions/${questionId}/run`, { code })
 /** 문항 답 제출. 최종 제출 전까지는 고쳐서 다시 낼 수 있고 마지막 답이 채점된다 */
-export const submitAnswer = async (assignmentId: string, questionId: string, content: string) =>
-  toSubmission(await put<SubmissionOut>(`${base(assignmentId)}/answers/${nid(questionId)}`, { content }))
-/**
- * 힌트 없이 처음 낸 문항은 바로 제출되지 않고 개념 확인(AWAITING_CHECK)을 거친다.
- * 붙여넣기 여부는 본문에 싣지 않고 /paste-events(길이 · 시점만)로 따로 보낸다(불변식 I5).
- */
-export const answerConceptCheck = async (assignmentId: string, questionId: string, body: ConceptReply) => {
-  if (body.pasted) {
-    await logPaste({ question_id: questionId, field: 'CONCEPT_CHECK', length: body.reply.length, pasted_at: new Date().toISOString() })
-  }
-  return toSubmission(
-    await post<SubmissionOut>(`${base(assignmentId)}/answers/${nid(questionId)}/concept-check`, {
-      reply: body.reply,
-      elapsed_ms: Math.max(0, Math.round(body.elapsed_ms)),
-    }),
-  )
-}
+export const submitAnswer = (assignmentId: number, questionId: number, content: string) =>
+  put<Submission>(`${base(assignmentId)}/answers/${questionId}`, { content })
+/** 힌트 없이 처음 낸 문항은 바로 제출되지 않고 개념 확인(AWAITING_CHECK)을 거친다 */
+export const answerConceptCheck = (assignmentId: number, questionId: number, body: ConceptReply) =>
+  post<Submission>(`${base(assignmentId)}/answers/${questionId}/concept-check`, {
+    reply: body.reply,
+    elapsed_ms: Math.max(0, Math.round(body.elapsed_ms)),
+  })
 /** 개념 확인을 미루고 답을 고치러 돌아간다. 다시 제출하면 같은 질문이 이어진다 */
-export const cancelConceptCheck = async (assignmentId: string, questionId: string) =>
-  toSubmission(await del<SubmissionOut>(`${base(assignmentId)}/answers/${nid(questionId)}/concept-check`))
+export const cancelConceptCheck = (assignmentId: number, questionId: number) =>
+  del<Submission>(`${base(assignmentId)}/answers/${questionId}/concept-check`)
 /** 과제 최종 제출. 모든 문항을 낸 뒤에만 할 수 있다 */
-export const finalizeSubmission = async (assignmentId: string) =>
-  toSubmission(await post<SubmissionOut>(`${base(assignmentId)}/submission/finalize`))
+export const finalizeSubmission = (assignmentId: number) => post<Submission>(`${base(assignmentId)}/submission/finalize`)

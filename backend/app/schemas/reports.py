@@ -55,7 +55,8 @@ class QuestionStat(BaseModel):
     question_index: int
     type_label: str
     correct_rate: int
-    variant_rate: int
+    variant_rate: int | None
+    """확인 문제가 없는 문항이면 null(화면: 확인 문제 없음)"""
     avg_hint_steps: float
 
 
@@ -101,7 +102,8 @@ class AssignmentReport(BaseModel):
     submitted_count: int
     student_count: int
     assisted_correct_rate: int
-    alone_variant_rate: int
+    alone_variant_rate: int | None
+    """과제에 확인 문제가 하나도 없으면 null"""
     concept_check_ok_rate: int
     question_stats: list[QuestionStat]
     mistakes: list[QuestionMistakes]

@@ -1,15 +1,14 @@
-import { api, get, langToApi, langToUi, nid, post, put, sid, type BackendLanguage } from './client'
+import { api, get, post, put, type Language } from './client'
+
+export type { Language }
 
 /** 문항 유형. 퀴즈·출력 예측은 정답 대조, 코드는 테스트 실행, 간단 제작은 교수자 채점 */
 export type QuestionType = 'MULTIPLE_CHOICE' | 'SHORT_ANSWER' | 'CODE' | 'PROJECT'
 
-/**
- * 테스트 한 건. 모든 언어 표준 입력 → 표준 출력(schema D23).
- * 화면 필드 이름은 그대로 두고 `call` = 표준 입력, `expected` = 기대 표준 출력으로 쓴다.
- */
+/** 테스트 한 건. 모든 언어 표준 입력 → 표준 출력(schema D23). 출력은 줄 끝 공백 · 마지막 줄바꿈 무시 */
 export type TestCase = {
-  call: string
-  expected: string
+  input: string
+  expected_output: string
   hidden: boolean
 }
 
@@ -25,7 +24,10 @@ export type Variant = {
 
 /** 교수자가 보는 문항 (정답·숨김 테스트 포함) */
 export type Question = {
-  id: string
+  /** 저장 전 문항은 null */
+  seq: number | null
+  /** 화면에서만 쓰는 목록 키(직접 추가한 저장 전 문항). 서버는 무시한다 */
+  key?: string
   type: QuestionType
   points: number
   prompt: string
@@ -63,30 +65,29 @@ export type AiPolicy = {
   prompt_mode: 'FORM' | 'CUSTOM'
   custom_prompt: string | null
   /** 학생 1명 · 이 과제 AI 메시지 수 상한(기본 30) */
-  usage_limit?: number
+  usage_limit: number
 }
 
-export type ProgrammingLanguage = 'Python' | 'Java' | 'C' | 'JavaScript'
-
 export type Assignment = {
-  id: string
-  class_id: string
+  /** 저장 전 초안은 null */
+  seq: number | null
+  class_id: number | null
   title: string
   course: string
   audience: string
-  language: ProgrammingLanguage
+  language: Language
   /** 교수자가 쓴 과제 설명. AI 지시문에 맥락으로 들어간다 */
   description: string
   due_at: string | null
   published: boolean
   /** 결과 공개 여부(서버가 정함) */
-  results_released?: boolean
+  results_released: boolean
   policy: AiPolicy
   questions: Question[]
 }
 
 export type AssignmentSummary = {
-  id: string
+  seq: number
   title: string
   kinds: string
   status: 'DRAFT' | 'OPEN' | 'CLOSED'
@@ -106,85 +107,31 @@ export type SimulationCase = {
   attempt: boolean
   leak_blocked: boolean
   external_signals: string[]
+  response_mode: string
   reply: string
 }
 
-
-// ---------- 백엔드 모양 ↔ 화면 모양 ----------
-
-type TestOut = { input: string; expected_output: string; hidden: boolean }
-type QuestionOut = Omit<Question, 'id' | 'tests'> & { seq: number | null; tests: TestOut[] }
-type AssignmentOut = Omit<Assignment, 'id' | 'class_id' | 'language' | 'questions'> & {
-  seq: number | null
-  class_id: number | null
-  language: BackendLanguage
-  questions: QuestionOut[]
-}
-type SummaryOut = Omit<AssignmentSummary, 'id'> & { seq: number }
-
-const toQuestion = ({ seq, tests, ...q }: QuestionOut, i: number): Question => ({
-  ...q,
-  id: seq == null ? `new-${i}` : sid(seq),
-  tests: tests.map((t) => ({ call: t.input, expected: t.expected_output, hidden: t.hidden })),
-})
-
-const toAssignment = ({ seq, class_id, language, questions, ...a }: AssignmentOut): Assignment => ({
-  ...a,
-  id: sid(seq),
-  class_id: sid(class_id),
-  language: langToUi(language),
-  questions: questions.map(toQuestion),
-})
-
-/** 표준 입력은 줄바꿈으로 끝나게 (scanf가 마지막 줄을 읽도록) */
-const stdin = (text: string) => (text && !text.endsWith('\n') ? `${text}\n` : text)
-
-const toApi = (a: Assignment) => ({
-  title: a.title,
-  course: a.course,
-  audience: a.audience,
-  language: langToApi(a.language),
-  description: a.description,
-  due_at: a.due_at,
-  policy: a.policy,
-  questions: a.questions.map(({ id: _id, tests, ...q }) => ({
-    ...q,
-    tests: tests.map((t) => ({ input: stdin(t.call), expected_output: t.expected, hidden: t.hidden })),
-  })),
-})
-
-export const listAssignments = async (classId: string): Promise<AssignmentSummary[]> =>
-  (await get<SummaryOut[]>(`/classes/${nid(classId)}/assignments`)).map(({ seq, ...s }) => ({ ...s, id: sid(seq) }))
-export const getAssignment = async (assignmentId: string) =>
-  toAssignment(await get<AssignmentOut>(`/assignments/${nid(assignmentId)}`))
-export const createDraftFromSample = async (classId: string) =>
-  toAssignment(await post<AssignmentOut>(`/classes/${nid(classId)}/assignments/drafts`, { source: 'SAMPLE' }))
-export const createBlankDraft = async (classId: string) =>
-  toAssignment(await post<AssignmentOut>(`/classes/${nid(classId)}/assignments/drafts`, { source: 'BLANK' }))
+export const listAssignments = (classId: number) => get<AssignmentSummary[]>(`/classes/${classId}/assignments`)
+export const getAssignment = (assignmentId: number) => get<Assignment>(`/assignments/${assignmentId}`)
+/** 저장 전 초안. SAMPLE = 샘플 md(C 2진수 과제), BLANK = 빈 과제. AI 정책은 클래스 기본값 */
+export const createDraftFromSample = (classId: number) =>
+  post<Assignment>(`/classes/${classId}/assignments/drafts`, { source: 'SAMPLE' })
+export const createBlankDraft = (classId: number) => post<Assignment>(`/classes/${classId}/assignments/drafts`, { source: 'BLANK' })
 /** 과제 파일(.md, 정해진 양식 — docs/spec/assignment-md-format.md)에서 문항을 찾는다. 저장은 하지 않는다 */
-export const extractFromFile = async (classId: string, file: File) => {
+export const extractFromFile = (classId: number, file: File) => {
   const form = new FormData()
   form.append('file', file)
-  return toAssignment(await api<AssignmentOut>(`/classes/${nid(classId)}/assignments/extract`, { method: 'POST', body: form }))
+  return api<Assignment>(`/classes/${classId}/assignments/extract`, { method: 'POST', body: form })
 }
-/** id가 'new'면 새로 저장, 아니면 수정 */
-export const saveAssignment = async (assignment: Assignment) =>
-  toAssignment(
-    assignment.id === 'new'
-      ? await post<AssignmentOut>(`/classes/${nid(assignment.class_id)}/assignments`, toApi(assignment))
-      : await put<AssignmentOut>(`/assignments/${nid(assignment.id)}`, toApi(assignment)),
-  )
-export const publishAssignment = (assignmentId: string) =>
-  post<{ invite_code: string }>(`/assignments/${nid(assignmentId)}/publish`)
+/** seq가 없으면 새로 저장, 있으면 수정 */
+export const saveAssignment = (a: Assignment) =>
+  a.seq == null ? post<Assignment>(`/classes/${a.class_id}/assignments`, a) : put<Assignment>(`/assignments/${a.seq}`, a)
+export const publishAssignment = (assignmentId: number) => post<{ invite_code: string }>(`/assignments/${assignmentId}/publish`)
 /** 점수·정답·내 리포트를 학생에게 한꺼번에 공개한다. 공개 전에는 학생에게 정오도 보이지 않는다 */
-export const releaseResults = (assignmentId: string) =>
-  post<{ results_released: boolean }>(`/assignments/${nid(assignmentId)}/release`)
+export const releaseResults = (assignmentId: number) => post<{ results_released: boolean }>(`/assignments/${assignmentId}/release`)
 /** "학생은 이렇게 경험해요" 요약 (시스템 프롬프트 원문은 아님) */
-export const getPolicyPreview = (assignment: Assignment) =>
-  post<{ lines: string[]; hint_mode_label: string }>('/assignments/preview', toApi(assignment))
+export const getPolicyPreview = (a: Assignment) => post<{ lines: string[]; hint_mode_label: string }>('/assignments/preview', a)
 /** 지시문 직접 작성 모드의 시작점 */
-export const getPromptDraft = async (assignment: Assignment) =>
-  (await post<{ prompt: string }>('/assignments/prompt-draft', toApi(assignment))).prompt
+export const getPromptDraft = async (a: Assignment) => (await post<{ prompt: string }>('/assignments/prompt-draft', a)).prompt
 /** 학생처럼 우회 요청을 보내 보고 AI가 설정대로 답하는지 확인한다(실제 분류기 · LLM · 누출 검사) */
-export const simulateAttacks = (assignment: Assignment) =>
-  post<SimulationCase[]>('/assignments/simulate', toApi(assignment))
+export const simulateAttacks = (a: Assignment) => post<SimulationCase[]>('/assignments/simulate', a)

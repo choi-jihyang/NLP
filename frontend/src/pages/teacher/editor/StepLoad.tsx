@@ -1,4 +1,5 @@
-import type { Assignment, ProgrammingLanguage } from '../../../api/assignments'
+import type { Assignment, Language } from '../../../api/assignments'
+import { LANGUAGE_LABEL } from '../../../api/client'
 import { typeSummary, totalPoints } from './questionText'
 
 type Props = {
@@ -14,7 +15,7 @@ type Props = {
   onNext: () => void
 }
 
-const LANGUAGES: ProgrammingLanguage[] = ['Python', 'Java', 'C', 'JavaScript']
+const LANGUAGES: Language[] = ['C', 'PYTHON', 'JAVA', 'JAVASCRIPT']
 const AUDIENCES = ['대학 1학년', '대학 2학년', '비전공 교양', '고등학교 정보', '코딩 테스트 준비반']
 
 /** STEP 1. 과목·대상·언어를 적고 과제 파일을 불러온다 */
@@ -41,9 +42,9 @@ export default function StepLoad({ draft, loaded, loading, fileName, error, onCh
         </label>
         <label className="field">
           <span className="label">언어 · 코드 실행 채점에 쓰여요</span>
-          <select className="inp" value={draft.language} onChange={(e) => onChange({ language: e.target.value as ProgrammingLanguage })}>
+          <select className="inp" value={draft.language} onChange={(e) => onChange({ language: e.target.value as Language })}>
             {LANGUAGES.map((l) => (
-              <option key={l}>{l}</option>
+              <option key={l} value={l}>{LANGUAGE_LABEL[l]}{l === 'C' || l === 'PYTHON' ? '' : ' (코드 실행 미지원)'}</option>
             ))}
           </select>
         </label>

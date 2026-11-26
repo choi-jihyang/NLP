@@ -1,5 +1,4 @@
-import { get, nid, post } from './client'
-import { logPaste } from './pasteEvents'
+import { get, post } from './client'
 
 /** schema.md 의 ResponseMode + 도움 방식 고르기(OFFER_CHOICES) */
 export type ResponseMode = 'NEXT_STEP' | 'HINT_ONLY' | 'ASK_ATTEMPT' | 'OFF_TOPIC' | 'USAGE_LIMIT' | 'OFFER_CHOICES'
@@ -24,32 +23,23 @@ export type ChatTurn = {
 }
 
 export type ChatState = {
-  question_id: string
+  question_id: number
   turns: ChatTurn[]
   hint_step: number
   max_hint_steps: number
   usage_remaining: number
 }
 
+/** 붙여넣기 여부는 싣지 않는다 — /paste-events(field = CHAT)로 따로(불변식 I5) */
 export type ChatRequest = {
-  assignment_id: string
-  question_id: string
+  assignment_id: number
+  question_id: number
   message: string
   choice?: HelpChoice
-  pasted?: boolean
 }
 
-type ChatStateOut = Omit<ChatState, 'question_id'> & { question_id: number }
-const toState = (s: ChatStateOut): ChatState => ({ ...s, question_id: String(s.question_id) })
-const url = (a: string, q: string) => `/assignments/${nid(a)}/questions/${nid(q)}/chat`
+const url = (a: number, q: number) => `/assignments/${a}/questions/${q}/chat`
 
-export const getChat = async (assignmentId: string, questionId: string) =>
-  toState(await get<ChatStateOut>(url(assignmentId, questionId)))
-/** 붙여넣기 여부는 본문에 싣지 않고 /paste-events(길이 · 시점만)로 따로 보낸다(불변식 I5) */
-export const sendChat = async (req: ChatRequest) => {
-  if (req.pasted) {
-    await logPaste({ question_id: req.question_id, field: 'CHAT', length: req.message.length, pasted_at: new Date().toISOString() })
-  }
-  const body = req.choice ? { message: req.message, choice: req.choice } : { message: req.message }
-  return toState(await post<ChatStateOut>(url(req.assignment_id, req.question_id), body))
-}
+export const getChat = (assignmentId: number, questionId: number) => get<ChatState>(url(assignmentId, questionId))
+export const sendChat = ({ assignment_id, question_id, message, choice }: ChatRequest) =>
+  post<ChatState>(url(assignment_id, question_id), choice ? { message, choice } : { message })

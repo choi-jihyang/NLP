@@ -16,8 +16,8 @@ export default function CodeTestsEditor({ question: q, onChange }: Props) {
         <span className="label">테스트 케이스 · 숨김 테스트는 학생에게 입력이 보이지 않아요</span>
         {q.tests.map((t, j) => (
           <div className="tedit" key={j}>
-            <input className="inp mono" aria-label={`테스트 ${j + 1} 입력`} value={t.call} placeholder="표준 입력 예: 5" onChange={(e) => setTest(j, { call: e.target.value })} />
-            <input className="inp mono" aria-label={`테스트 ${j + 1} 기대 출력`} value={t.expected} placeholder="기대 출력" onChange={(e) => setTest(j, { expected: e.target.value })} />
+            <input className="inp mono" aria-label={`테스트 ${j + 1} 입력`} value={t.input} placeholder="표준 입력 예: 5" onChange={(e) => setTest(j, { input: e.target.value })} />
+            <input className="inp mono" aria-label={`테스트 ${j + 1} 기대 출력`} value={t.expected_output} placeholder="기대 출력" onChange={(e) => setTest(j, { expected_output: e.target.value })} />
             <label className="check note">
               <input type="checkbox" checked={t.hidden} onChange={(e) => setTest(j, { hidden: e.target.checked })} />
               숨김
@@ -28,7 +28,7 @@ export default function CodeTestsEditor({ question: q, onChange }: Props) {
           </div>
         ))}
         <div>
-          <button className="btn sm" onClick={() => onChange({ tests: [...q.tests, { call: '', expected: '', hidden: false }] })}>+ 테스트 추가</button>
+          <button className="btn sm" onClick={() => onChange({ tests: [...q.tests, { input: '', expected_output: '', hidden: false }] })}>+ 테스트 추가</button>
         </div>
       </div>
       <p className="note">제출하면 테스트를 실행해서 모두 통과하면 정답으로 채점해요. 학생은 제출 전에 공개 테스트만 실행해 볼 수 있어요.</p>
