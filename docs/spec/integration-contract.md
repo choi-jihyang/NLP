@@ -41,6 +41,8 @@ backend/app/
 | `confidence` | float 0.0–1.0 | 판단 전체에 대한 확신도 (**하나의 값**) |
 
 - `has_self_attempt_evidence`는 `history` 중 `role="student"` 메시지만 근거로 삼는다. AI의 이전 답변에 식이 있어도 근거가 아니다(불변식 I4).
+- **판단 보조 규칙**: `thinkguard_nlp.classify()`는 모델 결과를 `rules.apply_rules()`에 통과시켜 돌려준다(출력 형식은 같음). 학습 맥락일 때 학생 글에 코드 2줄 이상·코드블록·에러 로그·"했더니/바꿨는데" 앞의 구체적 값이 있으면 `has_self_attempt_evidence=true`, "전체 코드·정답 코드·답만·그냥 … 줘" 같은 문구가 있으면 `requests_complete_answer=true`로 OR한다("답 말고·힌트만"은 제외). `uncertain`·`confidence`는 바꾸지 않는다. 한국어평가셋1로 만들고 셋2·3(125행)으로 검증: 시도 P/R 0.67/0.07 → 0.89/0.53, 답요청 R 0.71 → 0.85.
+  - 규칙은 붙인 코드가 학생이 쓴 것인지 모른다(가짜 시도도 NEXT_STEP). 그래서 NEXT_STEP 지시의 완성 코드 금지와 누출 검사(§4)를 함께 둔다.
 - 백엔드는 `uncertain=true` **또는** `confidence < CLASSIFIER_MIN_CONFIDENCE`(기본 0.5)면 "모호함"으로 처리한다. → [chat-policy.md](chat-policy.md)
 - 출력 필드가 빠지거나 타입이 다르면 백엔드가 Pydantic 검증 오류를 낸다.
 
