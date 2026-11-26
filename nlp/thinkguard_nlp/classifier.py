@@ -7,6 +7,8 @@ CLASSIFIER=http 일 때 nlp/server.py 의 POST /classify 를 호출한다.
 
 from typing import Any
 
+from thinkguard_nlp.rules import apply_rules
+
 
 def classify(message: str, history: list[dict[str, str]]) -> dict[str, Any]:
     """학생의 새 메시지와 이전 대화를 받아 분류 결과를 돌려준다.
@@ -25,10 +27,12 @@ def classify(message: str, history: list[dict[str, str]]) -> dict[str, Any]:
         }
     """
     # TODO(NLP 팀): 모델 구현으로 교체. 지금은 항상 "모호함"을 돌려준다.
-    return {
+    # 모델 결과는 마지막에 판단 보조 규칙(rules.py)을 거친다. 모델을 바꿔도 이 줄은 유지한다.
+    model_result = {
         "is_learning_context": True,
         "requests_complete_answer": False,
         "has_self_attempt_evidence": False,
         "uncertain": True,
         "confidence": 0.0,
     }
+    return apply_rules(message, history, model_result)
