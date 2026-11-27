@@ -1,4 +1,4 @@
-/* 디자인 토큰 — 화면시안_v2.html 에서 옮김. 색·폰트는 여기서만 바꾼다. */
+/* 디자인 토큰 — 화면 시안 v4(docs/planning/design/mockup/common.css)에서 옮김. 색·폰트는 여기서만 바꾼다. */
 :root {
   --bg: #fafcfb;
   --surface: #ffffff;
@@ -17,13 +17,50 @@
   --warn-soft: #fdf0e0;
   --bad: #c6463a;
   --bad-soft: #fde8e5;
+  --code-bg: #16181b;
+  --code-fg: #e8e9eb;
+  --code-line: #2c2e33;
+  --code-muted: #9a9ca3;
+  --syn-k: #7fd6c8;
+  --syn-s: #f2b56b;
+  --syn-g: #8fd19e;
+  --on-dark: #ffffff;
+  --code-panel: #111214;
+  --nav-bg: rgba(250, 252, 251, 0.85);
+  --glow: rgba(34, 136, 124, 0.16);
   --f-display: 'Hahmlet', 'Noto Serif KR', serif;
   --f-body: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   --f-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
-  --code-bg: #1f2b29;
-  --code-fg: #e4efec;
   --scrim: rgba(255, 255, 255, 0.88);
   --shadow-sm: 0 1px 2px rgba(20, 40, 35, 0.12);
-  --r: 10px;
+  --r: 16px;
   color-scheme: light;
+}
+
+/* 다크: 무채색 회색 + 청록 강조. index.html이 첫 그림 전에 data-theme을 정한다 */
+html[data-theme='dark'] {
+  --bg: #111214;
+  --surface: #18191c;
+  --surface-2: #212226;
+  --line: #2c2e33;
+  --grid: #1a1b1e;
+  --fg: #e8e9eb;
+  --muted: #9a9ca3;
+  --logo: #6fd0c0;
+  --accent: #3fb3a4;
+  --accent-ink: #0c0d0f;
+  --accent-soft: rgba(63, 179, 164, 0.14);
+  --good: #62c47f;
+  --good-soft: rgba(98, 196, 127, 0.14);
+  --warn: #e3a04f;
+  --warn-soft: rgba(227, 160, 79, 0.14);
+  --bad: #ef7b6f;
+  --bad-soft: rgba(239, 123, 111, 0.14);
+  --code-bg: #0c0d0f;
+  --code-panel: #0a0a0b;
+  --nav-bg: rgba(17, 18, 20, 0.85);
+  --glow: rgba(63, 179, 164, 0.12);
+  --scrim: rgba(17, 18, 20, 0.88);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
 }

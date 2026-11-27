@@ -32,6 +32,17 @@ export default function PolicyOptions({ policy: p, onChange }: Props) {
           </select>
         </label>
         <label className="field">
+          <span className="label">AI 메시지 · 학생당 (이 과제)</span>
+          <input
+            className="inp"
+            type="number"
+            min={1}
+            max={200}
+            value={p.usage_limit}
+            onChange={(e) => onChange({ usage_limit: Math.max(1, Math.min(200, Math.round(Number(e.target.value) || 1))) })}
+          />
+        </label>
+        <label className="field">
           <span className="label">힌트를 쓰면 점수는</span>
           <select className="inp" value={p.hint_penalty} onChange={(e) => onChange({ hint_penalty: e.target.value as HintPenalty })}>
             <option value="NONE">감점 없음</option>

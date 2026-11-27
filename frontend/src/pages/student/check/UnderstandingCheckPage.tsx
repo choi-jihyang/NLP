@@ -5,6 +5,7 @@ import { Link, useParams } from 'react-router-dom'
 import { getMySubmission } from '../../../api/submissions'
 import { getUnderstandingCheck, submitUnderstandingCheck, type Confidence } from '../../../api/understanding'
 import { CodeBlock } from '../../../components/CodeBlock'
+import { PageHead } from '../../../components/PageHead'
 import { QueryState } from '../../../components/QueryState'
 import CheckItemCard from './CheckItemCard'
 
@@ -28,16 +29,35 @@ export default function UnderstandingCheckPage() {
       }),
   })
 
+  const head = (
+    <PageHead
+      back={{ to: '/student/classes', label: '내 과제' }}
+      eyebrow="Understanding check"
+      title="이해 확인"
+      sub="AI 없이 · 한 번만 낼 수 있어요"
+    />
+  )
   if (!check.data || !submission.data) {
-    return <QueryState isPending={check.isPending || submission.isPending} error={check.error ?? submission.error} />
+    return (
+      <>
+        {head}
+        <main className="wrap page">
+          <QueryState isPending={check.isPending || submission.isPending} error={check.error ?? submission.error} />
+        </main>
+      </>
+    )
   }
   if (!submission.data.finalized) {
     return (
-      <section className="panel stack narrow">
-        <h2>이해 확인</h2>
-        <p>과제를 최종 제출한 뒤에 할 수 있어요.</p>
-        <Link className="btn primary" to={`/student/assignments/${assignmentId}`}>과제로 돌아가기</Link>
-      </section>
+      <>
+        {head}
+        <main className="wrap page">
+          <section className="panel stack narrow">
+            <p>과제를 최종 제출한 뒤에 할 수 있어요.</p>
+            <Link className="btn primary" to={`/student/assignments/${assignmentId}`}>과제로 돌아가기</Link>
+          </section>
+        </main>
+      </>
     )
   }
   const { items } = check.data
@@ -45,14 +65,13 @@ export default function UnderstandingCheckPage() {
   const ready = explanation.trim().length > 0 && items.every((i) => (values[i.question_id] ?? '').trim())
 
   return (
-    <div>
-      <div className="sbar">
-        <h2>이해 확인</h2>
-        <span className="chip warn">AI 도움 없음</span>
-        <div className="kv">
-          <b>약 3~5분</b>
-          <span>예상 시간</span>
-        </div>
+    <>
+      {head}
+      <main className="wrap page">
+      <div className="grid g3" style={{ marginBottom: 24 }}>
+        <div className="tile"><p className="k">도움</p><p className="v" style={{ fontSize: '1.3rem' }}>AI 없음</p></div>
+        <div className="tile"><p className="k">예상 시간</p><p className="v" style={{ fontSize: '1.3rem' }}>약 3~5분</p></div>
+        <div className="tile"><p className="k">점수</p><p className="v" style={{ fontSize: '1.3rem' }}>자동 반영 안 됨</p></div>
       </div>
       <p className="flow">최종 제출 → 이해 확인 → 교수자가 결과를 공개하면 내 리포트</p>
       <div className="stack mid" style={{ margin: 0 }}>
@@ -99,6 +118,7 @@ export default function UnderstandingCheckPage() {
         </div>
         {result.error && <p className="error-text">{result.error.message}</p>}
       </div>
-    </div>
+      </main>
+    </>
   )
 }

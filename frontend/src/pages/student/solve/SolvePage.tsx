@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'react-router-dom'
 import { LANGUAGE_LABEL } from '../../../api/client'
 import { getStudentAssignment, type AnswerState } from '../../../api/submissions'
 import { formatDue } from '../../../components/format'
+import { PageHead } from '../../../components/PageHead'
 import { QueryState } from '../../../components/QueryState'
 import { useChat } from '../../../hooks/useChat'
 import { usePasteLog } from '../../../hooks/usePasteLog'
@@ -33,7 +34,11 @@ export default function SolvePage() {
   const paste = usePasteLog(qid, assignment.data?.external_signal_enabled ?? false)
 
   if (!assignment.data || !submission || !q || qid == null) {
-    return <QueryState isPending={assignment.isPending || query.isPending} error={assignment.error ?? query.error} />
+    return (
+      <main className="wrap page">
+        <QueryState isPending={assignment.isPending || query.isPending} error={assignment.error ?? query.error} />
+      </main>
+    )
   }
   const a = assignment.data
   // 아직 손대지 않은 문항은 서버에 답이 없다 → 시작 코드로 시작하는 빈 답
@@ -46,26 +51,31 @@ export default function SolvePage() {
   const finalized = submission.finalized
 
   return (
-    <div>
-      <div className="sbar">
-        <h2>{a.title}</h2>
-        <span className="note">
-          {a.course} · {LANGUAGE_LABEL[a.language]} · 마감 {formatDue(a.due_at)}
-        </span>
-        <label className="check">
-          <input type="checkbox" checked={debug} onChange={(e) => setDebug(e.target.checked)} />
-          판별 과정 표시 (시연용)
-        </label>
-      </div>
-      {a.external_signal_enabled && (
-        <p className="flow">이 과제는 붙여넣기 길이와 시점을 기록해요. 붙여 넣은 내용은 저장하지 않아요.</p>
-      )}
-      <QuestionNav
-        questions={questions}
-        answers={submission.answers}
-        current={index}
-        onSelect={(i) => setParams({ q: String(i) }, { replace: true })}
-      />
+    <>
+      <PageHead
+        back={{ to: '/student/classes', label: '내 과제' }}
+        title={a.title}
+        sub={`${a.course} · ${LANGUAGE_LABEL[a.language]} · 마감 ${formatDue(a.due_at)}`}
+        actions={
+          <>
+            {a.external_signal_enabled && (
+              <span className="notice">붙여넣기는 길이와 시점만 기록해요. 내용은 저장하지 않아요.</span>
+            )}
+            <label className="check note">
+              <input type="checkbox" checked={debug} onChange={(e) => setDebug(e.target.checked)} />
+              판별 과정 표시 (시연용)
+            </label>
+          </>
+        }
+      >
+        <QuestionNav
+          questions={questions}
+          answers={submission.answers}
+          current={index}
+          onSelect={(i) => setParams({ q: String(i) }, { replace: true })}
+        />
+      </PageHead>
+      <main className="wrap page">
       <div className="split">
         <QuestionCard
           key={qid}
@@ -105,6 +115,7 @@ export default function SolvePage() {
       {(submit.error || conceptCheck.error || finalize.error || send.error) && (
         <p className="error-text">{(submit.error ?? conceptCheck.error ?? finalize.error ?? send.error)?.message}</p>
       )}
-    </div>
+      </main>
+    </>
   )
 }

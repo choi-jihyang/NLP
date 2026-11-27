@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import type { Question } from '../../../../api/assignments'
 import { TYPE_LABEL } from '../questionText'
 import ChoiceEditor from './ChoiceEditor'
@@ -23,16 +25,21 @@ const GRADING = {
 export default function QuestionEditor({ index, question: q, onChange, onRemove }: Props) {
   const grading = GRADING[q.type]
   const isNew = q.seq == null
+  // 문항은 접었다 펴는 목록. 첫 문항과 새로 추가한 문항만 펼쳐서 시작한다
+  const [open, setOpen] = useState(index === 0 || isNew)
+  const title = q.prompt.split('\n')[0].trim() || '(문제 없음)'
 
   return (
-    <div className="item">
+    <div className={`item${open ? '' : ' folded'}`}>
       <div className="spread">
-        <div className="row">
-          <b>문항 {index + 1}</b>
+        <button type="button" className="qhead" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+          <span className="qn-badge">{index + 1}</span>
+          <span className="qtitle">{title}</span>
           <span className="chip">{TYPE_LABEL[q.type]}</span>
           <span className={`chip ${grading.tone}`}>{grading.text}</span>
           {isNew && <span className="chip">직접 추가</span>}
-        </div>
+          <span className="note">{open ? '접기 ▲' : '펴기 ▼'}</span>
+        </button>
         <div className="row">
           <label className="row note">
             배점
@@ -41,6 +48,8 @@ export default function QuestionEditor({ index, question: q, onChange, onRemove 
           <button className="btn sm" onClick={onRemove}>삭제</button>
         </div>
       </div>
+      {open && (
+      <>
       <label className="field">
         <span className="label">문제</span>
         <textarea className="inp" value={q.prompt} placeholder="문제를 입력하세요" onChange={(e) => onChange({ prompt: e.target.value })} />
@@ -57,6 +66,8 @@ export default function QuestionEditor({ index, question: q, onChange, onRemove 
       {q.type === 'PROJECT' && <ProjectEditor question={q} onChange={onChange} />}
       {isNew && (
         <p className="note">직접 추가한 문항의 힌트, 개념 확인 질문, 확인 문제는 실제 AI를 연결하면 문제와 정답을 바탕으로 자동 생성돼요.</p>
+      )}
+      </>
       )}
     </div>
   )

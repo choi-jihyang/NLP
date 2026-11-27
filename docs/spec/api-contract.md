@@ -46,6 +46,11 @@
 | POST | `/auth/signup` | 공개 | `{name, email, password}` → **201** `{access_token, user{seq, name, email, role}}` 교수자만 가입. 이름 1–100자, 이메일은 소문자로 저장, 비밀번호 8–128자. 오류: `EMAIL_TAKEN`, `VALIDATION_FAILED` ✅ 구현됨 | `signup` |
 | POST | `/auth/login` | 공개 | `{email, password}` → `{access_token, user{seq, name, email, role}}`. 실패는 이유와 상관없이 `INVALID_CREDENTIALS`. 교수자 토큰 12시간 ✅ 구현됨 | `login` |
 
+### 마이페이지 (v4 · 새 API 없음, 결정 11/27)
+- 교수자 마이페이지의 이름 · 이메일은 로그인 응답의 `user`를 이 탭(sessionStorage)에 저장해 둔 값으로 보여 준다. **이름 수정 · 비밀번호 변경 · 결제 내역 · 1년 연장은 화면만** 있다(저장 · 결제하지 않음, 결제 내역은 예시 데이터).
+- 이용 중인 클래스는 `GET /classes`, 학생 마이페이지는 `GET /me/classes`로 채운다.
+- 클래스 개설의 "결제하고 개설"은 화면에 결제 과정을 보이지 않고, 안에서 지금 API(`POST /payments` NEW → `POST /classes`)로 개설한 뒤 클래스 상세로 간다.
+
 ### 클래스 · 참여
 | 메서드 | 경로 | 권한 | 요청 → 응답 | 프론트 함수 |
 |---|---|---|---|---|
