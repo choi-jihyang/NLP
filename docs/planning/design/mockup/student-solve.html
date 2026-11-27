@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>학생 · 과제 풀이</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 로그인 후 화면 시안 공통 스타일 — 메인 시안(main_page_design.html)과 같은 결. 색·폰트는 frontend/src/styles/tokens.css 그대로 */
+:root{
+  --bg:#fafcfb; --surface:#fff; --surface-2:#f0f6f4; --line:#dde7e4; --grid:#edf3f1;
+  --fg:#1b2623; --muted:#5f6f6a; --logo:#1d6b5f;
+  --accent:#22887c; --accent-ink:#fff; --accent-soft:#e2f4f0;
+  --good:#2e8a4a; --good-soft:#e4f5e8; --warn:#bd6912; --warn-soft:#fdf0e0; --bad:#c6463a; --bad-soft:#fde8e5;
+  --code-bg:#16181b; --code-fg:#e8e9eb;
+  --f-display:'Hahmlet','Noto Serif KR',serif;
+  --f-body:'IBM Plex Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --r:16px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.25;text-wrap:balance;word-break:keep-all;font-weight:600}
+p{margin:0}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:24px}
+.mono{font-family:var(--f-mono)}
+.muted{color:var(--muted)}
+.eyebrow{font-family:var(--f-mono);font-size:.76rem;letter-spacing:.08em;color:var(--accent);text-transform:uppercase}
+
+/* 헤더: 로고(왼쪽) · 메뉴 · 요금제 · 마이페이지 · 로그아웃(오른쪽) */
+.nav{position:sticky;top:0;z-index:20;backdrop-filter:blur(12px);background:rgba(250,252,251,.85);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;gap:20px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:1.2rem;color:var(--logo)}
+.logo svg{width:30px;height:30px}
+.menu{display:flex;gap:4px;margin-left:8px}
+.menu a{padding:8px 14px;border-radius:99px;color:var(--muted);font-size:.92rem;font-weight:500}
+.menu a:hover{color:var(--fg);background:var(--surface-2)}
+.menu a.on{color:var(--fg);background:var(--surface-2)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:4px}
+.nav-right .who{display:flex;align-items:center;gap:8px;margin-right:8px;font-size:.88rem;color:var(--muted)}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;font-size:.82rem}
+
+/* 버튼 */
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:99px;padding:9px 18px;font-size:.9rem;font-weight:500;border:1px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;transition:filter .15s,background .15s}
+.pill.primary{background:var(--fg);color:#fff}
+.pill.primary:hover{filter:brightness(1.25)}
+.pill.accent{background:var(--accent);color:var(--accent-ink)}
+.pill.ghost{background:var(--surface);border-color:var(--line);color:var(--fg)}
+.pill.ghost:hover{background:var(--surface-2)}
+.pill.text{background:none;color:var(--muted);padding-inline:12px}
+.pill.text:hover{color:var(--fg)}
+.pill.text.on{color:var(--fg)}
+.pill.sm{padding:6px 13px;font-size:.84rem}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;padding:3px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted);font-weight:500;white-space:nowrap}
+.chip.acc{background:var(--accent-soft);color:var(--accent)}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+
+/* 페이지 머리 (그래프 용지) */
+.head{position:relative;border-bottom:1px solid var(--line);overflow:hidden}
+.head::before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(90deg,#000,transparent 85%);-webkit-mask-image:linear-gradient(90deg,#000,transparent 85%)}
+.head .wrap{position:relative;padding-block:44px 36px}
+.head h1{font-size:clamp(1.8rem,3.4vw,2.5rem);margin-top:8px}
+.head .sub{color:var(--muted);margin-top:8px}
+.head-row{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+main{padding-block:32px 80px}
+
+/* 블록 */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.pad{padding:24px}
+.sec{margin-top:40px}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.sec-h h2{font-size:1.35rem}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.spread{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+
+/* 숫자 타일 */
+.stat{padding:20px 22px}
+.stat .k{font-size:.84rem;color:var(--muted)}
+.stat .v{font-family:var(--f-display);font-size:2rem;font-weight:600;line-height:1.2;margin-top:6px}
+.stat .v small{font-size:1rem;color:var(--muted);font-weight:500}
+.stat.alert{border-color:#f1d3ad;background:var(--warn-soft)}
+.stat.alert .v{color:var(--warn)}
+
+/* 할 일 목록 */
+.todo{display:flex;flex-direction:column}
+.todo a{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px 22px;border-top:1px solid var(--line)}
+.todo a:first-child{border-top:0}
+.todo a:hover{background:var(--surface-2)}
+.todo .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.todo .ic.warn{background:var(--warn-soft);color:var(--warn)}
+.todo .ic svg{width:18px;height:18px}
+.todo b{display:block;font-weight:600}
+.todo span.m{font-size:.86rem;color:var(--muted)}
+.todo .go{color:var(--muted);font-size:.86rem}
+
+/* 클래스 카드 */
+.ccard{display:flex;flex-direction:column;gap:16px;padding:24px;transition:border-color .2s,transform .2s}
+.ccard:hover{border-color:var(--accent);transform:translateY(-2px)}
+.ccard h3{font-size:1.25rem}
+.code{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:.92rem;background:var(--surface-2);padding:6px 10px 6px 12px;border-radius:10px}
+.code button{border:0;background:var(--surface);border-radius:6px;font:inherit;font-size:.74rem;padding:2px 8px;color:var(--muted);cursor:pointer}
+.meter{display:flex;flex-direction:column;gap:6px}
+.meter .lbl{display:flex;justify-content:space-between;font-size:.84rem;color:var(--muted)}
+.meter .lbl b{color:var(--fg);font-weight:600}
+.track{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.track i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.ccard .foot{display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid var(--line);font-size:.86rem;color:var(--muted)}
+.ccard.new{border-style:dashed;align-items:center;justify-content:center;text-align:center;color:var(--muted);min-height:260px;background:transparent}
+.ccard.new .plus{width:48px;height:48px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:1.6rem;margin-bottom:4px}
+.ccard.new b{color:var(--fg);font-family:var(--f-display);font-size:1.1rem}
+
+/* 탭 (클래스 안) */
+.subtabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-top:28px;overflow-x:auto}
+.subtabs a{padding:10px 16px 12px;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;white-space:nowrap}
+.subtabs a.on{color:var(--fg);border-bottom-color:var(--accent)}
+.subtabs a .chip{margin-left:6px}
+
+/* 과제 카드 */
+.acard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px 24px;align-items:center;padding:22px 24px}
+.acard h3{font-size:1.15rem}
+.acard .meta{font-size:.86rem;color:var(--muted);margin-top:6px}
+.acard .prog{display:grid;grid-template-columns:minmax(0,260px) auto;gap:12px;align-items:center;margin-top:14px;font-size:.84rem;color:var(--muted)}
+.acard .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+/* 학생 칩 목록 */
+.people{display:flex;flex-wrap:wrap;gap:8px}
+.people a{font-family:var(--f-mono);font-size:.88rem;padding:7px 14px;border:1px solid var(--line);border-radius:99px;background:var(--surface)}
+.people a:hover{border-color:var(--accent);color:var(--accent)}
+
+/* 폼 */
+.field{display:flex;flex-direction:column;gap:6px}
+.field span{font-size:.8rem;font-weight:600;color:var(--muted);letter-spacing:.03em}
+.inp{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;font:inherit;width:100%}
+.inp[readonly]{background:var(--surface-2);color:var(--muted)}
+
+/* 표 */
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:.8rem;padding:12px 16px;border-bottom:1px solid var(--line)}
+td{padding:14px 16px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+.tbl{overflow-x:auto}
+
+/* 마이페이지 */
+.side-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:32px;align-items:start}
+.side{position:sticky;top:88px;display:flex;flex-direction:column;gap:2px}
+.side a{padding:10px 14px;border-radius:10px;color:var(--muted);font-weight:500}
+.side a.on,.side a:hover{background:var(--surface-2);color:var(--fg)}
+.side a.danger{color:var(--bad)}
+.profile{display:flex;align-items:center;gap:18px}
+.profile .avatar{width:64px;height:64px;font-size:1.4rem;font-family:var(--f-display)}
+
+.mock-note{position:fixed;right:16px;bottom:16px;font-family:var(--f-mono);font-size:.72rem;background:var(--fg);color:#fff;padding:6px 12px;border-radius:99px;opacity:.75}
+
+@media (max-width:960px){
+  .g4{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr}
+  .side-layout{grid-template-columns:1fr}
+  .side{position:static;flex-direction:row;overflow-x:auto}
+  .menu{display:none}
+}
+@media (max-width:640px){
+  .wrap{padding-inline:16px}
+  .g3,.g2{grid-template-columns:1fr}
+  .nav-right .who{display:none}
+  .nav-right .pill.text{padding-inline:8px;font-size:.84rem}
+  .acard{grid-template-columns:1fr}
+  .acard .acts{justify-content:flex-start}
+  .acard .prog{grid-template-columns:1fr}
+}
+
+/* 과제 풀이 */
+.solve-head .wrap{padding-block:28px 0}
+.solve-head h1{font-size:clamp(1.5rem,2.6vw,2rem)}
+.qbar{display:flex;align-items:center;gap:8px;margin-top:22px;overflow-x:auto;padding-bottom:16px}
+.qbar a{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:.86rem;white-space:nowrap;color:var(--muted)}
+.qbar a b{font-family:var(--f-mono);color:var(--fg)}
+.qbar a.on{border-color:var(--fg);background:var(--fg);color:#fff}
+.qbar a.on b{color:#fff}
+.qbar a.done{border-color:var(--accent);color:var(--accent)}
+.qbar .sep{flex:1}
+.notice{display:flex;gap:8px;align-items:center;font-size:.84rem;color:var(--muted)}
+.notice i{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.solve{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:20px;align-items:start}
+.qpanel{padding:28px}
+.qpanel .qtext{font-size:1rem;line-height:1.75;margin-top:14px}
+.qpanel ul{margin:10px 0 0;padding-left:20px;color:var(--fg);font-size:.95rem;line-height:1.8}
+code{font-family:var(--f-mono);font-size:.88em;background:var(--surface-2);padding:1px 6px;border-radius:5px}
+.editor{margin-top:20px;border-radius:14px;overflow:hidden;background:var(--code-bg);color:var(--code-fg)}
+.editor .bar{display:flex;justify-content:space-between;padding:10px 16px;font-family:var(--f-mono);font-size:.76rem;color:#9a9ca3;border-bottom:1px solid #2c2e33}
+.editor pre{margin:0;padding:16px 18px;font-family:var(--f-mono);font-size:.86rem;line-height:1.75;overflow-x:auto;counter-reset:l}
+.editor pre span.l{display:block}
+.editor pre span.l::before{counter-increment:l;content:counter(l);display:inline-block;width:28px;color:#62656c;text-align:right;margin-right:16px}
+.editor .k{color:#7fd6c8}.editor .s{color:#f2b56b}.editor .c{color:#9a9ca3}
+.tests{margin-top:16px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.tests .th{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--surface-2);font-size:.86rem;font-weight:600}
+.trow{display:grid;grid-template-columns:24px 1fr 1fr 1fr;gap:12px;padding:10px 16px;border-top:1px solid var(--line);font-family:var(--f-mono);font-size:.82rem;align-items:center}
+.trow .ok{color:var(--good)}.trow .no{color:var(--bad)}
+.trow.h{font-family:var(--f-body);color:var(--muted);font-size:.76rem;font-weight:600}
+.qacts{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:20px;flex-wrap:wrap}
+
+/* AI 패널 */
+.ai{position:sticky;top:84px;display:flex;flex-direction:column;max-height:calc(100vh - 104px);overflow:hidden}
+.ai-h{padding:18px 20px;border-bottom:1px solid var(--line)}
+.lv{display:flex;gap:5px;margin-top:12px}
+.lv i{flex:1;height:6px;border-radius:3px;background:var(--surface-2)}
+.lv i.on{background:var(--accent)}
+.ai-h .note{font-size:.8rem;color:var(--muted);margin-top:8px;display:block}
+.msgs{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:12px;background:var(--bg)}
+.bub{max-width:88%;padding:10px 14px;border-radius:14px;font-size:.9rem;line-height:1.55}
+.bub.me{margin-left:auto;background:var(--fg);color:#fff;border-bottom-right-radius:4px}
+.bub.bot{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.bub .tag{display:block;font-family:var(--f-mono);font-size:.7rem;color:var(--accent);margin-bottom:4px}
+.quick{display:flex;gap:6px;flex-wrap:wrap;padding:12px 20px 0}
+.quick button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 12px;font:inherit;font-size:.8rem;color:var(--muted);cursor:pointer}
+.send{display:flex;gap:8px;padding:12px 20px 18px}
+.send .inp{border-radius:99px;padding-inline:16px}
+.foot-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:24px;padding:16px 22px}
+/* 문항 탭 전환 (시안) */
+.qv{display:none}.qv.on{display:block}
+.qbar a.on.done{border-color:var(--fg);color:#fff}
+.chs{display:grid;gap:8px;margin-top:18px}
+.chs label{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:.95rem}
+.chs label.sel{border-color:var(--accent);background:var(--accent-soft)}
+.ans{margin-top:16px;display:flex;align-items:center;gap:10px}
+.ans input{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:var(--f-mono);font-size:.95rem;background:var(--bg);width:200px}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:.88rem;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.trow.run{opacity:.4}
+/* 코드 편집 (시안): 글자는 투명한 입력칸에 치고, 아래 겹친 층에 색을 입혀 보여 줘요 */
+.ed{display:grid;grid-template-columns:46px minmax(0,1fr);font-family:var(--f-mono);font-size:.86rem;line-height:1.75}
+.ed .gut{padding:16px 12px 16px 0;text-align:right;color:#62656c;user-select:none;white-space:pre}
+.ed .area{position:relative;min-width:0}
+.ed pre.hl,.ed textarea{margin:0;padding:16px 18px 16px 4px;font:inherit;line-height:inherit;white-space:pre;tab-size:4;border:0;letter-spacing:0;word-spacing:0}
+.ed pre.hl{position:absolute;inset:0;overflow:hidden;pointer-events:none;color:var(--code-fg)}
+.ed textarea{position:relative;display:block;width:100%;min-height:120px;resize:none;background:transparent;color:transparent;caret-color:#e4efec;outline:none;overflow-x:auto;overflow-y:hidden}
+.ed textarea::selection{background:rgba(127,214,200,.28);color:transparent}
+.editor:focus-within{box-shadow:0 0 0 2px var(--accent)}
+.picks{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.picks button{border:1px solid var(--accent);background:var(--accent-soft);color:var(--fg);border-radius:99px;padding:4px 10px;font:inherit;font-size:.78rem;cursor:pointer}
+.picks.used button{opacity:.45;pointer-events:none}
+.ailock{display:none;margin:12px 20px 18px;padding:12px 14px;border-radius:12px;background:var(--surface-2);font-size:.86rem}
+.ailock b{display:block;margin-bottom:2px}.ailock span{color:var(--muted)}
+.cc{display:none;margin-top:18px;padding:18px;border:1px solid var(--accent);border-radius:14px;background:var(--accent-soft)}
+.cc.on{display:grid;gap:12px}
+.cc textarea{min-height:80px}
+.confirm{display:none;margin-top:12px;padding:18px 22px;border:1px solid var(--fg);border-radius:14px;background:var(--surface)}
+.confirm.on{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.ai-empty{margin:auto;color:var(--muted);font-size:.88rem;text-align:center}
+@media (max-width:960px){.solve{grid-template-columns:1fr}.ai{position:static;max-height:none}}
+@media (max-width:640px){.trow{grid-template-columns:20px 1fr 1fr;}.trow .exp{display:none}}
+</style>
+<style id="tg-dark">
+/* ===== 추가: 다크모드 · 새 화면 공통 (11/26) ===== */
+html[data-theme="dark"]{
+  --bg:#111214; --surface:#18191c; --surface-2:#212226; --line:#2c2e33; --grid:#1a1b1e;
+  --fg:#e8e9eb; --muted:#9a9ca3; --logo:#6fd0c0;
+  --accent:#3fb3a4; --accent-ink:#0c0d0f; --accent-soft:rgba(63,179,164,.14);
+  --good:#62c47f; --good-soft:rgba(98,196,127,.14); --warn:#e3a04f; --warn-soft:rgba(227,160,79,.14); --bad:#ef7b6f; --bad-soft:rgba(239,123,111,.14);
+  --code-bg:#0c0d0f; --code-fg:#e8e9eb;
+  color-scheme:dark;
+}
+html[data-theme="dark"] .nav{background:rgba(17,18,20,.85)}
+html[data-theme="dark"] .pill.primary,html[data-theme="dark"] .bub.me,html[data-theme="dark"] .qbar a.on,html[data-theme="dark"] .qbar a.on b{color:var(--bg)}
+html[data-theme="dark"] .stat.alert{border-color:rgba(227,160,79,.35)}
+html[data-theme="dark"] .mock-note{color:var(--bg)}
+html[data-theme="dark"] .logo svg path:first-child{fill:var(--logo)}
+html,body{transition:background-color .2s,color .2s}
+
+.theme-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--fg);display:grid;place-items:center;cursor:pointer;margin-left:4px}
+.theme-btn:hover{background:var(--surface-2)}
+.theme-btn svg{width:17px;height:17px}
+html[data-theme="dark"] .qbar a.on.done{color:var(--bg)}
+</style>
+<script src="theme.js"></script>
+</head>
+<body>
+<!-- 과제 풀이 (/student/assignments/:id) · 문항 3 코드 작성 -->
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="student-assignments.html" aria-label="ThinkGuard 내 과제로">
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z" fill="#1d6b5f"/><path d="M11 12.5 14.5 16 11 19.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="18.2" width="5.5" height="2.2" rx="1.1" fill="#fff"/><circle cx="21.5" cy="10.5" r="2" fill="#7fd6c8"/></svg>
+      ThinkGuard
+    </a>
+    <nav class="menu"><a class="on" href="student-assignments.html">내 과제</a><a href="student-join.html?in=1">클래스 참여</a></nav>
+    <div class="nav-right">
+      <span class="who"><span class="avatar">04</span><span class="mono">20260004</span></span>
+      <a class="pill text" href="student-mypage.html">마이페이지</a>
+      <a class="pill ghost sm" href="../main_page_design.html">나가기</a>
+    </div>
+  </div>
+</header>
+
+<section class="head solve-head">
+  <div class="wrap">
+    <a class="muted" href="student-assignments.html" style="font-size:.88rem">← 내 과제</a>
+    <div class="head-row" style="margin-top:8px">
+      <div>
+        <h1>2진수 변환기 · 덧셈기 · 뺄셈기</h1>
+        <p class="sub">프로그래밍 기초 · C · 마감 12월 5일(토) 23:59</p>
+      </div>
+    </div>
+    <nav class="qbar" aria-label="문항 이동">
+      <a class="done" href="#q1" data-q="1"><b>1</b>객관식 ✓</a>
+      <a class="done" href="#q2" data-q="2"><b>2</b>출력 예측 ✓</a>
+      <a class="on" href="#q3" data-q="3"><b>3</b>코드 작성</a>
+      <a href="#q4" data-q="4"><b>4</b>코드 작성</a>
+      <a href="#q5" data-q="5"><b>5</b>간단 제작</a>
+    </nav>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="solve">
+    <section class="card qpanel">
+    <div class="qv on" data-q="3">
+      <div class="row"><span class="eyebrow">Question 3</span><span class="chip">코드 작성</span><span class="chip">20점</span></div>
+      <p class="qtext">10진수 정수 <code>n</code>을 입력받아 2진수로 출력하는 <code>print_binary</code> 함수를 완성하시오.</p>
+      <ul>
+        <li>입력: 0 이상 1,000,000 이하의 정수 <code>n</code> 한 줄</li>
+        <li>출력: <code>n</code>을 2진수로 쓴 것. 앞에 0을 붙이지 않는다. <code>n</code>이 0이면 <code>0</code></li>
+        <li><code>printf("%b")</code>처럼 2진수를 바로 출력하는 기능은 쓰지 않는다.</li>
+      </ul>
+
+      <div class="editor">
+        <div class="bar"><span>main.c</span><span>Tab = 공백 4칸</span></div>
+<pre><span class="l"><span class="k">#include</span> <span class="s">&lt;stdio.h&gt;</span></span><span class="l"></span><span class="l"><span class="k">void</span> print_binary(<span class="k">unsigned int</span> n) {</span><span class="l">    <span class="k">char</span> bits[33];</span><span class="l">    <span class="k">int</span> len = 0;</span><span class="l">    <span class="k">while</span> (n &gt; 0) {</span><span class="l">        bits[len++] = <span class="s">'0'</span> + n % 2;</span><span class="l">        n /= 2;</span><span class="l">    }</span><span class="l">    <span class="k">for</span> (<span class="k">int</span> i = len - 1; i &gt;= 0; i--)</span><span class="l">        printf(<span class="s">"%c"</span>, bits[i]);</span><span class="l">}</span><span class="l"></span><span class="l"><span class="k">int</span> main(<span class="k">void</span>) {</span><span class="l">    <span class="k">unsigned int</span> n;</span><span class="l">    scanf(<span class="s">"%u"</span>, &amp;n);</span><span class="l">    print_binary(n);</span><span class="l">    printf(<span class="s">"\n"</span>);</span><span class="l">    <span class="k">return</span> 0;</span><span class="l">}</span></pre>
+      </div>
+
+      <div class="tests">
+        <div class="th"><span>공개 테스트</span><span class="chip warn">2 / 3 통과</span></div>
+        <div class="trow h"><span></span><span>입력</span><span>기대 출력</span><span class="exp">내 출력</span></div>
+        <div class="trow"><span class="ok">✓</span><span>6</span><span>110</span><span class="exp">110</span></div>
+        <div class="trow"><span class="ok">✓</span><span>13</span><span>1101</span><span class="exp">1101</span></div>
+        <div class="trow"><span class="no">✗</span><span>0</span><span>0</span><span class="exp muted">(빈 출력)</span></div>
+      </div>
+      <p class="muted" style="font-size:.82rem;margin-top:8px">숨김 테스트 3개는 채점할 때만 실행돼요.</p>
+
+      <div class="qacts">
+        <button class="pill ghost" data-run>공개 테스트 실행</button>
+        <button class="pill primary" data-submit>문항 3 제출</button>
+      </div>
+    </div>
+
+    <div class="qv" data-q="1">
+      <div class="row"><span class="eyebrow">Question 1</span><span class="chip">객관식</span><span class="chip">10점</span></div>
+      <p class="qtext">2진수 <code>1011</code>을 10진수로 바꾸면?</p>
+      <div class="chs">
+        <label class="sel"><input type="radio" name="q1" checked> 11</label>
+        <label><input type="radio" name="q1"> 13</label>
+        <label><input type="radio" name="q1"> 1011</label>
+        <label><input type="radio" name="q1"> 3</label>
+      </div>
+      <div class="qacts"><span class="chip good">제출함</span><button class="pill ghost" data-submit>다시 제출</button></div>
+    </div>
+
+    <div class="qv" data-q="2">
+      <div class="row"><span class="eyebrow">Question 2</span><span class="chip">출력 예측</span><span class="chip">10점</span></div>
+      <p class="qtext">다음 프로그램에 <code>13</code>을 넣으면 무엇이 출력될까?</p>
+      <div class="editor">
+        <div class="bar"><span>predict.c</span><span>읽기 전용</span></div>
+<pre><span class="l"><span class="k">int</span> bits[32], len = 0;</span><span class="l"><span class="k">while</span> (n &gt; 0) { bits[len++] = n % 2; n /= 2; }</span><span class="l"><span class="k">for</span> (<span class="k">int</span> i = len - 1; i &gt;= 0; i--) printf(<span class="s">"%d"</span>, bits[i]);</span></pre>
+      </div>
+      <div class="ans"><input value="1101" aria-label="예상 출력"><span class="chip good">제출함</span></div>
+      <div class="qacts"><span></span><button class="pill ghost" data-submit>다시 제출</button></div>
+    </div>
+
+    <div class="qv" data-q="4">
+      <div class="row"><span class="eyebrow">Question 4</span><span class="chip">코드 작성</span><span class="chip">25점</span></div>
+      <p class="qtext">2진수 문자열 두 개를 더하는 <code>add_binary</code> 함수를 완성하시오.</p>
+      <ul>
+        <li>입력: 2진수 문자열 <code>a</code>, <code>b</code> 한 줄씩 (최대 30자리)</li>
+        <li>출력: 두 수의 합을 2진수로. 정수로 바꿔 더하지 않는다.</li>
+      </ul>
+      <div class="editor">
+        <div class="bar"><span>main.c</span><span>Tab = 공백 4칸</span></div>
+<pre><span class="l"><span class="k">#include</span> <span class="s">&lt;stdio.h&gt;</span></span><span class="l"><span class="k">#include</span> <span class="s">&lt;string.h&gt;</span></span><span class="l"></span><span class="l"><span class="k">void</span> add_binary(<span class="k">const char</span> *a, <span class="k">const char</span> *b) {</span><span class="l">    <span class="c">// 여기에 작성</span></span><span class="l">}</span></pre>
+      </div>
+      <div class="tests">
+        <div class="th"><span>공개 테스트</span><span class="chip">실행 전</span></div>
+        <div class="trow h"><span></span><span>입력</span><span>기대 출력</span><span class="exp">내 출력</span></div>
+        <div class="trow"><span class="st">·</span><span>101 / 11</span><span>1000</span><span class="exp muted">—</span></div>
+        <div class="trow"><span class="st">·</span><span>1 / 1</span><span>10</span><span class="exp muted">—</span></div>
+        <div class="trow"><span class="st">·</span><span>0 / 0</span><span>0</span><span class="exp muted">—</span></div>
+      </div>
+      <div class="qacts"><button class="pill ghost" data-run>공개 테스트 실행</button><button class="pill primary" data-submit>문항 4 제출</button></div>
+      <div class="cc" data-cc="4"><span class="chip acc" style="justify-self:start">제출 전 개념 확인</span><p>힌트 없이 풀었네요. 제출하기 전에 하나만 물어볼게요.</p><b>두 자리를 더한 값이 2가 되면 무엇을 해야 하나요?</b><textarea class="inp" placeholder="한두 문장으로 본인 말로"></textarea><p class="muted" style="font-size:.82rem">점수에는 들어가지 않아요</p><div class="spread"><button class="pill ghost" type="button" data-ccback>답 고치러 돌아가기</button><button class="pill primary" type="button" data-ccok>답하고 제출</button></div></div>
+    </div>
+
+    <div class="qv" data-q="5">
+      <div class="row"><span class="eyebrow">Question 5</span><span class="chip">간단 제작</span><span class="chip">35점</span><span class="chip warn">교수자 채점</span></div>
+      <p class="qtext">2진수 뺄셈기를 만드시오. 결과가 음수면 <code>-</code>를 붙인다.</p>
+      <ul>
+        <li>채점 기준: 빌림 처리 · 음수 결과 · 앞자리 0 정리 · 정수 변환 없이 · 방식 주석</li>
+      </ul>
+      <div class="editor">
+        <div class="bar"><span>main.c</span><span>Tab = 공백 4칸</span></div>
+<pre><span class="l"><span class="c">/* 어떤 방식으로 뺐는지 한 줄로 적어 주세요 */</span></span><span class="l"></span><span class="l"></span></pre>
+      </div>
+      <div class="qacts"><span></span><button class="pill primary" data-submit>문항 5 제출</button></div>
+      <div class="cc" data-cc="5"><span class="chip acc" style="justify-self:start">제출 전 개념 확인</span><p>힌트 없이 풀었네요. 제출하기 전에 하나만 물어볼게요.</p><b>빌림이 필요한 때는 언제인가요?</b><textarea class="inp" placeholder="한두 문장으로 본인 말로"></textarea><p class="muted" style="font-size:.82rem">점수에는 들어가지 않아요</p><div class="spread"><button class="pill ghost" type="button" data-ccback>답 고치러 돌아가기</button><button class="pill primary" type="button" data-ccok>답하고 제출</button></div></div>
+    </div>
+    </section>
+
+    <aside class="card ai" aria-label="학습 AI">
+      <div class="ai-h">
+        <div class="spread"><b>AI 도움 · 문항 <span id="aiq">3</span></b><span class="chip acc">시도한 만큼 열기</span></div>
+        <div class="lv" id="lv"><i class="on"></i><i></i><i></i></div>
+        <span class="note" id="ainote">열린 힌트 1 / 3단계 · 내 코드를 보여주면 다음 단계가 열려요</span>
+      </div>
+      <div class="msgs">
+        <p class="ai-empty" id="aiempty" style="display:none">아직 이 문항 대화가 없어요</p>
+        <div class="bub me">코드 전체 짜주세요</div>
+        <div class="bub bot"><span class="tag">도움 방식 고르기</span>완성 코드는 드릴 수 없어요. 어떤 도움이 좋을까요? 지금까지 짠 코드를 보여 주면 다음 단계를 같이 찾아요.<div class="picks"><button type="button" data-pick="concept">개념 설명</button><button type="button" data-pick="hint">다음 단계 힌트</button><button type="button" data-pick="code">내 코드 봐 주세요</button></div></div>
+        <div class="bub me">위에 짠 대로 했는데 0을 넣으면 아무것도 안 나와요</div>
+        <div class="bub bot"><span class="tag">힌트 1단계 · 시도 근거 있음</span>n이 0일 때 <code>while (n &gt; 0)</code> 조건을 한 번 따라가 볼까요? 반복이 몇 번 도는지, 그때 <code>len</code>이 얼마인지 세어 보세요.</div>
+      </div>
+      <div class="ailock" id="ailock"><b></b><span></span></div>
+      <div class="quick"><button>다음 힌트 주세요</button><button>개념만 설명해 주세요</button></div>
+      <form class="send" id="send"><input class="inp" placeholder="질문하거나 막힌 코드·에러 메시지를 적어 주세요"><button class="pill primary sm">보내기</button></form>
+    </aside>
+  </div>
+
+  <div class="card foot-bar">
+    <span class="muted" style="font-size:.9rem"><b style="color:var(--fg)" id="cnt">2 / 5문항</b> 제출 · 마감 전까지 고쳐서 다시 낼 수 있어요</span>
+    <button class="pill primary" id="fin">최종 제출</button>
+  </div>
+  <div class="confirm" id="conf"><div><b>최종 제출할까요?</b><p class="muted" style="font-size:.86rem;margin-top:4px"><span id="left"></span>제출하면 고칠 수 없고 AI 도움이 닫혀요</p></div><div class="row"><button class="pill ghost" id="cno">더 고칠래요</button><button class="pill primary" id="cyes">최종 제출</button></div></div>
+</main>
+<script>
+/* 풀이 화면 시안 동작: 문항 탭 · 제출 · 테스트 실행 · AI 대화. 실제 채점·AI 호출 없이 정해진 결과만 보여 줘요 */
+(function(){
+  var $=function(q,r){return (r||document).querySelector(q)},$$=function(q,r){return [].slice.call((r||document).querySelectorAll(q))};
+  var tabs=$$('.qbar a[data-q]'),views=$$('.qv'),msgs=$('.msgs'),empty=$('#aiempty'),lv=$$('#lv i'),note=$('#ainote');
+  var cur='3',done={1:1,2:1},level={1:0,2:0,3:1,4:0,5:0},ccOpen={},ccDone={},finalized=false;
+  $$('.msgs .bub').forEach(function(b){b.dataset.q='3'});
+
+  /* C 코드 편집기: 기존 코드 보기를 입력 가능한 칸으로 바꿔요 */
+  var KW=/^(int|char|void|unsigned|signed|const|while|for|if|else|return|long|short|size_t|break|continue|do|switch|case|static|struct)$/;
+  function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+  function hl(src){
+    var re=/(\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$))|("(?:\\.|[^"\\\n])*"?|'(?:\\.|[^'\\\n])*'?|<[\w.\/]+\.h>)|(#\w+)|([A-Za-z_]\w*)/g,out='',i=0,m;
+    while((m=re.exec(src))){out+=esc(src.slice(i,m.index));
+      if(m[1])out+='<span class="c">'+esc(m[1])+'</span>';else if(m[2])out+='<span class="s">'+esc(m[2])+'</span>';
+      else if(m[3])out+='<span class="k">'+esc(m[3])+'</span>';else out+=KW.test(m[4])?'<span class="k">'+m[4]+'</span>':esc(m[4]);
+      i=re.lastIndex}
+    return out+esc(src.slice(i))+'\n';
+  }
+  $$('.qv').forEach(function(v){
+    if(v.dataset.q==='2')return;var pre=$('.editor pre',v);if(!pre)return;
+    var src=$$('span.l',pre).map(function(l){return l.textContent}).join('\n');
+    var ed=document.createElement('div');ed.className='ed';
+    ed.innerHTML='<div class="gut"></div><div class="area"><pre class="hl" aria-hidden="true"></pre><textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="코드 입력"></textarea></div>';
+    pre.replaceWith(ed);
+    var ta=$('textarea',ed),hp=$('pre.hl',ed),gut=$('.gut',ed);ta.value=src;
+    function paint(){hp.innerHTML=hl(ta.value);var n=ta.value.split('\n').length,g='';for(var k=1;k<=n;k++)g+=k+'\n';gut.textContent=g;
+      ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';hp.scrollLeft=ta.scrollLeft}
+    function ins(t){ta.focus();if(!document.execCommand('insertText',false,t)){ta.setRangeText(t,ta.selectionStart,ta.selectionEnd,'end')}paint()}
+    ta.addEventListener('input',paint);ta.addEventListener('scroll',function(){hp.scrollLeft=ta.scrollLeft});
+    ta.addEventListener('keydown',function(e){
+      if(e.key==='Tab'){e.preventDefault();ins('    ')}
+      else if(e.key==='Enter'){e.preventDefault();var b=ta.value.slice(0,ta.selectionStart),line=b.slice(b.lastIndexOf('\n')+1),ind=line.match(/^\s*/)[0];
+        ins('\n'+ind+(/\{\s*$/.test(line)?'    ':''))}
+    });
+    paint();
+  });
+
+  var toastEl=document.createElement('div');toastEl.className='toast';document.body.appendChild(toastEl);var tt;
+  function toast(t){toastEl.textContent=t;toastEl.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){toastEl.classList.remove('on')},1800)}
+
+  function paintAi(){
+    var n=0;$$('.msgs .bub').forEach(function(b){var on=b.dataset.q===cur;b.style.display=on?'':'none';if(on)n++});
+    empty.style.display=n?'none':'';
+    lv.forEach(function(i,k){i.classList.toggle('on',k<level[cur])});
+    note.textContent='열린 힌트 '+level[cur]+' / 3단계'+(level[cur]<3?' · 내 코드를 보여주면 다음 단계가 열려요':'');
+    $('#aiq').textContent=cur;msgs.scrollTop=msgs.scrollHeight;
+    var why=finalized?['최종 제출한 과제예요','최종 제출한 뒤에는 AI 도움이 닫혀요']:ccOpen[cur]?['개념 확인 질문에 먼저 답해 주세요','답하는 동안에는 AI 도움을 쓸 수 없어요']:cur==='2'?['이 문항은 AI 도움 없이 풀어요','교수자가 이 문항의 AI 도움을 꺼 두었어요']:null;
+    var lk=$('#ailock');lk.style.display=why?'block':'none';$('.quick').style.display=why?'none':'';$('#send').style.display=why?'none':'';
+    if(why){$('b',lk).textContent=why[0];$('span',lk).textContent=why[1]}
+  }
+  function show(q){
+    cur=q;tabs.forEach(function(t){t.classList.toggle('on',t.dataset.q===q)});
+    views.forEach(function(v){v.classList.toggle('on',v.dataset.q===q)});paintAi();
+  }
+  tabs.forEach(function(t){t.addEventListener('click',function(e){e.preventDefault();show(t.dataset.q);history.replaceState(null,'','#q'+t.dataset.q)})});
+
+  /* 제출 */
+  function needCheck(q){return (q==='4'||q==='5')&&level[q]===0&&!ccDone[q]}
+  $$('[data-submit]').forEach(function(b){b.addEventListener('click',function(){
+    var q=b.closest('.qv').dataset.q;
+    if(needCheck(q)){ccOpen[q]=1;var box=$('[data-cc="'+q+'"]');box.classList.add('on');$('textarea',box).focus();paintAi();return}
+    doSubmit(b,q);
+  })});
+  $$('[data-ccback]').forEach(function(x){x.onclick=function(){var box=x.closest('.cc'),q=box.dataset.cc;box.classList.remove('on');ccOpen[q]=0;paintAi()}});
+  $$('[data-ccok]').forEach(function(x){x.onclick=function(){var box=x.closest('.cc'),q=box.dataset.cc;
+    if(!$('textarea',box).value.trim()){$('textarea',box).focus();toast('한두 문장만 적어 주세요');return}
+    box.classList.remove('on');ccOpen[q]=0;ccDone[q]=1;paintAi();doSubmit($('.qv[data-q="'+q+'"] [data-submit]'),q)}});
+  function doSubmit(b,q){
+    var again=!!done[q];done[q]=1;
+    var tab=$('.qbar a[data-q="'+q+'"]');tab.classList.add('done');if(tab.textContent.indexOf('✓')<0)tab.insertAdjacentText('beforeend',' ✓');
+    b.textContent='다시 제출';b.classList.remove('primary');b.classList.add('ghost');
+    $('#cnt').textContent=Object.keys(done).length+' / 5문항';
+    var j=('245'.indexOf(q)>=0)?'를':'을';toast(again?'문항 '+q+j+' 다시 냈어요':'문항 '+q+j+' 제출했어요');
+  }
+
+  /* 최종 제출 */
+  $('#fin').onclick=function(){var left=5-Object.keys(done).length;$('#left').textContent=left?'아직 안 낸 문항 '+left+'개 · ':'';$('#conf').classList.add('on');$('#conf').scrollIntoView({block:'center',behavior:'smooth'})};
+  $('#cno').onclick=function(){$('#conf').classList.remove('on')};
+  $('#cyes').onclick=function(){finalized=true;$('#conf').classList.remove('on');
+    $$('[data-submit],[data-run]').forEach(function(x){x.disabled=true;x.style.opacity=.45});
+    $$('.ed textarea,.chs input,.ans input').forEach(function(x){x.readOnly=true;x.disabled=x.type==='radio'});
+    var fb=$('.foot-bar');fb.innerHTML='<span style="font-size:.9rem"><b>최종 제출했어요</b> <span class="muted">· 이제 AI 없이 이해 확인을 해요</span></span><a class="pill primary" href="student-check.html">이해 확인으로 →</a>';
+    $$('.picks').forEach(function(x){x.classList.add('used')});
+    paintAi();toast('최종 제출했어요')};
+
+  /* 공개 테스트 실행 */
+  $$('[data-run]').forEach(function(b){b.addEventListener('click',function(){
+    var v=b.closest('.qv'),chip=$('.tests .th .chip',v),rows=$$('.trow:not(.h)',v);
+    chip.className='chip';chip.textContent='실행 중…';rows.forEach(function(r){r.classList.add('run')});b.disabled=true;
+    setTimeout(function(){
+      rows.forEach(function(r){r.classList.remove('run')});b.disabled=false;
+      var q=v.dataset.q,code=(v.querySelector('.ed textarea')||{}).value||'',res;
+      if(q==='4')res=/여기에 작성/.test(code)?[0,0,0]:[1,1,1];
+      else{var zero=/n\s*==\s*0|!\s*n\b|n\s*<=\s*0|do\s*\{/.test(code);res=[1,1,zero?1:0]}
+      rows.forEach(function(r,k){var st=r.children[0],ex=r.querySelector('.exp'),ok=res[k];
+        st.textContent=ok?'✓':'✗';st.className=ok?'ok':'no';ex.textContent=ok?r.children[2].textContent:'(빈 출력)';ex.classList.toggle('muted',!ok)});
+      var n=res.filter(Boolean).length;chip.className='chip '+(n===3?'good':n?'warn':'bad');chip.textContent=n+' / 3 통과';
+      toast('공개 테스트를 실행했어요');
+    },800);
+  })});
+
+  /* 객관식 보기 */
+  $$('.chs label').forEach(function(l){l.addEventListener('click',function(){$$('.chs label').forEach(function(x){x.classList.toggle('sel',x===l)})})});
+
+  /* AI 대화 (정해진 답) */
+  function bub(cls,html,tag){var d=document.createElement('div');d.className='bub '+cls;d.dataset.q=cur;d.innerHTML=(tag?'<span class="tag">'+tag+'</span>':'')+html;msgs.appendChild(d);paintAi()}
+  function reply(html,tag){var d=document.createElement('div');d.className='bub bot';d.dataset.q=cur;d.innerHTML='<span class="tag">생각하는 중…</span>';msgs.appendChild(d);paintAi();
+    setTimeout(function(){d.innerHTML='<span class="tag">'+tag+'</span>'+html;msgs.scrollTop=msgs.scrollHeight},700)}
+  var HINT={3:['','n이 0일 때 <code>while (n &gt; 0)</code> 조건을 한 번 따라가 볼까요?','반복이 0번 돌면 <code>len</code>도 0이라 출력할 게 없어요. n이 0인 경우만 따로 다루려면 어디에 무엇을 넣으면 될까요?','함수 맨 앞에서 n이 0인지 먼저 확인하고, 그때 <code>0</code>을 출력한 뒤 끝내 보세요. 나머지는 지금 코드 그대로 두면 돼요.'],
+            def:['','가장 오른쪽 자리부터 생각해 볼까요? 한 자리씩 처리할 때 무엇을 기억해 둬야 할까요?','두 자리와 올림을 더한 값이 2 이상이면 어떻게 되는지 적어 보세요.','합을 2로 나눈 나머지는 이번 자리, 몫은 다음 자리로 넘길 올림이에요. 이 순서로 한 자리씩 채워 보세요.']};
+  function hint(){
+    var h=HINT[cur]||HINT.def;
+    if(level[cur]>=3){reply('힌트는 3단계까지 다 열었어요. 지금 코드에서 막힌 줄을 보여 주면 같이 볼게요.','힌트 한도');return}
+    level[cur]++;reply(h[level[cur]],'힌트 '+level[cur]+'단계');
+  }
+  $$('.quick button').forEach(function(b){b.addEventListener('click',function(){
+    bub('me',b.textContent);
+    if(b.textContent.indexOf('힌트')>=0)hint();
+    else reply('2진수는 자리마다 2배씩 커지는 수예요. 오른쪽 끝이 1, 그다음이 2, 4, 8… 자리값이에요. 10진수를 2로 계속 나누면 나머지가 오른쪽 자리부터 하나씩 나와요.','개념 설명');
+  })});
+  var CONCEPT='2진수는 자리마다 2배씩 커지는 수예요. 오른쪽 끝이 1, 그다음이 2, 4, 8… 자리값이에요. 10진수를 2로 계속 나누면 나머지가 오른쪽 자리부터 하나씩 나와요.';
+  msgs.addEventListener('click',function(e){var b=e.target.closest('[data-pick]');if(!b)return;b.parentNode.classList.add('used');
+    bub('me',b.textContent);var k=b.dataset.pick;
+    if(k==='concept')reply(CONCEPT,'개념 설명');
+    else if(k==='code'){bub('me','<code>'+(($('.qv[data-q="'+cur+'"] .ed textarea')||{}).value||'').split('\n').slice(0,3).map(function(l){return l.replace(/&/g,'&amp;').replace(/</g,'&lt;')}).join('<br>')+'</code> …');hint()}
+    else hint()});
+  $('#send').addEventListener('submit',function(e){e.preventDefault();var i=$('input',this),t=i.value.trim();if(!t)return;
+    var d=document.createElement('div');d.textContent=t;bub('me',d.innerHTML);i.value='';
+    if(/전체|정답|답\s*알려|짜\s*줘|짜주/.test(t))reply('완성 코드는 드릴 수 없어요. 어떤 도움이 좋을까요?<div class="picks"><button type="button" data-pick="concept">개념 설명</button><button type="button" data-pick="hint">다음 단계 힌트</button><button type="button" data-pick="code">내 코드 봐 주세요</button></div>','도움 방식 고르기');
+    else hint();
+  });
+
+  var h=location.hash.match(/^#q([1-5])$/);show(h?h[1]:'3');
+  if(/[?&]view=1/.test(location.search)){
+    ['1','2','3','4','5'].forEach(function(q){done[q]=1;var t=$('.qbar a[data-q="'+q+'"]');t.classList.add('done');if(t.textContent.indexOf('✓')<0)t.insertAdjacentText('beforeend',' ✓')});
+    $('#cyes').onclick();toastEl.classList.remove('on');
+    $('.foot-bar').innerHTML='<span style="font-size:.9rem"><b>최종 제출한 과제예요</b> <span class="muted">· 볼 수만 있어요</span></span><a class="pill ghost" href="student-assignments.html">내 과제로</a>';
+  }
+})();
+</script>
+<span class="mock-note">화면 시안 · 기능 없음</span>
+</body>
+</html>

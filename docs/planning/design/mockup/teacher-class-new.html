@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>클래스 개설</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="theme.js"></script>
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in">
+<a class="logo" href="teacher-classes.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z" fill="#1d6b5f"/><path d="M11 12.5 14.5 16 11 19.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="18.2" width="5.5" height="2.2" rx="1.1" fill="#fff"/><circle cx="21.5" cy="10.5" r="2" fill="#7fd6c8"/></svg>ThinkGuard</a>
+<nav class="menu"><a class="on" href="teacher-classes.html">내 클래스</a></nav>
+<div class="nav-right"><span class="who"><span class="avatar">김</span>김교수</span>
+<a class="pill text" href="pricing.html">요금제</a><a class="pill text" href="teacher-mypage.html">마이페이지</a><a class="pill ghost sm" href="../main_page_design.html">로그아웃</a></div>
+</div></header>
+<section class="head"><div class="wrap"><div class="head-row"><div><a class="muted" href="teacher-classes.html" style="font-size:.9rem">← 내 클래스</a><p class="eyebrow">New class</p><h1>클래스 개설</h1></div></div></div></section>
+<main><div class="wrap" style="max-width:760px">
+<div class="card pad form">
+  <label class="field"><span>클래스 이름</span><input class="inp" placeholder="예: 프로그래밍 기초 2분반"></label>
+  <label class="field"><span>시작 날짜</span><input class="inp" type="date" value="2026-12-01"></label>
+  <div class="field"><span>요금제 · 1년</span>
+    <div class="grid g3">
+      <label class="opt on" data-plan="small" data-n="50" data-p="90,000원"><b>Small</b><span class="muted">학생 50명</span><span class="price">90,000원</span></label>
+      <label class="opt" data-plan="medium" data-n="100" data-p="150,000원"><b>Medium</b><span class="muted">학생 100명</span><span class="price">150,000원</span></label>
+      <label class="opt" data-plan="large" data-n="200" data-p="250,000원"><b>Large</b><span class="muted">학생 200명</span><span class="price">250,000원</span></label>
+    </div>
+  </div>
+  <div class="sum"><span class="muted">2026.12.01 – 2027.12.01 · 학생 <span id="sn">50</span>명</span><b id="sp">90,000원</b></div>
+  <div class="spread"><span></span><a class="pill primary" href="teacher-class.html" id="pay">결제하고 개설</a></div>
+</div>
+</div></main>
+<span class="mock-note">화면 시안 · 기능 없음</span>
+<script>
+var opts=document.querySelectorAll('.opt');
+function pick(o){opts.forEach(function(x){x.classList.toggle('on',x===o)});document.getElementById('sn').textContent=o.dataset.n;document.getElementById('sp').textContent=o.dataset.p}
+opts.forEach(function(o){o.onclick=function(){pick(o)}});
+var want=new URLSearchParams(location.search).get('plan');opts.forEach(function(o){if(o.dataset.plan===want)pick(o)});
+
+document.getElementById('pay').onclick=function(e){e.preventDefault();var a=this;a.textContent='결제 중…';a.style.opacity=.6;
+  setTimeout(function(){tgToast('결제했어요 · 수업 코드가 만들어졌어요');setTimeout(function(){location.href=a.href},900)},700)};
+</script>
+</body>
+</html>

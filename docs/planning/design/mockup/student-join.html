@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>수업 입장</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="theme.js"></script>
+<style>.wait{text-align:center}.wait .dot{width:44px;height:44px;border-radius:50%;background:var(--warn-soft);color:var(--warn);display:grid;place-items:center;margin:0 auto 14px;font-size:1.2rem}</style>
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in">
+<a class="logo" href="../main_page_design.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z" fill="#1d6b5f"/><path d="M11 12.5 14.5 16 11 19.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="18.2" width="5.5" height="2.2" rx="1.1" fill="#fff"/><circle cx="21.5" cy="10.5" r="2" fill="#7fd6c8"/></svg>ThinkGuard</a>
+<div class="nav-right"><a class="pill text" href="login.html">로그인</a><a class="pill primary sm" href="student-join.html">수업 코드로 입장</a></div>
+</div></header>
+
+<main class="center"><div class="card pad narrow" style="width:100%">
+  <div class="pane on" id="j1"><div class="form">
+    <h2 style="font-size:1.5rem">수업 입장</h2>
+    <label class="field"><span>수업 코드</span><input class="inp mono" id="code" value="TG-4821"></label>
+    <label class="field" id="sidf"><span>학번</span><input class="inp mono" id="sid" placeholder="예: 20260004"></label>
+    <p class="muted" id="sidme" style="display:none;font-size:.88rem">학번 <span class="mono">20260004</span>로 들어가요</p>
+    <a class="pill primary" href="#" id="go">입장하기</a>
+    <p class="muted" style="font-size:.84rem;text-align:center">가입 없이 들어와요 · 명단에 없으면 참여 요청이 가요</p>
+  </div></div>
+  <div class="pane wait" id="j3">
+    <div class="dot">⋯</div>
+    <h2 style="font-size:1.4rem">참여 요청을 보냈어요</h2>
+    <p class="muted" style="margin-top:8px">교수자가 수락하면 들어갈 수 있어요 · 학번 <span class="mono" id="wsid"></span></p>
+    <div class="row" style="justify-content:center;margin-top:20px"><button class="pill ghost" id="back">처음으로</button><button class="pill primary" id="chk">수락됐는지 확인</button></div>
+  </div>
+  <div class="pane" id="j2"><div class="form">
+    <h2 style="font-size:1.5rem">프로그래밍 기초 1분반</h2>
+    <dl class="kv">
+      <dt>저장</dt><dd>질문 · 풀이 · AI 답변 · 힌트</dd>
+      <dt>보는 사람</dt><dd>나와 담당 교수자</dd>
+      <dt>붙여넣기</dt><dd>길이 · 시점만 (내용 X)</dd>
+    </dl>
+    <div class="row" style="justify-content:space-between"><button class="pill ghost" id="no">동의하지 않음</button><a class="pill primary" href="student-assignments.html">동의하고 시작</a></div>
+  </div></div>
+  <div class="pane wait" id="j4">
+    <h2 style="font-size:1.4rem">입장하지 않았어요</h2>
+    <p class="muted" style="margin-top:8px">동의해야 과제를 풀 수 있어요</p>
+    <div class="row" style="justify-content:center;margin-top:20px"><button class="pill ghost" id="again">다시 보기</button></div>
+  </div>
+</div></main>
+<span class="mock-note">화면 시안 · 기능 없음</span>
+<script>
+(function(){
+  var $=function(q){return document.querySelector(q)},ROSTER=['20260001','20260002','20260003','20260004','20260005'],tries=0;
+  function to(id){document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.id===id)})}
+  var inside=/[?&]in=1/.test(location.search);
+  if(inside){var h=document.querySelector('header.nav');h.outerHTML="<header class=\"nav\"><div class=\"wrap nav-in\">\n<a class=\"logo\" href=\"student-assignments.html\"><svg viewBox=\"0 0 32 32\" fill=\"none\" aria-hidden=\"true\"><path d=\"M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z\" fill=\"#1d6b5f\"/><path d=\"M11 12.5 14.5 16 11 19.5\" stroke=\"#fff\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><rect x=\"16.2\" y=\"18.2\" width=\"5.5\" height=\"2.2\" rx=\"1.1\" fill=\"#fff\"/><circle cx=\"21.5\" cy=\"10.5\" r=\"2\" fill=\"#7fd6c8\"/></svg>ThinkGuard</a>\n<nav class=\"menu\"><a href=\"student-assignments.html\">\ub0b4 \uacfc\uc81c</a><a class=\"on\" href=\"student-join.html?in=1\">\ud074\ub798\uc2a4 \ucc38\uc5ec</a></nav>\n<div class=\"nav-right\"><span class=\"who\"><span class=\"avatar\">04</span><span class=\"mono\">20260004</span></span>\n<a class=\"pill text\" href=\"student-mypage.html\">\ub9c8\uc774\ud398\uc774\uc9c0</a><a class=\"pill ghost sm\" href=\"../main_page_design.html\">\ub098\uac00\uae30</a></div>\n</div></header>";$('#sidf').style.display='none';$('#sidme').style.display='';$('#code').value='';$('#code').placeholder='예: TG-1234';$('#code').focus()}
+  $('#go').onclick=function(e){e.preventDefault();var sid=inside?'20260004':($('#sid').value.trim()||'20260004');
+    if(inside||ROSTER.indexOf(sid)>=0){to('j2')}else{$('#wsid').textContent=sid;to('j3')}};
+  $('#chk').onclick=function(){tries++;if(tries<2){tgToast('아직 수락 전이에요 · 조금 뒤에 다시 확인해 주세요')}else{tgToast('수락됐어요');to('j2')}};
+  $('#back').onclick=function(){tries=0;to('j1')};
+  $('#no').onclick=function(){to('j4')};$('#again').onclick=function(){to('j2')};
+})();
+</script>
+</body>
+</html>

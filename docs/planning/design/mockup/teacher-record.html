@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>학생별 기록</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="theme.js"></script>
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in">
+<a class="logo" href="teacher-classes.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z" fill="#1d6b5f"/><path d="M11 12.5 14.5 16 11 19.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="18.2" width="5.5" height="2.2" rx="1.1" fill="#fff"/><circle cx="21.5" cy="10.5" r="2" fill="#7fd6c8"/></svg>ThinkGuard</a>
+<nav class="menu"><a class="on" href="teacher-classes.html">내 클래스</a></nav>
+<div class="nav-right"><span class="who"><span class="avatar">김</span>김교수</span>
+<a class="pill text" href="pricing.html">요금제</a><a class="pill text" href="teacher-mypage.html">마이페이지</a><a class="pill ghost sm" href="../main_page_design.html">로그아웃</a></div>
+</div></header>
+<section class="head"><div class="wrap"><div class="head-row"><div><a class="muted" href="teacher-report.html" style="font-size:.9rem">← 반 리포트</a><p class="eyebrow">Student record</p><h1><span class="mono" id="who">20260002</span></h1><p class="sub">2진수 변환기 · 덧셈기 · 뺄셈기</p></div><select class="inp mono pick" aria-label="다른 학생 보기"><option>20260001</option><option selected>20260002</option><option>20260003</option><option>20260004</option><option>20260005</option></select></div></div></section>
+<main><div class="wrap">
+<div class="grid g4">
+  <div class="card stat"><p class="k">점수</p><p class="v">40<small> / 100</small></p></div>
+  <div class="card stat"><p class="k">채점 대기</p><p class="v">35<small>점</small></p></div>
+  <div class="card stat alert"><p class="k">확인 문제</p><p class="v">0<small> / 2</small></p></div>
+  <div class="card stat"><p class="k">힌트</p><p class="v">6<small>단계 · 반 평균 2.7</small></p></div>
+</div>
+<section class="sec"><div class="sec-h"><h2>문항별</h2></div>
+<div class="card tbl"><table>
+  <tr><th>문항</th><th>결과</th><th>힌트</th><th>확인 문제</th><th>개념 확인</th></tr>
+  <tr><td>1</td><td><span class="chip bad">오답</span></td><td>0</td><td><span class="chip bad">오답 (1)</span></td><td>설명함</td></tr>
+  <tr><td>2</td><td><span class="chip good">정답</span></td><td>2</td><td><span class="chip bad">오답 (110)</span></td><td>—</td></tr>
+  <tr><td>3</td><td>테스트 6/6</td><td>3</td><td class="muted">없음</td><td>—</td></tr>
+  <tr><td>4</td><td>테스트 4/6</td><td>1</td><td class="muted">없음</td><td>—</td></tr>
+  <tr><td>5</td><td><span class="chip warn">채점 대기</span></td><td>0</td><td class="muted">없음</td><td>설명함</td></tr>
+</table></div></section>
+<section class="sec"><div class="sec-h"><h2>문항 3 대화</h2></div>
+<div class="card pad" style="display:flex;flex-direction:column;gap:14px">
+  <div><p class="say">print_binary 코드 전체 짜주세요</p><div class="trace"><span class="chip">완성 답안 요청</span><span class="chip">시도 없음</span><span class="chip good">누출 없음</span></div></div>
+  <div><p class="say">while 문으로 n % 2를 찍었는데 1010이 0101로 나와요</p><div class="trace"><span class="chip">풀이 공유</span><span class="chip acc">시도 있음</span><span class="chip good">누출 없음</span></div></div>
+  <p class="muted" style="font-size:.86rem">힌트 3단계 뒤 통과 · 확정 판정 아님</p>
+</div></section>
+</div></main>
+<span class="mock-note">화면 시안 · 기능 없음</span>
+
+<script>document.querySelector('select.pick').onchange=function(){document.getElementById('who').textContent=this.value;tgToast(this.value+' 기록으로 바꿨어요')}</script>
+</body>
+</html>

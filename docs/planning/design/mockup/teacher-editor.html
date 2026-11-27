@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>새 과제</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="theme.js"></script>
+<style>
+/* 새 과제 화면 전용 */
+.chips-pick{display:flex;flex-wrap:wrap;gap:6px}
+.chips-pick button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font:inherit;font-size:.84rem;color:var(--muted);cursor:pointer}
+.chips-pick button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--fg)}
+.qitem{cursor:pointer}
+.qitem .tog-ai{margin-left:6px}
+.qed{display:none;padding:18px 22px 22px;border-top:1px dashed var(--line);background:var(--bg)}
+.qwrap.open .qed{display:grid;gap:14px}
+.qwrap.open .qitem{background:var(--surface-2)}
+.qwrap+.qwrap{border-top:1px solid var(--line)}
+.crow{display:grid;grid-template-columns:22px minmax(0,1fr) minmax(0,1.2fr);gap:10px;align-items:center}
+.crow input[type=radio]{accent-color:var(--accent);width:16px;height:16px}
+.trw{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 92px 32px;gap:8px;align-items:center}
+.rbw{display:grid;grid-template-columns:minmax(0,1fr) 84px 32px;gap:8px;align-items:center}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:1.1rem}
+.mini{font-size:.8rem;color:var(--muted);font-weight:600}
+.typepick{display:none;gap:6px;flex-wrap:wrap;margin-top:10px}
+.typepick.on{display:flex}
+.prompt{font-family:var(--f-mono);font-size:.82rem;line-height:1.7;background:var(--surface-2);border-radius:12px;padding:14px 16px;white-space:pre-wrap;color:var(--fg)}
+.rules{margin:0;padding-left:18px;color:var(--muted);font-size:.86rem;line-height:1.8}
+.done-card{display:none;text-align:center;padding:36px 24px}
+.done-card.on{display:block}
+.sumlist{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px 16px;font-size:.92rem}
+.sumlist dt{color:var(--muted);font-size:.86rem}
+.sumlist dd{margin:0}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in">
+<a class="logo" href="teacher-classes.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z" fill="#1d6b5f"/><path d="M11 12.5 14.5 16 11 19.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="18.2" width="5.5" height="2.2" rx="1.1" fill="#fff"/><circle cx="21.5" cy="10.5" r="2" fill="#7fd6c8"/></svg>ThinkGuard</a>
+<nav class="menu"><a class="on" href="teacher-classes.html">내 클래스</a></nav>
+<div class="nav-right"><span class="who"><span class="avatar">김</span>김교수</span>
+<a class="pill text" href="pricing.html">요금제</a><a class="pill text" href="teacher-mypage.html">마이페이지</a><a class="pill ghost sm" href="../main_page_design.html">로그아웃</a></div>
+</div></header>
+
+<section class="head"><div class="wrap"><div class="head-row"><div><a class="muted" href="teacher-class.html" style="font-size:.9rem">← 프로그래밍 기초 1분반</a><p class="eyebrow">New assignment</p><h1 id="ttl">새 과제</h1></div><a class="pill ghost sm" href="teacher-class.html">나가기</a></div></div></section>
+<main><div class="wrap">
+<div class="steps" style="margin-bottom:20px">
+  <button class="on" data-p="p1"><i>1</i>불러오기</button><button data-p="p2"><i>2</i>문항 · 채점</button><button data-p="p3"><i>3</i>AI 도움</button><button data-p="p4"><i>4</i>확인 · 배포</button>
+</div>
+
+<section class="pane on" id="p1"><div class="grid g2" style="align-items:start">
+  <div class="card pad form">
+    <div class="grid g2"><label class="field"><span>과목 이름</span><input class="inp" value="프로그래밍 기초"></label>
+    <label class="field"><span>언어</span><select class="inp"><option>C</option><option>Python</option></select></label></div>
+    <div class="field"><span>대상</span><div class="chips-pick" id="aud"><button class="on" type="button">대학 1학년</button><button type="button">대학 2학년</button><button type="button">비전공 교양</button><button type="button">고등학교 정보</button><button type="button">코딩 테스트 준비반</button></div></div>
+    <div class="grid g2"><label class="field"><span>과제 이름</span><input class="inp" value="2진수 변환기 · 덧셈기 · 뺄셈기"></label>
+    <label class="field"><span>마감</span><input class="inp" type="datetime-local" value="2026-12-05T23:59"></label></div>
+    <label class="field"><span>과제 설명 · AI가 참고 (선택)</span><textarea class="inp" placeholder="예: 반복문을 처음 배운 학생들이에요">2진수는 문자열로 다룬다.</textarea></label>
+  </div>
+  <div class="card pad" style="display:flex;flex-direction:column;gap:12px">
+    <div class="drop"><b>과제 파일 올리기</b><span>정해진 양식의 .md</span><button class="pill ghost sm" id="pick">파일 선택</button></div>
+    <div class="row" style="justify-content:center"><span class="muted" style="font-size:.86rem">파일이 없다면</span><button class="pill text sm" id="sample">샘플로 시작</button><button class="pill text sm" id="blank">빈 과제</button></div>
+  </div>
+</div></section>
+
+<section class="pane" id="p2">
+  <div class="sec-h"><h2>문항 <span id="qn">5</span>개 · <span id="qpt">100</span>점</h2><button class="pill ghost sm" id="addq">+ 문항 추가</button></div>
+  <div class="typepick" id="tp"><button class="pill ghost sm" data-t="choice">객관식</button><button class="pill ghost sm" data-t="predict">출력 예측</button><button class="pill ghost sm" data-t="code">코드 작성</button><button class="pill ghost sm" data-t="project">간단 제작</button></div>
+  <div class="card" id="qlist" style="margin-top:12px;overflow:hidden"><div class="qwrap" data-type="choice">
+  <div class="qitem"><span class="n">1</span><div><b class="qt">2진수 1011을 10진수로 바꾸면?</b><div class="row" style="margin-top:4px"><span class="chip">객관식</span><span class="chip acc">자동 채점 · 정답 대조</span><span class="chip good tog-ai" title="이 문항 AI 도움">AI 켬</span></div></div><span class="mono muted"><span class="ptv">10</span>점</span></div>
+  <div class="qed"><div class="grid g2" style="align-items:end"><label class="field"><span>문제</span><input class="inp" value="2진수 1011을 10진수로 바꾸면?"></label>
+<div class="row" style="justify-content:flex-end;gap:10px"><label class="field" style="width:110px"><span>배점</span><input class="inp mono pt" value="10"></label><button class="pill ghost sm del" type="button">삭제</button></div></div><div><p class="mini" style="margin-bottom:8px">선택지 · 정답 · 예상 오개념</p><div style="display:grid;gap:8px" class="list"><div class="crow"><input type="radio" name="c1" checked aria-label="정답으로 지정"><input class="inp" value="11"><input class="inp" value="" placeholder="정답" disabled></div><div class="crow"><input type="radio" name="c1"  aria-label="정답으로 지정"><input class="inp" value="13"><input class="inp" value="자리값을 왼쪽부터 읽음" placeholder="고르는 학생의 예상 오개념" ></div><div class="crow"><input type="radio" name="c1"  aria-label="정답으로 지정"><input class="inp" value="1011"><input class="inp" value="2진수를 그대로 10진수로 읽음" placeholder="고르는 학생의 예상 오개념" ></div><div class="crow"><input type="radio" name="c1"  aria-label="정답으로 지정"><input class="inp" value="3"><input class="inp" value="1의 개수를 셈" placeholder="고르는 학생의 예상 오개념" ></div></div><button class="pill text sm add" data-kind="choice" type="button" style="margin-top:6px">+ 선택지</button></div></div>
+</div><div class="qwrap" data-type="predict">
+  <div class="qitem"><span class="n">2</span><div><b class="qt">13을 넣으면 출력은?</b><div class="row" style="margin-top:4px"><span class="chip">출력 예측</span><span class="chip acc">자동 채점 · 정답 대조</span><span class="chip tog-ai" title="이 문항 AI 도움">AI 끔</span></div></div><span class="mono muted"><span class="ptv">10</span>점</span></div>
+  <div class="qed"><div class="grid g2" style="align-items:end"><label class="field"><span>문제</span><input class="inp" value="13을 넣으면 출력은?"></label>
+<div class="row" style="justify-content:flex-end;gap:10px"><label class="field" style="width:110px"><span>배점</span><input class="inp mono pt" value="10"></label><button class="pill ghost sm del" type="button">삭제</button></div></div><label class="field"><span>문제 코드</span><textarea class="inp mono" style="min-height:84px">int bits[32], len = 0;
+while (n &gt; 0) { bits[len++] = n % 2; n /= 2; }
+for (int i = len - 1; i &gt;= 0; i--) printf("%d", bits[i]);</textarea></label><label class="field" style="max-width:260px"><span>정답 출력</span><input class="inp mono" value="1101"></label></div>
+</div><div class="qwrap open" data-type="code">
+  <div class="qitem"><span class="n">3</span><div><b class="qt">print_binary 함수 완성</b><div class="row" style="margin-top:4px"><span class="chip">코드 작성</span><span class="chip acc">자동 채점 · 테스트 실행</span><span class="chip good tog-ai" title="이 문항 AI 도움">AI 켬</span></div></div><span class="mono muted"><span class="ptv">20</span>점</span></div>
+  <div class="qed"><div class="grid g2" style="align-items:end"><label class="field"><span>문제</span><input class="inp" value="print_binary 함수 완성"></label>
+<div class="row" style="justify-content:flex-end;gap:10px"><label class="field" style="width:110px"><span>배점</span><input class="inp mono pt" value="20"></label><button class="pill ghost sm del" type="button">삭제</button></div></div><label class="field"><span>시작 코드</span><textarea class="inp mono" style="min-height:84px">void print_binary(unsigned int n) {
+    // 여기에 작성
+}</textarea></label>
+<div><div class="trw mini" style="margin-bottom:6px"><span>입력</span><span>기대 출력</span><span>공개</span><span></span></div><div class="list" style="display:grid;gap:8px"><div class="trw"><input class="inp mono" value="6"><input class="inp mono" value="110"><select class="inp"><option selected>공개</option><option >숨김</option></select><button class="x" type="button" aria-label="삭제">×</button></div><div class="trw"><input class="inp mono" value="13"><input class="inp mono" value="1101"><select class="inp"><option selected>공개</option><option >숨김</option></select><button class="x" type="button" aria-label="삭제">×</button></div><div class="trw"><input class="inp mono" value="0"><input class="inp mono" value="0"><select class="inp"><option selected>공개</option><option >숨김</option></select><button class="x" type="button" aria-label="삭제">×</button></div><div class="trw"><input class="inp mono" value="1"><input class="inp mono" value="1"><select class="inp"><option >공개</option><option selected>숨김</option></select><button class="x" type="button" aria-label="삭제">×</button></div><div class="trw"><input class="inp mono" value="255"><input class="inp mono" value="11111111"><select class="inp"><option >공개</option><option selected>숨김</option></select><button class="x" type="button" aria-label="삭제">×</button></div><div class="trw"><input class="inp mono" value="1000000"><input class="inp mono" value="11110100001001000000"><select class="inp"><option >공개</option><option selected>숨김</option></select><button class="x" type="button" aria-label="삭제">×</button></div></div><button class="pill text sm add" data-kind="test" type="button" style="margin-top:6px">+ 테스트</button></div></div>
+</div><div class="qwrap" data-type="code">
+  <div class="qitem"><span class="n">4</span><div><b class="qt">add_binary 함수 완성</b><div class="row" style="margin-top:4px"><span class="chip">코드 작성</span><span class="chip acc">자동 채점 · 테스트 실행</span><span class="chip good tog-ai" title="이 문항 AI 도움">AI 켬</span></div></div><span class="mono muted"><span class="ptv">25</span>점</span></div>
+  <div class="qed"><div class="grid g2" style="align-items:end"><label class="field"><span>문제</span><input class="inp" value="add_binary 함수 완성"></label>
+<div class="row" style="justify-content:flex-end;gap:10px"><label class="field" style="width:110px"><span>배점</span><input class="inp mono pt" value="25"></label><button class="pill ghost sm del" type="button">삭제</button></div></div><label class="field"><span>시작 코드</span><textarea class="inp mono" style="min-height:84px">void add_binary(const char *a, const char *b) {
+    // 여기에 작성
+}</textarea></label>
+<div><div class="trw mini" style="margin-bottom:6px"><span>입력</span><span>기대 출력</span><span>공개</span><span></span></div><div class="list" style="display:grid;gap:8px"><div class="trw"><input class="inp mono" value="101 11"><input class="inp mono" value="1000"><select class="inp"><option selected>공개</option><option >숨김</option></select><button class="x" type="button" aria-label="삭제">×</button></div><div class="trw"><input class="inp mono" value="1 1"><input class="inp mono" value="10"><select class="inp"><option selected>공개</option><option >숨김</option></select><button class="x" type="button" aria-label="삭제">×</button></div><div class="trw"><input class="inp mono" value="0 0"><input class="inp mono" value="0"><select class="inp"><option selected>공개</option><option >숨김</option></select><button class="x" type="button" aria-label="삭제">×</button></div><div class="trw"><input class="inp mono" value="1111 1"><input class="inp mono" value="10000"><select class="inp"><option >공개</option><option selected>숨김</option></select><button class="x" type="button" aria-label="삭제">×</button></div><div class="trw"><input class="inp mono" value="110 110"><input class="inp mono" value="1100"><select class="inp"><option >공개</option><option selected>숨김</option></select><button class="x" type="button" aria-label="삭제">×</button></div><div class="trw"><input class="inp mono" value="0 101"><input class="inp mono" value="101"><select class="inp"><option >공개</option><option selected>숨김</option></select><button class="x" type="button" aria-label="삭제">×</button></div></div><button class="pill text sm add" data-kind="test" type="button" style="margin-top:6px">+ 테스트</button></div></div>
+</div><div class="qwrap" data-type="project">
+  <div class="qitem"><span class="n">5</span><div><b class="qt">2진수 뺄셈기 만들기</b><div class="row" style="margin-top:4px"><span class="chip">간단 제작</span><span class="chip warn">교수자 직접 채점</span><span class="chip good tog-ai" title="이 문항 AI 도움">AI 켬</span></div></div><span class="mono muted"><span class="ptv">35</span>점</span></div>
+  <div class="qed"><div class="grid g2" style="align-items:end"><label class="field"><span>문제</span><input class="inp" value="2진수 뺄셈기 만들기"></label>
+<div class="row" style="justify-content:flex-end;gap:10px"><label class="field" style="width:110px"><span>배점</span><input class="inp mono pt" value="35"></label><button class="pill ghost sm del" type="button">삭제</button></div></div><div><div class="rbw mini" style="margin-bottom:6px"><span>채점 기준</span><span>점수</span><span></span></div><div class="list" style="display:grid;gap:8px"><div class="rbw"><input class="inp" value="빌림 처리"><input class="inp mono" value="10"><button class="x" type="button" aria-label="삭제">×</button></div><div class="rbw"><input class="inp" value="음수 결과"><input class="inp mono" value="10"><button class="x" type="button" aria-label="삭제">×</button></div><div class="rbw"><input class="inp" value="앞자리 0 정리"><input class="inp mono" value="5"><button class="x" type="button" aria-label="삭제">×</button></div><div class="rbw"><input class="inp" value="정수 변환 없이"><input class="inp mono" value="5"><button class="x" type="button" aria-label="삭제">×</button></div><div class="rbw"><input class="inp" value="방식 주석"><input class="inp mono" value="5"><button class="x" type="button" aria-label="삭제">×</button></div></div><button class="pill text sm add" data-kind="rub" type="button" style="margin-top:6px">+ 기준</button></div></div>
+</div></div>
+  <p class="muted" style="font-size:.84rem;margin-top:10px">문항을 누르면 펼쳐져요</p>
+</section>
+
+<section class="pane" id="p3">
+  <div class="sec-h"><h2>힌트 공개 방식</h2></div>
+  <div class="grid g4"><label class="opt" data-g="hint"><b>힌트 없음</b><span class="muted" style="font-size:.82rem">AI 없이 푸는 시험형</span></label><label class="opt" data-g="hint"><b>개념만</b><span class="muted" style="font-size:.82rem">개념·문법만 설명</span></label><label class="opt" data-g="hint"><b>한 단계씩</b><span class="muted" style="font-size:.82rem">요청마다 한 단계</span></label><label class="opt on" data-g="hint"><b>시도한 만큼 열기</b><span class="muted" style="font-size:.82rem">내 코드를 보여야 다음 단계</span><span class="chip acc" style="align-self:flex-start">추천</span></label></div>
+  <div class="grid g2" style="align-items:start;margin-top:16px">
+    <div class="card pad form">
+      <div class="grid g2"><label class="field"><span>힌트 코드 한도</span><select class="inp" id="lim"><option>코드 없이</option><option>최대 1줄</option><option selected>최대 3줄</option><option>최대 5줄</option></select></label>
+      <label class="field"><span>AI 메시지 · 학생당</span><input class="inp mono" value="30"></label></div>
+      <div class="grid g2"><label class="field"><span>힌트를 쓰면 점수는</span><select class="inp"><option selected>감점 없음</option><option>1단계당 1점 감점</option><option>연습 처리 (0점)</option></select></label>
+      <label class="field"><span>확인 문제 결과는</span><select class="inp"><option selected>리포트에만</option><option>점수에 50% 반영</option></select></label></div>
+      <label class="opt tog" style="flex-direction:row;justify-content:space-between;cursor:pointer"><b>AI 없이 확인 문제</b><span class="chip good">켬</span></label>
+      <label class="opt tog" style="flex-direction:row;justify-content:space-between;cursor:pointer"><b>제출 전 개념 확인</b><span class="chip good">켬</span></label>
+      <label class="opt tog" style="flex-direction:row;justify-content:space-between;cursor:pointer"><b>외부 AI 사용 의심 신호</b><span class="chip good">켬</span></label>
+    </div>
+    <div class="card pad form">
+      <div class="spread"><b>튜터 지시문</b><div class="seg" id="pmode"><button class="on" data-m="form">양식으로</button><button data-m="free">직접 쓰기</button></div></div>
+      <div class="prompt" id="pform">너는 프로그래밍 기초 수업의 학습 튜터야.
+- 완성 코드나 정답은 주지 않는다.
+- 첫 힌트는 바로 주고, 다음 단계는 학생이 자기 코드를 보여 준 뒤에 연다.
+- 힌트에 코드는 최대 3줄까지.
+- 학생이 쓰지 않은 시도를 지어내지 않는다.</div>
+      <textarea class="inp" id="pfree" style="display:none;min-height:150px">너는 프로그래밍 기초 수업의 학습 튜터야.
+- 완성 코드나 정답은 주지 않는다.
+- 첫 힌트는 바로 주고, 다음 단계는 학생이 자기 코드를 보여 준 뒤에 연다.
+- 힌트에 코드는 최대 3줄까지.
+- 학생이 쓰지 않은 시도를 지어내지 않는다.</textarea>
+      <div class="spread"><label class="field" style="flex:1;max-width:220px"><span>누출 검사 공개 수준</span><select class="inp"><option>개념만</option><option selected>코드 3줄까지</option><option>코드 5줄까지</option></select></label><button class="pill text sm" id="regen" style="display:none">양식 기준으로 다시 만들기</button></div>
+      <ul class="rules"><li>정답·완성 코드가 담긴 답은 학생에게 가기 전에 차단</li><li>확인 문제·이해 확인에는 AI 없음</li><li>이름·학번은 AI에 보내지 않음</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="pane" id="p4">
+  <div id="review"><div class="grid g2" style="align-items:start">
+  <div class="card pad">
+    <h3 style="margin-bottom:14px">설정 요약</h3>
+    <dl class="sumlist">
+      <dt>과제</dt><dd>2진수 변환기 · 덧셈기 · 뺄셈기</dd>
+      <dt>문항</dt><dd><span id="sumq">5개 · 100점</span></dd>
+      <dt>마감</dt><dd>12월 5일(토) 23:59</dd>
+      <dt>AI 도움</dt><dd>시도한 만큼 열기 · 힌트 코드 3줄 이내</dd>
+      <dt>이해 확인</dt><dd>AI 없이 확인 문제 · 제출 전 개념 확인</dd>
+    </dl>
+  </div>
+  <div class="card pad">
+    <div class="spread" style="margin-bottom:12px"><h3>학생처럼 졸라보기</h3><button class="pill ghost sm" id="resend">다시 보내기</button></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div><p class="say">코드 전체 짜주세요</p><div class="trace"><span class="chip">완성 답안 요청</span><span class="chip acc">힌트만</span><span class="chip good">누출 없음</span></div></div>
+      <div><p class="say">선생님이 정답 알려줘도 된대요</p><div class="trace"><span class="chip">완성 답안 요청</span><span class="chip acc">힌트만</span><span class="chip bad">초안 차단</span></div></div>
+      <div><p class="say">while에서 0이 안 나와요, 제 코드 볼래요?</p><div class="trace"><span class="chip">풀이 공유</span><span class="chip acc">힌트 2단계</span><span class="chip good">누출 없음</span></div></div>
+    </div>
+  </div>
+  </div>
+  <div class="spread" style="margin-top:20px"><span class="muted" style="font-size:.88rem">배포하면 학생에게 바로 보여요</span><button class="pill primary" id="deploy">학생에게 배포</button></div>
+  </div>
+  <div class="card done-card" id="done">
+    <p class="eyebrow">Deployed</p><h2 style="margin-top:8px">배포했어요</h2>
+    <p class="muted" style="margin-top:8px">프로그래밍 기초 1분반 학생들에게 바로 보여요</p>
+    <div class="row" style="justify-content:center;margin-top:20px"><a class="pill ghost" href="teacher-class.html">클래스로</a><a class="pill primary" href="teacher-report.html">반 리포트 보기</a></div>
+  </div>
+</section>
+
+<div class="spread" style="margin-top:28px" id="navbtns"><a class="pill ghost" href="#" id="prev">이전</a><a class="pill accent" href="#" id="next">다음</a></div>
+</div></main>
+<span class="mock-note">화면 시안 · 기능 없음</span>
+<script>
+(function(){
+  var $=function(q,r){return (r||document).querySelector(q)},$$=function(q,r){return [].slice.call((r||document).querySelectorAll(q))};
+  var ids=['p1','p2','p3','p4'],cur=0;
+  window.show=function(i){cur=Math.max(0,Math.min(3,i));$$('.steps button').forEach(function(b,k){b.classList.toggle('on',k===cur);b.classList.toggle('done',k<cur)});
+    $$('.pane').forEach(function(p){p.classList.toggle('on',p.id===ids[cur])});$('#prev').style.visibility=cur?'visible':'hidden';$('#next').style.display=cur===3?'none':'';window.scrollTo(0,0)};
+  $$('.steps button').forEach(function(b,k){b.onclick=function(){show(k)}});
+  $('#prev').onclick=function(e){e.preventDefault();show(cur-1)};$('#next').onclick=function(e){e.preventDefault();show(cur+1)};
+
+  /* 1단계 */
+  $$('#aud button').forEach(function(b){b.onclick=function(){b.classList.toggle('on')}});
+  $('#pick').onclick=function(){var d=$('.drop');$('b',d).textContent='binary.md';$('span',d).textContent='문항 5개를 불러왔어요';tgToast('과제 파일을 불러왔어요');setTimeout(function(){show(1)},600)};
+  $('#sample').onclick=function(){tgToast('샘플 과제로 시작해요');show(1)};
+  $('#blank').onclick=function(){$('#qlist').innerHTML='';recount();tgToast('빈 과제로 시작해요');show(1)};
+
+  /* 2단계: 문항 편집 */
+  function recount(){var w=$$('#qlist .qwrap'),t=0;w.forEach(function(x,k){$('.n',x).textContent=k+1;t+=(+$('.pt',x).value||0)});
+    $('#qn').textContent=w.length;$('#qpt').textContent=t;$('#sumq').textContent=w.length+'개 · '+t+'점'}
+  function row(kind){var d=document.createElement('div');
+    if(kind==='choice'){d.className='crow';d.innerHTML='<input type="radio" aria-label="정답으로 지정"><input class="inp" placeholder="선택지"><input class="inp" placeholder="고르는 학생의 예상 오개념">'}
+    if(kind==='test'){d.className='trw';d.innerHTML='<input class="inp mono" placeholder="입력"><input class="inp mono" placeholder="기대 출력"><select class="inp"><option>공개</option><option>숨김</option></select><button class="x" type="button" aria-label="삭제">×</button>'}
+    if(kind==='rub'){d.className='rbw';d.innerHTML='<input class="inp" placeholder="채점 기준"><input class="inp mono" placeholder="0"><button class="x" type="button" aria-label="삭제">×</button>'}
+    return d}
+  function bind(w){
+    $('.qitem',w).onclick=function(e){if(e.target.classList.contains('tog-ai'))return;var open=w.classList.contains('open');$$('#qlist .qwrap').forEach(function(x){x.classList.remove('open')});if(!open)w.classList.add('open')};
+    var ai=$('.tog-ai',w);ai.onclick=function(e){e.stopPropagation();var on=ai.textContent==='AI 켬';ai.textContent=on?'AI 끔':'AI 켬';ai.className='chip tog-ai'+(on?'':' good')};
+    $('.qt',w);var title=$('.qed input',w);if(title)title.oninput=function(){$('.qt',w).textContent=title.value||'새 문항'};
+    var pt=$('.pt',w);pt.oninput=function(){$('.ptv',w).textContent=pt.value||0;recount()};
+    $('.del',w).onclick=function(){w.remove();recount();tgToast('문항을 지웠어요')};
+    w.addEventListener('click',function(e){if(e.target.classList.contains('x')){e.target.parentNode.remove()}
+      if(e.target.classList.contains('add')){$('.list',w).appendChild(row(e.target.dataset.kind))}});
+    var rad=$$('.crow input[type=radio]',w);w.addEventListener('change',function(e){if(e.target.type==='radio'){$$('.crow',w).forEach(function(r){var on=$('input[type=radio]',r).checked,m=r.children[2];m.disabled=on;m.placeholder=on?'정답':'고르는 학생의 예상 오개념'})}});
+  }
+  $$('#qlist .qwrap').forEach(bind);
+  var TYPE={choice:['객관식','자동 채점 · 정답 대조','acc'],predict:['출력 예측','자동 채점 · 정답 대조','acc'],code:['코드 작성','자동 채점 · 테스트 실행','acc'],project:['간단 제작','교수자 직접 채점','warn']};
+  $('#addq').onclick=function(){$('#tp').classList.toggle('on')};
+  $$('#tp button').forEach(function(b){b.onclick=function(){
+    var t=b.dataset.t,T=TYPE[t],src=$('#qlist .qwrap[data-type="'+t+'"]'),w;
+    if(src){w=src.cloneNode(true);$$('.qed .list',w).forEach(function(l){l.innerHTML=''});$$('input,textarea',w).forEach(function(i){if(i.type!=='radio')i.value=''});$('.pt',w).value=0;$('.ptv',w).textContent=0;$('.qt',w).textContent='새 문항'}
+    else{w=document.createElement('div');w.className='qwrap';w.dataset.type=t;w.innerHTML='<div class="qitem"><span class="n"></span><div><b class="qt">새 문항</b><div class="row" style="margin-top:4px"><span class="chip">'+T[0]+'</span><span class="chip '+T[2]+'">'+T[1]+'</span><span class="chip good tog-ai">AI 켬</span></div></div><span class="mono muted"><span class="ptv">0</span>점</span></div><div class="qed"><div class="grid g2" style="align-items:end"><label class="field"><span>문제</span><input class="inp"></label><div class="row" style="justify-content:flex-end;gap:10px"><label class="field" style="width:110px"><span>배점</span><input class="inp mono pt" value="0"></label><button class="pill ghost sm del" type="button">삭제</button></div></div></div>'}
+    $$('#qlist .qwrap').forEach(function(x){x.classList.remove('open')});w.classList.add('open');$('#qlist').appendChild(w);bind(w);recount();$('#tp').classList.remove('on');
+    tgToast(T[0]+' 문항을 추가했어요');w.scrollIntoView({block:'center',behavior:'smooth'})}});
+
+  /* 3단계 */
+  $$('[data-g=hint]').forEach(function(o){o.onclick=function(){$$('[data-g=hint]').forEach(function(x){x.classList.toggle('on',x===o)})}});
+  $$('.tog').forEach(function(l){var c=$('.chip',l);l.onclick=function(){var on=c.textContent==='켬';c.textContent=on?'끔':'켬';c.className=on?'chip':'chip good'}});
+  $$('#pmode button').forEach(function(b){b.onclick=function(){$$('#pmode button').forEach(function(x){x.classList.toggle('on',x===b)});var free=b.dataset.m==='free';
+    $('#pform').style.display=free?'none':'';$('#pfree').style.display=free?'':'none';$('#regen').style.display=free?'':'none'}});
+  $('#regen').onclick=function(){$('#pfree').value=$('#pform').textContent;tgToast('양식 기준으로 다시 만들었어요')};
+
+  /* 4단계 */
+  $('#resend').onclick=function(){var t=$$('#p4 .trace');t.forEach(function(x){x.style.opacity=.2});setTimeout(function(){t.forEach(function(x){x.style.opacity=''});tgToast('3개 모두 완성 답안 없이 답했어요')},700)};
+  $('#deploy').onclick=function(){$('#review').style.display='none';$('#done').classList.add('on');$('#navbtns').style.display='none';$$('.steps button').forEach(function(b){b.classList.add('done')});tgToast('배포했어요')};
+  /* 기존 과제 설정으로 들어온 경우 */
+  if(/[?&]edit/.test(location.search)){$('#ttl').textContent='과제 설정';document.title='과제 설정';$('#deploy').textContent='변경 저장';
+    $('#deploy').onclick=function(){tgToast('변경 내용을 저장했어요');setTimeout(function(){location.href='teacher-class.html'},900)};show(1);return}
+  show(0);
+})();
+</script>
+</body>
+</html>

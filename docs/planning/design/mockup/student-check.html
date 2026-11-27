@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이해 확인</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="theme.js"></script>
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in">
+<a class="logo" href="student-assignments.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z" fill="#1d6b5f"/><path d="M11 12.5 14.5 16 11 19.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="18.2" width="5.5" height="2.2" rx="1.1" fill="#fff"/><circle cx="21.5" cy="10.5" r="2" fill="#7fd6c8"/></svg>ThinkGuard</a>
+<nav class="menu"><a class="on" href="student-assignments.html">내 과제</a><a class="" href="student-join.html?in=1">클래스 참여</a></nav>
+<div class="nav-right"><span class="who"><span class="avatar">04</span><span class="mono">20260004</span></span>
+<a class="pill text" href="student-mypage.html">마이페이지</a><a class="pill ghost sm" href="../main_page_design.html">나가기</a></div>
+</div></header>
+<section class="head"><div class="wrap"><div class="head-row"><div><a class="muted" href="student-assignments.html" style="font-size:.9rem">← 내 과제</a><p class="eyebrow">Understanding check</p><h1>이해 확인</h1><p class="sub">AI 없이 · 한 번만 낼 수 있어요</p></div></div></div></section>
+<main><div class="wrap" style="max-width:820px;display:flex;flex-direction:column;gap:16px" id="cbody">
+<div class="card pad" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;text-align:center">
+  <div><p class="muted" style="font-size:.8rem">도움</p><b>AI 없음</b></div>
+  <div><p class="muted" style="font-size:.8rem">예상 시간</p><b>약 3~5분</b></div>
+  <div><p class="muted" style="font-size:.8rem">점수</p><b>자동 반영 안 됨</b></div>
+</div>
+<div class="card pad form">
+  <h3>내 코드 설명</h3>
+  <div class="answer" style="max-height:150px">while (n > 0) {
+    bits[len++] = '0' + n % 2;
+    n /= 2;
+}</div>
+  <label class="field"><span>입력이 어떻게 출력까지 가나요? 요구사항이 바뀌면 어디를 고치나요?</span><textarea class="inp"></textarea></label>
+</div>
+<div class="card">
+  <div class="item-q"><span class="chip">확인 문제 1</span><p style="margin-top:8px">2진수 <span class="mono">1101</span>을 10진수로?</p>
+    <div class="choices"><label><input type="radio" name="a"> 13</label><label><input type="radio" name="a"> 11</label><label><input type="radio" name="a"> 1101</label><label><input type="radio" name="a"> 3</label></div>
+    <div class="conf"><span class="muted" style="font-size:.84rem">자신감</span><div class="seg"><button class="on">확신</button><button>애매</button><button>모름</button></div></div></div>
+  <div class="item-q"><span class="chip">확인 문제 2</span><p style="margin-top:8px"><span class="mono">n = 6</span>이면 출력은?</p>
+    <input class="inp mono" style="margin-top:10px;max-width:220px" placeholder="출력">
+    <div class="conf"><span class="muted" style="font-size:.84rem">자신감</span><div class="seg"><button>확신</button><button class="on">애매</button><button>모름</button></div></div></div>
+</div>
+<div class="spread"><span class="muted" style="font-size:.86rem">정답은 결과 공개 뒤 내 리포트에서</span><button class="pill primary" id="csub">제출</button></div>
+</div>
+<div class="wrap" id="cdone" style="max-width:620px;display:none"><div class="card pad" style="text-align:center;padding:40px 24px">
+  <p class="eyebrow">Done</p><h2 style="margin-top:8px">이해 확인을 제출했어요</h2>
+  <p class="muted" style="margin-top:8px">교수자가 결과를 공개하면 내 리포트에서 함께 볼 수 있어요</p>
+  <p class="muted" style="font-size:.84rem;margin-top:16px">최종 제출 → 이해 확인 → <b style="color:var(--fg)">결과 공개 후 내 리포트</b></p>
+  <a class="pill primary" href="student-assignments.html#checked" style="margin-top:20px">내 과제로</a>
+</div></div></main>
+<span class="mock-note">화면 시안 · 기능 없음</span>
+<script>document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)))
+document.getElementById('csub').onclick=function(){document.getElementById('cbody').style.display='none';document.getElementById('cdone').style.display='';window.scrollTo(0,0)};
+</script>
+</body>
+</html>

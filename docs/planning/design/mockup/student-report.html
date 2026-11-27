@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내 리포트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="theme.js"></script>
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in">
+<a class="logo" href="student-assignments.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z" fill="#1d6b5f"/><path d="M11 12.5 14.5 16 11 19.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="18.2" width="5.5" height="2.2" rx="1.1" fill="#fff"/><circle cx="21.5" cy="10.5" r="2" fill="#7fd6c8"/></svg>ThinkGuard</a>
+<nav class="menu"><a class="on" href="student-assignments.html">내 과제</a><a class="" href="student-join.html?in=1">클래스 참여</a></nav>
+<div class="nav-right"><span class="who"><span class="avatar">04</span><span class="mono">20260004</span></span>
+<a class="pill text" href="student-mypage.html">마이페이지</a><a class="pill ghost sm" href="../main_page_design.html">나가기</a></div>
+</div></header>
+
+<section class="head"><div class="wrap"><div class="head-row"><div><a class="muted" href="student-assignments.html" style="font-size:.9rem">← 내 과제</a><p class="eyebrow">My report</p><h1>2진수 변환기 · 덧셈기 · 뺄셈기</h1></div><span class="chip good">결과 공개됨</span></div></div></section>
+<main><div class="wrap">
+<div class="grid g3">
+  <div class="card pad"><p class="muted" style="font-size:.84rem">점수</p><p class="big" style="margin-top:8px">70<small> / 100</small></p></div>
+  <div class="card pad"><p class="muted" style="font-size:.84rem">받은 힌트</p><p class="big" style="margin-top:8px">3<small>단계</small></p></div>
+  <div class="card pad"><p class="muted" style="font-size:.84rem">확신했는데 틀림</p><p class="big" style="margin-top:8px;color:var(--warn)">1<small>문제</small></p></div>
+</div>
+<section class="sec grid g2" style="align-items:start">
+  <div><div class="sec-h"><h2>개념별 상태</h2></div><div class="card">
+    <div class="concept"><b>나머지로 2진수 만들기</b><span class="chip good">이해함</span><small>문항 2 · 확인 문제도 정답</small></div>
+    <div class="concept"><b>자리값 읽기</b><span class="chip bad">다시 보기</span><small>문항 1은 맞혔지만 확인 문제에서 틀림</small></div>
+    <div class="concept"><b>경계값 0 처리</b><span class="chip warn">애매</span><small>문항 3 · 힌트 2단계로 통과</small></div>
+  </div></div>
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div><div class="sec-h"><h2>나의 오개념</h2></div><div class="card pad"><b>자리값을 왼쪽부터 읽음</b><p class="muted" style="font-size:.86rem;margin-top:4px">1101 → 11 로 답함 · 오른쪽 끝이 1의 자리예요</p></div></div>
+    <div><div class="sec-h"><h2>착각 주의 개념</h2></div><div class="card pad" style="border-left:3px solid var(--warn)"><b>2진수 → 10진수 바꾸기</b><p class="muted" style="font-size:.86rem;margin-top:4px">"확신"으로 골랐는데 틀렸어요</p></div></div>
+    <div><div class="sec-h"><h2>다음에 볼 것</h2></div><div class="card pad"><ul class="list-plain"><li>1101, 1011을 직접 10진수로 바꿔 보기</li><li>n = 0일 때 내 코드 따라가 보기</li></ul></div></div>
+  </div>
+</section>
+<section class="sec"><div class="sec-h"><h2>문항별 결과와 정답</h2></div>
+<div class="card tbl"><table>
+  <tr><th>문항</th><th>유형</th><th>내 결과</th><th>정답 · 풀이 방향</th></tr>
+  <tr><td>1</td><td>객관식</td><td><span class="chip good">정답</span></td><td>① 11 · 8 + 0 + 2 + 1</td></tr>
+  <tr><td>2</td><td>출력 예측</td><td><span class="chip good">정답</span></td><td class="mono">1101</td></tr>
+  <tr><td>3</td><td>코드 작성</td><td>테스트 6/6 · 힌트 2</td><td>0이면 먼저 0을 출력하고 끝내기</td></tr>
+  <tr><td>4</td><td>코드 작성</td><td><span class="chip bad">테스트 4/6</span></td><td>오른쪽 자리부터 더하고 올림을 넘기기</td></tr>
+  <tr><td>5</td><td>간단 제작</td><td>30 / 35</td><td>음수 처리 좋아요 · 앞자리 0 정리 빠짐</td></tr>
+</table></div></section>
+</div></main>
+<span class="mock-note">화면 시안 · 기능 없음</span>
+</body>
+</html>

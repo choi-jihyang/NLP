@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>반 리포트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="theme.js"></script>
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in">
+<a class="logo" href="teacher-classes.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z" fill="#1d6b5f"/><path d="M11 12.5 14.5 16 11 19.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="18.2" width="5.5" height="2.2" rx="1.1" fill="#fff"/><circle cx="21.5" cy="10.5" r="2" fill="#7fd6c8"/></svg>ThinkGuard</a>
+<nav class="menu"><a class="on" href="teacher-classes.html">내 클래스</a></nav>
+<div class="nav-right"><span class="who"><span class="avatar">김</span>김교수</span>
+<a class="pill text" href="pricing.html">요금제</a><a class="pill text" href="teacher-mypage.html">마이페이지</a><a class="pill ghost sm" href="../main_page_design.html">로그아웃</a></div>
+</div></header>
+
+<section class="head"><div class="wrap"><div class="head-row"><div><a class="muted" href="teacher-class.html" style="font-size:.9rem">← 프로그래밍 기초 1분반</a><p class="eyebrow">Report</p><h1>2진수 변환기 · 반 리포트</h1><p class="sub">최종 제출 3 / 5명 기준</p></div><a class="pill accent sm" href="teacher-grading.html">간단 제작 채점 3</a></div></div></section>
+<main><div class="wrap">
+<div class="grid g4">
+  <div class="card stat"><p class="k">제출</p><p class="v">3<small> / 5명</small></p></div>
+  <div class="card stat"><p class="k">도움 받은 원문제 정답률</p><p class="v">67<small>%</small></p><p class="muted" style="font-size:.78rem;margin-top:4px">자동 채점 4문항 평균</p></div>
+  <div class="card stat alert"><p class="k">혼자 푼 확인 문제 정답률</p><p class="v">50<small>%</small></p><p style="font-size:.78rem;margin-top:4px;color:var(--warn)">원문제보다 17%p 낮아요</p></div>
+  <div class="card stat"><p class="k">혼자 푼 문항 개념 확인</p><p class="v">2<small> / 3명</small></p><p class="muted" style="font-size:.78rem;margin-top:4px">1명은 설명 부족</p></div>
+</div>
+
+<section class="sec"><div class="sec-h"><h2>AI와 함께 vs 혼자서</h2><div class="legend"><span><i></i>원문제</span><span><i class="alone"></i>확인 문제</span></div></div>
+<div class="card pad bars">
+  <div><div class="brow"><span>문항 1</span><div class="track"><i style="width:67%"></i></div><b>67%</b></div><div class="brow" style="margin-top:4px"><span></span><div class="track"><i class="alone" style="width:33%"></i></div><b>33%</b></div></div><div><div class="brow"><span>문항 2</span><div class="track"><i style="width:100%"></i></div><b>100%</b></div><div class="brow" style="margin-top:4px"><span></span><div class="track"><i class="alone" style="width:67%"></i></div><b>67%</b></div></div><div><div class="brow"><span>문항 3</span><div class="track"><i style="width:67%"></i></div><b>67%</b></div><div class="brow" style="margin-top:4px"><span></span><span class="none">확인 문제 없음</span><b></b></div></div><div><div class="brow"><span>문항 4</span><div class="track"><i style="width:33%"></i></div><b>33%</b></div><div class="brow" style="margin-top:4px"><span></span><span class="none">확인 문제 없음</span><b></b></div></div>
+  <div class="brow"><span>문항 5</span><span class="none">간단 제작 · 채점 중</span><b></b></div>
+</div></section>
+
+<section class="sec"><div class="sec-h"><h2>반 전체가 틀린 지점</h2></div>
+<div class="grid g3" style="align-items:start">
+  <div class="card pad"><h3 style="font-size:1rem;margin-bottom:14px">문항 1 · 선택 비율</h3><div class="bars">
+    <div class="mrow"><span>① 11</span><div class="track"><i class="good" style="width:67%"></i></div><b class="mono">67%</b></div>
+    <div class="mrow"><span>② 13</span><div class="track"><i class="bad" style="width:33%"></i></div><b class="mono">33%</b><small>자리값을 왼쪽부터 읽음</small></div>
+    <div class="mrow"><span>③ 1011</span><div class="track"><i style="width:0"></i></div><b class="mono">0%</b></div>
+  </div></div>
+  <div class="card pad"><h3 style="font-size:1rem;margin-bottom:14px">문항 2 · 자주 나온 오답</h3><div class="bars">
+    <div class="mrow"><span class="mono">1011</span><div class="track"><i class="bad" style="width:33%"></i></div><b class="mono">1명</b><small>나머지를 거꾸로 읽지 않음</small></div>
+  </div></div>
+  <div class="card pad"><h3 style="font-size:1rem;margin-bottom:14px">문항 3 · 자주 실패한 테스트</h3><div class="bars">
+    <div class="mrow"><span class="mono">입력 0</span><div class="track"><i class="bad" style="width:33%"></i></div><b class="mono">1명</b><small>0일 때 빈 출력</small></div>
+  </div></div>
+</div>
+<div class="card pad" style="margin-top:16px;border-left:3px solid var(--accent)">
+  <h3 style="font-size:1rem;margin-bottom:10px">다음 수업 보충 제안</h3>
+  <ul class="list-plain">
+    <li>자리값은 오른쪽부터 · 1101을 10진수로 바꾸는 예제 하나</li>
+    <li>나머지를 모은 뒤 거꾸로 출력하는 이유 짚기</li>
+    <li>0 같은 경계값을 먼저 테스트하는 습관</li>
+  </ul>
+</div></section>
+
+<section class="sec"><div class="sec-h"><h2>AI로는 풀었지만 혼자서는 못 푼 학생</h2></div>
+<div class="card tbl"><table>
+  <tr><th>학생</th><th>문항</th><th>원문제</th><th>받은 힌트</th><th>확인 문제 답</th><th>예상 원인</th></tr>
+  <tr><td class="mono"><a class="sid" href="teacher-record.html">20260002</a></td><td>2</td><td><span class="chip good">정답</span></td><td>2단계</td><td><span class="chip bad">011</span></td><td>나머지를 거꾸로 읽지 않음</td></tr>
+  <tr><td class="mono"><a class="sid" href="teacher-record.html">20260001</a></td><td>1</td><td><span class="chip good">정답</span></td><td>0단계</td><td><span class="chip bad">11</span></td><td>자리값 계산 실수</td></tr>
+</table></div></section>
+
+<section class="sec"><div class="sec-h"><h2>외부 AI 사용 의심 신호</h2><span class="muted" style="font-size:.84rem">참고용 · 확정 아님</span></div>
+<div class="card tbl"><table>
+  <tr><th>학생</th><th>문항</th><th>신호</th><th>강도</th></tr>
+  <tr><td class="mono"><a class="sid" href="teacher-record.html">20260003</a></td><td>4</td><td>붙여넣기 788자 · 풀이 2분</td><td><span class="chip bad">높음</span></td></tr>
+  <tr><td class="mono"><a class="sid" href="teacher-record.html">20260001</a></td><td>5</td><td>개념 확인 답변 말투</td><td><span class="chip warn">보통</span></td></tr>
+</table></div></section>
+</div></main>
+<span class="mock-note">화면 시안 · 기능 없음</span>
+</body>
+</html>
