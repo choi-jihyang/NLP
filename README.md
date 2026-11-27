@@ -106,6 +106,13 @@ npm run dev
   cd frontend && API_PROXY_TARGET=http://localhost:8010 npm run dev
   ```
 
+### 한 번에 실행
+위 설치를 마친 뒤 루트에서:
+```bash
+make dev
+```
+- 백엔드(8000)와 프론트엔드(5173)가 함께 뜬다. Ctrl+C로 둘 다 종료.
+
 ### 테스트 · 검사
 ```bash
 cd backend && .venv/bin/pytest && .venv/bin/ruff check .
