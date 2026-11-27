@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>채점</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="theme.js"></script>
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in">
+<a class="logo" href="teacher-classes.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z" fill="#1d6b5f"/><path d="M11 12.5 14.5 16 11 19.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="18.2" width="5.5" height="2.2" rx="1.1" fill="#fff"/><circle cx="21.5" cy="10.5" r="2" fill="#7fd6c8"/></svg>ThinkGuard</a>
+<nav class="menu"><a class="on" href="teacher-classes.html">내 클래스</a></nav>
+<div class="nav-right"><span class="who"><span class="avatar">김</span>김교수</span>
+<a class="pill text" href="pricing.html">요금제</a><a class="pill text" href="teacher-mypage.html">마이페이지</a><a class="pill ghost sm" href="../main_page_design.html">로그아웃</a></div>
+</div></header>
+<section class="head"><div class="wrap"><div class="head-row"><div><a class="muted" href="teacher-class.html" style="font-size:.9rem">← 프로그래밍 기초 1분반</a><p class="eyebrow">Grading</p><h1>간단 제작 채점</h1><p class="sub">2진수 변환기 · 문항 5</p></div><div class="seg" id="gtab"><button class="on" data-f="wait">대기 <span>2</span></button><button data-f="done">완료 <span>1</span></button></div></div></div></section>
+<main><div class="wrap" style="display:flex;flex-direction:column;gap:16px">
+<div class="card pad gcard fade" style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:24px">
+  <div><div class="row" style="margin-bottom:10px"><b class="mono">20260001</b><span class="chip">문항 5</span><span class="chip warn">대기</span></div><div class="answer">/* 빌림(borrow) 방식 */
+int compare_binary(const char *a, const char *b) {
+    int la = strlen(a), lb = strlen(b);
+    if (la != lb) return la > lb ? 1 : -1;
+    return strcmp(a, b);
+}
+...</div></div>
+  <div class="form">
+    <div class="rubric">
+      <label><input type="checkbox" data-pt="10" checked> 빌림 처리 · 10</label><label><input type="checkbox" data-pt="10" checked> 음수 결과 · 10</label>
+      <label><input type="checkbox" data-pt="5"> 앞자리 0 정리 · 5</label><label><input type="checkbox" data-pt="5" checked> 정수 변환 없이 · 5</label><label><input type="checkbox" data-pt="5" checked> 방식 주석 · 5</label>
+    </div>
+    <label class="field"><span>코멘트</span><textarea class="inp" style="min-height:64px"></textarea></label>
+    <div class="spread"><div class="score"><input class="inp mono" value="" placeholder="0"><span class="muted">/ 35</span></div><button class="pill primary sm" data-save>저장</button></div>
+  </div>
+</div><div class="card pad gcard fade" style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:24px">
+  <div><div class="row" style="margin-bottom:10px"><b class="mono">20260003</b><span class="chip">문항 5</span><span class="chip warn">붙여넣기 788자</span><span class="chip warn">대기</span></div><div class="answer">/* 빌림(borrow) 방식 */
+int compare_binary(const char *a, const char *b) {
+    int la = strlen(a), lb = strlen(b);
+    if (la != lb) return la > lb ? 1 : -1;
+    return strcmp(a, b);
+}
+...</div></div>
+  <div class="form">
+    <div class="rubric">
+      <label><input type="checkbox" data-pt="10" checked> 빌림 처리 · 10</label><label><input type="checkbox" data-pt="10" checked> 음수 결과 · 10</label>
+      <label><input type="checkbox" data-pt="5"> 앞자리 0 정리 · 5</label><label><input type="checkbox" data-pt="5" checked> 정수 변환 없이 · 5</label><label><input type="checkbox" data-pt="5" checked> 방식 주석 · 5</label>
+    </div>
+    <label class="field"><span>코멘트</span><textarea class="inp" style="min-height:64px"></textarea></label>
+    <div class="spread"><div class="score"><input class="inp mono" value="" placeholder="0"><span class="muted">/ 35</span></div><button class="pill primary sm" data-save>저장</button></div>
+  </div>
+</div><div class="card pad gcard fade" style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:24px">
+  <div><div class="row" style="margin-bottom:10px"><b class="mono">20260002</b><span class="chip">문항 5</span><span class="chip good">30 / 35</span></div><div class="answer">/* 빌림(borrow) 방식 */
+int compare_binary(const char *a, const char *b) {
+    int la = strlen(a), lb = strlen(b);
+    if (la != lb) return la > lb ? 1 : -1;
+    return strcmp(a, b);
+}
+...</div></div>
+  <div class="form">
+    <div class="rubric">
+      <label><input type="checkbox" data-pt="10" checked> 빌림 처리 · 10</label><label><input type="checkbox" data-pt="10" checked> 음수 결과 · 10</label>
+      <label><input type="checkbox" data-pt="5"> 앞자리 0 정리 · 5</label><label><input type="checkbox" data-pt="5" checked> 정수 변환 없이 · 5</label><label><input type="checkbox" data-pt="5" checked> 방식 주석 · 5</label>
+    </div>
+    <label class="field"><span>코멘트</span><textarea class="inp" style="min-height:64px">음수 처리 좋아요</textarea></label>
+    <div class="spread"><div class="score"><input class="inp mono" value="30" placeholder="0"><span class="muted">/ 35</span></div><button class="pill primary sm" data-save>저장</button></div>
+  </div>
+</div>
+</div></main>
+<span class="mock-note">화면 시안 · 기능 없음</span>
+
+<script>
+(function(){
+  var cards=[].slice.call(document.querySelectorAll('.gcard')),f='wait';
+  cards.forEach(function(c){c.dataset.st=c.querySelector('.chip.good')?'done':'wait'});
+  function paint(){var n={wait:0,done:0};cards.forEach(function(c){n[c.dataset.st]++;c.style.display=c.dataset.st===f?'grid':'none'});
+    document.querySelectorAll('#gtab button').forEach(function(b){b.classList.toggle('on',b.dataset.f===f);b.querySelector('span').textContent=n[b.dataset.f]})}
+  document.querySelectorAll('#gtab button').forEach(function(b){b.onclick=function(){f=b.dataset.f;paint()}});
+  cards.forEach(function(c){
+    var boxes=c.querySelectorAll('input[data-pt]'),score=c.querySelector('.score input');
+    function sum(){var t=0;boxes.forEach(function(x){if(x.checked)t+=+x.dataset.pt});score.value=t}
+    boxes.forEach(function(x){x.onchange=sum});
+    c.querySelector('[data-save]').onclick=function(){
+      var st=c.querySelector('.row .chip:last-child');st.className='chip good';st.textContent=(score.value||0)+' / 35';
+      var no=c.querySelector('b.mono').textContent;tgToast(no+' 채점을 저장했어요');
+      c.classList.add('out');setTimeout(function(){c.classList.remove('out');c.dataset.st='done';paint()},250)};
+  });
+  paint();
+})();
+</script>
+</body>
+</html>

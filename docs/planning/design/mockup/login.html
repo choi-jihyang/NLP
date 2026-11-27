@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로그인</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="theme.js"></script>
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in">
+<a class="logo" href="../main_page_design.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z" fill="#1d6b5f"/><path d="M11 12.5 14.5 16 11 19.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="18.2" width="5.5" height="2.2" rx="1.1" fill="#fff"/><circle cx="21.5" cy="10.5" r="2" fill="#7fd6c8"/></svg>ThinkGuard</a>
+<div class="nav-right"><a class="pill text" href="login.html">로그인</a><a class="pill primary sm" href="student-join.html">수업 코드로 입장</a></div>
+</div></header>
+
+<main class="center"><div class="card pad narrow" style="width:100%">
+  <p class="chip acc" id="next" style="margin-bottom:14px;display:none"></p>
+  <div class="seg" role="tablist" style="margin-bottom:22px"><button class="on" data-t="in">로그인</button><button data-t="up">계정 만들기</button></div>
+  <form class="form pane on" id="in" onsubmit="return false">
+    <h2 style="font-size:1.5rem">교수자 로그인</h2>
+    <label class="field"><span>이메일</span><input class="inp" type="email" value="teacher@thinkguard.test"></label>
+    <label class="field"><span>비밀번호</span><input class="inp" type="password" value="password"></label>
+    <a class="pill primary" href="teacher-classes.html" style="margin-top:8px">로그인</a>
+  </form>
+  <form class="form pane" id="up" onsubmit="return false">
+    <h2 style="font-size:1.5rem">교수자 계정 만들기</h2>
+    <label class="field"><span>이름</span><input class="inp" placeholder="김교수"></label>
+    <label class="field"><span>이메일</span><input class="inp" type="email" placeholder="name@school.ac.kr"></label>
+    <label class="field"><span>비밀번호 · 8자 이상</span><input class="inp" type="password"></label>
+    <a class="pill primary" href="teacher-class-new.html" style="margin-top:8px">계정 만들기</a>
+  </form>
+  <p class="muted" style="font-size:.86rem;margin-top:18px;text-align:center">학생은 <a href="student-join.html" style="color:var(--accent)">수업 코드로 입장</a></p>
+</div></main>
+<span class="mock-note">화면 시안 · 기능 없음</span>
+<script>document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id===b.dataset.t))})
+var plan=new URLSearchParams(location.search).get('plan');var NAME={small:'Small',medium:'Medium',large:'Large'};
+if(NAME[plan]){
+  var to='teacher-class-new.html?plan='+plan;
+  document.querySelectorAll('.pane .pill.primary').forEach(function(a){a.href=to});
+  var n=document.getElementById('next');n.textContent=NAME[plan]+' 요금제 · 로그인 후 클래스 개설로 이어져요';n.style.display='inline-flex';
+  document.querySelector('.seg button[data-t="up"]').click();
+}</script>
+</body>
+</html>

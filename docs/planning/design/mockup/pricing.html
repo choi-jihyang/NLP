@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>요금제</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="theme.js"></script>
+<style>.plan{display:flex;flex-direction:column}.plan .pill{align-self:stretch;justify-content:center}.plan.feat{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}</style>
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in">
+<a class="logo" href="teacher-classes.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z" fill="#1d6b5f"/><path d="M11 12.5 14.5 16 11 19.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="18.2" width="5.5" height="2.2" rx="1.1" fill="#fff"/><circle cx="21.5" cy="10.5" r="2" fill="#7fd6c8"/></svg>ThinkGuard</a>
+<nav class="menu"><a href="teacher-classes.html">내 클래스</a></nav>
+<div class="nav-right"><span class="who"><span class="avatar">김</span>김교수</span>
+<a class="pill text on" href="pricing.html">요금제</a><a class="pill text" href="teacher-mypage.html">마이페이지</a><a class="pill ghost sm" href="../main_page_design.html">로그아웃</a></div>
+</div></header>
+<section class="head"><div class="wrap"><div class="head-row"><div><p class="eyebrow">Pricing</p><h1>요금제</h1><p class="sub">클래스 하나 · 1년 · 기능은 모두 같아요</p></div><a class="pill accent" href="teacher-class-new.html">클래스 만들러 가기 →</a></div></div></section>
+<main><div class="wrap">
+<div class="grid g3">
+  <div class="card pad plan">
+    <div class="spread"><p class="eyebrow">Small</p></div>
+    <p class="big" style="margin-top:14px">90,000원<small> / 1년</small></p>
+    <p class="muted" style="margin-top:6px">학생 50명까지</p>
+    <a class="pill ghost" href="teacher-class-new.html?plan=small" style="margin-top:22px">이 요금제로 만들기</a>
+  </div>
+  <div class="card pad plan feat">
+    <div class="spread"><p class="eyebrow">Medium</p></div>
+    <p class="big" style="margin-top:14px">150,000원<small> / 1년</small></p>
+    <p class="muted" style="margin-top:6px">학생 100명까지</p>
+    <a class="pill primary" href="teacher-class-new.html?plan=medium" style="margin-top:22px">이 요금제로 만들기</a>
+  </div>
+  <div class="card pad plan">
+    <div class="spread"><p class="eyebrow">Large</p></div>
+    <p class="big" style="margin-top:14px">250,000원<small> / 1년</small></p>
+    <p class="muted" style="margin-top:6px">학생 200명까지</p>
+    <a class="pill ghost" href="teacher-class-new.html?plan=large" style="margin-top:22px">이 요금제로 만들기</a>
+  </div>
+</div>
+<p class="muted" style="font-size:.86rem;margin-top:18px">결제는 클래스를 만들 때 해요 · 기간이 끝나면 마이페이지에서 연장</p>
+</div></main>
+<span class="mock-note">화면 시안 · 기능 없음</span>
+</body>
+</html>

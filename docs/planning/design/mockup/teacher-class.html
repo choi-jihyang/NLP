@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>교수자 · 클래스</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 로그인 후 화면 시안 공통 스타일 — 메인 시안(main_page_design.html)과 같은 결. 색·폰트는 frontend/src/styles/tokens.css 그대로 */
+:root{
+  --bg:#fafcfb; --surface:#fff; --surface-2:#f0f6f4; --line:#dde7e4; --grid:#edf3f1;
+  --fg:#1b2623; --muted:#5f6f6a; --logo:#1d6b5f;
+  --accent:#22887c; --accent-ink:#fff; --accent-soft:#e2f4f0;
+  --good:#2e8a4a; --good-soft:#e4f5e8; --warn:#bd6912; --warn-soft:#fdf0e0; --bad:#c6463a; --bad-soft:#fde8e5;
+  --code-bg:#1f2b29; --code-fg:#e4efec;
+  --f-display:'Hahmlet','Noto Serif KR',serif;
+  --f-body:'IBM Plex Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --r:16px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.25;text-wrap:balance;word-break:keep-all;font-weight:600}
+p{margin:0}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:24px}
+.mono{font-family:var(--f-mono)}
+.muted{color:var(--muted)}
+.eyebrow{font-family:var(--f-mono);font-size:.76rem;letter-spacing:.08em;color:var(--accent);text-transform:uppercase}
+
+/* 헤더: 로고(왼쪽) · 메뉴 · 요금제 · 마이페이지 · 로그아웃(오른쪽) */
+.nav{position:sticky;top:0;z-index:20;backdrop-filter:blur(12px);background:rgba(250,252,251,.85);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;gap:20px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:1.2rem;color:var(--logo)}
+.logo svg{width:30px;height:30px}
+.menu{display:flex;gap:4px;margin-left:8px}
+.menu a{padding:8px 14px;border-radius:99px;color:var(--muted);font-size:.92rem;font-weight:500}
+.menu a:hover{color:var(--fg);background:var(--surface-2)}
+.menu a.on{color:var(--fg);background:var(--surface-2)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:4px}
+.nav-right .who{display:flex;align-items:center;gap:8px;margin-right:8px;font-size:.88rem;color:var(--muted)}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;font-size:.82rem}
+
+/* 버튼 */
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:99px;padding:9px 18px;font-size:.9rem;font-weight:500;border:1px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;transition:filter .15s,background .15s}
+.pill.primary{background:var(--fg);color:#fff}
+.pill.primary:hover{filter:brightness(1.25)}
+.pill.accent{background:var(--accent);color:var(--accent-ink)}
+.pill.ghost{background:var(--surface);border-color:var(--line);color:var(--fg)}
+.pill.ghost:hover{background:var(--surface-2)}
+.pill.text{background:none;color:var(--muted);padding-inline:12px}
+.pill.text:hover{color:var(--fg)}
+.pill.text.on{color:var(--fg)}
+.pill.sm{padding:6px 13px;font-size:.84rem}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;padding:3px 10px;border-radius:99px;background:var(--surface-2);color:var(--muted);font-weight:500;white-space:nowrap}
+.chip.acc{background:var(--accent-soft);color:var(--accent)}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+
+/* 페이지 머리 (그래프 용지) */
+.head{position:relative;border-bottom:1px solid var(--line);overflow:hidden}
+.head::before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(90deg,#000,transparent 85%);-webkit-mask-image:linear-gradient(90deg,#000,transparent 85%)}
+.head .wrap{position:relative;padding-block:44px 36px}
+.head h1{font-size:clamp(1.8rem,3.4vw,2.5rem);margin-top:8px}
+.head .sub{color:var(--muted);margin-top:8px}
+.head-row{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+main{padding-block:32px 80px}
+
+/* 블록 */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.pad{padding:24px}
+.sec{margin-top:40px}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.sec-h h2{font-size:1.35rem}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.spread{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+
+/* 숫자 타일 */
+.stat{padding:20px 22px}
+.stat .k{font-size:.84rem;color:var(--muted)}
+.stat .v{font-family:var(--f-display);font-size:2rem;font-weight:600;line-height:1.2;margin-top:6px}
+.stat .v small{font-size:1rem;color:var(--muted);font-weight:500}
+.stat.alert{border-color:#f1d3ad;background:var(--warn-soft)}
+.stat.alert .v{color:var(--warn)}
+
+/* 할 일 목록 */
+.todo{display:flex;flex-direction:column}
+.todo a{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px 22px;border-top:1px solid var(--line)}
+.todo a:first-child{border-top:0}
+.todo a:hover{background:var(--surface-2)}
+.todo .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.todo .ic.warn{background:var(--warn-soft);color:var(--warn)}
+.todo .ic svg{width:18px;height:18px}
+.todo b{display:block;font-weight:600}
+.todo span.m{font-size:.86rem;color:var(--muted)}
+.todo .go{color:var(--muted);font-size:.86rem}
+
+/* 클래스 카드 */
+.ccard{display:flex;flex-direction:column;gap:16px;padding:24px;transition:border-color .2s,transform .2s}
+.ccard:hover{border-color:var(--accent);transform:translateY(-2px)}
+.ccard h3{font-size:1.25rem}
+.code{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:.92rem;background:var(--surface-2);padding:6px 10px 6px 12px;border-radius:10px}
+.code button{border:0;background:var(--surface);border-radius:6px;font:inherit;font-size:.74rem;padding:2px 8px;color:var(--muted);cursor:pointer}
+.meter{display:flex;flex-direction:column;gap:6px}
+.meter .lbl{display:flex;justify-content:space-between;font-size:.84rem;color:var(--muted)}
+.meter .lbl b{color:var(--fg);font-weight:600}
+.track{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.track i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.ccard .foot{display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid var(--line);font-size:.86rem;color:var(--muted)}
+.ccard.new{border-style:dashed;align-items:center;justify-content:center;text-align:center;color:var(--muted);min-height:260px;background:transparent}
+.ccard.new .plus{width:48px;height:48px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:1.6rem;margin-bottom:4px}
+.ccard.new b{color:var(--fg);font-family:var(--f-display);font-size:1.1rem}
+
+/* 탭 (클래스 안) */
+.subtabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-top:28px;overflow-x:auto}
+.subtabs a{padding:10px 16px 12px;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;white-space:nowrap}
+.subtabs a.on{color:var(--fg);border-bottom-color:var(--accent)}
+.subtabs a .chip{margin-left:6px}
+
+/* 과제 카드 */
+.acard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px 24px;align-items:center;padding:22px 24px}
+.acard h3{font-size:1.15rem}
+.acard .meta{font-size:.86rem;color:var(--muted);margin-top:6px}
+.acard .prog{display:grid;grid-template-columns:minmax(0,260px) auto;gap:12px;align-items:center;margin-top:14px;font-size:.84rem;color:var(--muted)}
+.acard .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+/* 학생 칩 목록 */
+.people{display:flex;flex-wrap:wrap;gap:8px}
+.people a{font-family:var(--f-mono);font-size:.88rem;padding:7px 14px;border:1px solid var(--line);border-radius:99px;background:var(--surface)}
+.people a:hover{border-color:var(--accent);color:var(--accent)}
+
+/* 폼 */
+.field{display:flex;flex-direction:column;gap:6px}
+.field span{font-size:.8rem;font-weight:600;color:var(--muted);letter-spacing:.03em}
+.inp{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;font:inherit;width:100%}
+.inp[readonly]{background:var(--surface-2);color:var(--muted)}
+
+/* 표 */
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:.8rem;padding:12px 16px;border-bottom:1px solid var(--line)}
+td{padding:14px 16px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+.tbl{overflow-x:auto}
+
+/* 마이페이지 */
+.side-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:32px;align-items:start}
+.side{position:sticky;top:88px;display:flex;flex-direction:column;gap:2px}
+.side a{padding:10px 14px;border-radius:10px;color:var(--muted);font-weight:500}
+.side a.on,.side a:hover{background:var(--surface-2);color:var(--fg)}
+.side a.danger{color:var(--bad)}
+.profile{display:flex;align-items:center;gap:18px}
+.profile .avatar{width:64px;height:64px;font-size:1.4rem;font-family:var(--f-display)}
+
+.mock-note{position:fixed;right:16px;bottom:16px;font-family:var(--f-mono);font-size:.72rem;background:var(--fg);color:#fff;padding:6px 12px;border-radius:99px;opacity:.75}
+
+@media (max-width:960px){
+  .g4{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr}
+  .side-layout{grid-template-columns:1fr}
+  .side{position:static;flex-direction:row;overflow-x:auto}
+  .menu{display:none}
+}
+@media (max-width:640px){
+  .wrap{padding-inline:16px}
+  .g3,.g2{grid-template-columns:1fr}
+  .nav-right .who{display:none}
+  .nav-right .pill.text{padding-inline:8px;font-size:.84rem}
+  .acard{grid-template-columns:1fr}
+  .acard .acts{justify-content:flex-start}
+  .acard .prog{grid-template-columns:1fr}
+}
+</style>
+<style>.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:.88rem;opacity:0;transition:.25s;pointer-events:none;z-index:60}.toast.on{opacity:1;transform:translate(-50%,0)}</style>
+<style id="tg-dark">
+/* ===== 추가: 다크모드 · 새 화면 공통 (11/26) ===== */
+html[data-theme="dark"]{
+  --bg:#0f1514; --surface:#151d1b; --surface-2:#1d2725; --line:#2a3633; --grid:#18211f;
+  --fg:#e3ede9; --muted:#93a7a1; --logo:#6fd0c0;
+  --accent:#3fb3a4; --accent-ink:#0b1514; --accent-soft:#163430;
+  --good:#62c47f; --good-soft:#15301f; --warn:#e3a04f; --warn-soft:#33250f; --bad:#ef7b6f; --bad-soft:#3a1a17;
+  --code-bg:#0b1110; --code-fg:#e4efec;
+  color-scheme:dark;
+}
+html[data-theme="dark"] .nav{background:rgba(15,21,20,.85)}
+html[data-theme="dark"] .pill.primary,html[data-theme="dark"] .bub.me,html[data-theme="dark"] .qbar a.on,html[data-theme="dark"] .qbar a.on b{color:var(--bg)}
+html[data-theme="dark"] .stat.alert{border-color:#5a3e1a}
+html[data-theme="dark"] .mock-note{color:var(--bg)}
+html[data-theme="dark"] .logo svg path:first-child{fill:var(--logo)}
+html,body{transition:background-color .2s,color .2s}
+
+.theme-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--fg);display:grid;place-items:center;cursor:pointer;margin-left:4px}
+.theme-btn:hover{background:var(--surface-2)}
+.theme-btn svg{width:17px;height:17px}
+html[data-theme="dark"] .qbar a.on.done{color:var(--bg)}
+</style>
+<script src="theme.js"></script>
+</head>
+<body>
+<!-- 클래스 상세 (/teacher/classes/:classId) -->
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="teacher-classes.html" aria-label="ThinkGuard 내 클래스로">
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z" fill="#1d6b5f"/><path d="M11 12.5 14.5 16 11 19.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="18.2" width="5.5" height="2.2" rx="1.1" fill="#fff"/><circle cx="21.5" cy="10.5" r="2" fill="#7fd6c8"/></svg>
+      ThinkGuard
+    </a>
+    <nav class="menu"><a class="on" href="teacher-classes.html">내 클래스</a></nav>
+    <div class="nav-right">
+      <span class="who"><span class="avatar">김</span>김교수</span>
+      <a class="pill text" href="pricing.html">요금제</a>
+      <a class="pill text" href="teacher-mypage.html">마이페이지</a>
+      <a class="pill ghost sm" href="../main_page_design.html">로그아웃</a>
+    </div>
+  </div>
+</header>
+
+<section class="head">
+  <div class="wrap">
+    <a class="muted" href="teacher-classes.html" style="font-size:.88rem">← 내 클래스</a>
+    <div class="head-row" style="margin-top:8px">
+      <div>
+        <div class="row"><span class="chip good">진행 중</span><span class="chip">SMALL · 50명 이하</span></div>
+        <h1>프로그래밍 기초 1분반</h1>
+        <p class="sub">2026.11.26 – 2027.11.26 · 남은 기간 365일</p>
+      </div>
+      <div class="row">
+        <span class="code">TG-4821 <button type="button">복사</button></span>
+        <a class="pill primary" href="teacher-editor.html">+ 새 과제 만들기</a>
+      </div>
+    </div>
+    <nav class="subtabs">
+      <a class="on" href="teacher-class.html">과제</a>
+      <a href="teacher-students.html">학생 <span class="chip warn">요청 1</span></a>
+      <a href="teacher-ai-defaults.html">AI 기본값</a>
+    </nav>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="grid g4">
+    <div class="card stat"><p class="k">학생</p><p class="v">5<small> / 50명</small></p></div>
+    <div class="card stat"><p class="k">과제</p><p class="v">1</p></div>
+    <div class="card stat"><p class="k">최종 제출</p><p class="v">3<small> / 5명</small></p></div>
+    <div class="card stat alert"><p class="k">채점 대기</p><p class="v">3<small> 건</small></p></div>
+  </div>
+
+  <section class="sec">
+    <div class="sec-h"><h2>과제</h2><a class="pill text" href="teacher-editor.html">+ 새 과제 만들기</a></div>
+    <div class="card acard">
+      <div>
+        <div class="row"><h3>2진수 변환기 · 덧셈기 · 뺄셈기</h3><span class="chip good">진행 중</span><span class="chip acc" id="relchip" style="display:none">결과 공개됨</span></div>
+        <p class="meta">객관식 1 · 출력 예측 1 · 코드 작성 2 · 간단 제작 1 · 마감 12월 5일(토) 23:59 · AI 도움 시도한 만큼 열기</p>
+        <div class="prog"><div class="track"><i style="width:60%"></i></div><span>제출 3 / 5명</span></div>
+      </div>
+      <div class="acts">
+        <a class="pill ghost sm" href="teacher-report.html">리포트</a>
+        <a class="pill ghost sm" href="teacher-grading.html">채점 <span class="chip warn" style="padding:0 7px">3</span></a>
+        <a class="pill ghost sm" href="teacher-editor.html?edit=1">설정</a>
+        <button class="pill primary sm" id="rel" title="점수·정답·내 리포트를 학생에게 공개해요">결과 공개</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-h">
+      <div class="row"><h2>학생</h2><span class="chip warn">참여 요청 1건</span></div>
+      <a class="pill text" href="teacher-students.html">학생 관리 →</a>
+    </div>
+    <div class="card pad">
+      <div class="people">
+        <a href="teacher-record.html">20260001</a><a href="teacher-record.html">20260002</a><a href="teacher-record.html">20260003</a><a href="teacher-record.html">20260004</a><a href="teacher-record.html">20260005</a>
+      </div>
+      <p class="muted" style="font-size:.86rem;margin-top:14px">학생을 누르면 과제별 기록(힌트, 확인 문제, 참고 신호)을 볼 수 있어요.</p>
+    </div>
+  </section>
+</main>
+<span class="mock-note">화면 시안 · 기능 없음</span>
+<script>
+/* 결과 공개: 이 탭에서만 기억하고 학생 화면에서도 반영해요 (시안) */
+(function(){try{localStorage.removeItem('tg-released')}catch(e){}var b=document.getElementById('rel'),c=document.getElementById('relchip'),t=document.createElement('div');t.className='toast';document.body.appendChild(t);
+  function get(){try{return sessionStorage.getItem('tg-released')==='1'}catch(e){return false}}
+  function paint(){var on=get();b.style.display=on?'none':'';c.style.display=on?'':'none'}
+  b.onclick=function(){try{sessionStorage.setItem('tg-released','1')}catch(e){}paint();t.textContent='결과를 공개했어요 · 학생이 내 리포트를 볼 수 있어요';t.classList.add('on');setTimeout(function(){t.classList.remove('on')},2000)};
+  c.style.cursor='pointer';c.title='눌러서 공개 전으로 되돌리기 (시안)';c.onclick=function(){try{sessionStorage.removeItem('tg-released')}catch(e){}paint()};
+  paint()})();
+/* 수업 코드 복사 */
+document.querySelectorAll('.code button').forEach(function(b){b.addEventListener('click',function(e){
+  e.preventDefault();e.stopPropagation();
+  var code=b.parentNode.firstChild.textContent.trim();
+  function done(){var t=b.textContent;b.textContent='복사됨 ✓';b.disabled=true;setTimeout(function(){b.textContent=t;b.disabled=false},1500)}
+  function legacy(){var a=document.createElement('textarea');a.value=code;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove();done()}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(done,legacy);else legacy();
+})});
+</script>
+</body>
+</html>

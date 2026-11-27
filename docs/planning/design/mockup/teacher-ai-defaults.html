@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 기본값</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css">
+<script src="theme.js"></script>
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in">
+<a class="logo" href="teacher-classes.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 2.5 4.5 7v8.2c0 7 4.9 12.4 11.5 14.3 6.6-1.9 11.5-7.3 11.5-14.3V7L16 2.5Z" fill="#1d6b5f"/><path d="M11 12.5 14.5 16 11 19.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="18.2" width="5.5" height="2.2" rx="1.1" fill="#fff"/><circle cx="21.5" cy="10.5" r="2" fill="#7fd6c8"/></svg>ThinkGuard</a>
+<nav class="menu"><a class="on" href="teacher-classes.html">내 클래스</a></nav>
+<div class="nav-right"><span class="who"><span class="avatar">김</span>김교수</span>
+<a class="pill text" href="pricing.html">요금제</a><a class="pill text" href="teacher-mypage.html">마이페이지</a><a class="pill ghost sm" href="../main_page_design.html">로그아웃</a></div>
+</div></header>
+<section class="head">
+  <div class="wrap">
+    <a class="muted" href="teacher-classes.html" style="font-size:.88rem">← 내 클래스</a>
+    <div class="head-row" style="margin-top:8px">
+      <div>
+        <div class="row"><span class="chip good">진행 중</span><span class="chip">SMALL · 50명 이하</span></div>
+        <h1>프로그래밍 기초 1분반</h1>
+        <p class="sub">2026.11.26 – 2027.11.26 · 남은 기간 365일</p>
+      </div>
+      <div class="row">
+        <span class="code">TG-4821 <button type="button">복사</button></span>
+        <a class="pill primary" href="teacher-editor.html">+ 새 과제 만들기</a>
+      </div>
+    </div>
+    <nav class="subtabs">
+      <a href="teacher-class.html">과제</a>
+      <a href="teacher-students.html">학생 <span class="chip warn">요청 1</span></a>
+      <a class="on" href="teacher-ai-defaults.html">AI 기본값</a>
+    </nav>
+  </div>
+</section>
+<main><div class="wrap">
+<div class="spread" style="margin:4px 0 18px"><p class="muted" style="font-size:.9rem">새로 만드는 과제에 미리 채워져요 · 이미 만든 과제는 그대로</p></div>
+<section><div class="sec-h"><h2>힌트 공개 방식</h2></div>
+<div class="grid g4">
+  <label class="opt" data-g="hint"><b>힌트 없음</b><span class="muted" style="font-size:.84rem">AI 없이 푸는 시험형</span></label>
+  <label class="opt" data-g="hint"><b>개념만</b><span class="muted" style="font-size:.84rem">개념·문법만 설명</span></label>
+  <label class="opt" data-g="hint"><b>한 단계씩</b><span class="muted" style="font-size:.84rem">요청마다 한 단계</span></label>
+  <label class="opt on" data-g="hint"><b>시도한 만큼 열기</b><span class="muted" style="font-size:.84rem">내 코드를 보여야 다음 단계</span><span class="chip acc" style="align-self:flex-start">추천</span></label>
+</div></section>
+<section class="sec grid g2" style="align-items:start">
+  <div class="card pad form">
+    <label class="field"><span>힌트에 보여줄 코드 한도</span><select class="inp"><option>코드 없이 설명만</option><option>최대 1줄</option><option selected>최대 3줄</option><option>최대 5줄</option></select></label>
+    <label class="field"><span>힌트를 쓰면 점수는</span><select class="inp"><option selected>감점 없음</option><option>힌트 1단계당 1점 감점</option><option>힌트 쓴 문항은 연습 (0점)</option></select></label>
+    <label class="field"><span>확인 문제 결과는</span><select class="inp"><option selected>리포트에만 표시</option><option>점수에 반영 (원문제 50% + 확인 문제 50%)</option></select></label>
+  </div>
+  <div class="card pad form">
+    <label class="opt tog" style="flex-direction:row;justify-content:space-between;cursor:pointer"><b>AI 없이 확인 문제</b><span class="chip good">켬</span></label>
+    <label class="opt tog" style="flex-direction:row;justify-content:space-between;cursor:pointer"><b>제출 전 개념 확인</b><span class="chip good">켬</span></label>
+    <label class="opt tog" style="flex-direction:row;justify-content:space-between;cursor:pointer"><b>외부 AI 사용 의심 신호</b><span class="chip good">켬</span></label>
+    <p class="muted" style="font-size:.84rem">지시문 직접 쓰기는 과제마다 해요</p>
+  </div>
+</section>
+<div class="spread" style="margin-top:22px"><button class="pill ghost" id="reset">되돌리기</button><button class="pill primary" id="save">기본값 저장</button></div>
+</div></main>
+<span class="mock-note">화면 시안 · 기능 없음</span>
+<script>
+(function(){
+  var hints=document.querySelectorAll('[data-g=hint]');
+  hints.forEach(function(o){o.onclick=function(){hints.forEach(function(x){x.classList.toggle('on',x===o)})}});
+  document.querySelectorAll('.tog').forEach(function(l){var c=l.querySelector('.chip');l.onclick=function(){var on=c.textContent==='켬';c.textContent=on?'끔':'켬';c.className=on?'chip':'chip good'}});
+  document.getElementById('save').onclick=function(){tgToast('저장했어요 · 다음에 만드는 과제부터 적용돼요')};
+  document.getElementById('reset').onclick=function(){location.reload()};
+  document.querySelectorAll('.code button').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();
+    var code=b.parentNode.firstChild.textContent.trim(),done=function(){var t=b.textContent;b.textContent='복사됨 ✓';b.disabled=true;setTimeout(function(){b.textContent=t;b.disabled=false},1500)};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(done,done);else done()})});
+})();
+</script>
+</body>
+</html>
