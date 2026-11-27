@@ -5,7 +5,7 @@ export type User = { seq: number; name: string; email: string; role: Role }
 export type LoginResult = { access_token: string; user: User }
 
 const keep = (r: LoginResult): LoginResult => {
-  session.save(r.access_token, r.user.role)
+  session.save(r.access_token, r.user.role, { name: r.user.name, email: r.user.email })
   return r
 }
 

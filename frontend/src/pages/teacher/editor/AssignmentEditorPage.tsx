@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 
+import { PageHead } from '../../../components/PageHead'
 import { QueryState } from '../../../components/QueryState'
 import { useAssignmentDraft } from '../../../hooks/useAssignmentDraft'
 import StepPolicy from './policy/StepPolicy'
@@ -18,15 +19,22 @@ export default function AssignmentEditorPage() {
   const [step, setStep] = useState(1)
   const [fileName, setFileName] = useState<string | null>(null)
 
-  if (!draft) return <QueryState isPending={query.isPending} error={query.error} />
+  if (!draft) return <main className="wrap page"><QueryState isPending={query.isPending} error={query.error} /></main>
   const go = (n: number) => {
     setStep(n)
     window.scrollTo({ top: 0 })
   }
 
   return (
-    <div>
-      <Stepper step={step} enabled={loaded} onSelect={go} />
+    <>
+    <PageHead
+      back={{ to: `/teacher/classes/${classId}`, label: '클래스' }}
+      eyebrow={assignmentId ? 'Edit assignment' : 'New assignment'}
+      title={assignmentId ? draft.title || '과제 설정' : '새 과제'}
+    >
+      <div style={{ marginTop: 22 }}><Stepper step={step} enabled={loaded} onSelect={go} /></div>
+    </PageHead>
+    <main className="wrap page">
       {step === 1 && (
         <StepLoad
           draft={draft}
@@ -55,6 +63,7 @@ export default function AssignmentEditorPage() {
       )}
       {step === 3 && <StepPolicy draft={draft} onChange={updatePolicy} onPrev={() => go(2)} onNext={() => go(4)} />}
       {step === 4 && <StepReview draft={draft} onSaved={(saved) => update({ seq: saved.seq, questions: saved.questions })} onPrev={() => go(3)} />}
-    </div>
+    </main>
+    </>
   )
 }

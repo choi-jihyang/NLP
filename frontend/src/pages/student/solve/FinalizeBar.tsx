@@ -17,7 +17,7 @@ export default function FinalizeBar({ assignmentId, submitted, total, finalized,
 
   if (finalized) {
     return (
-      <div className="spread" style={{ marginTop: 18 }}>
+      <div className="panel spread foot-bar">
         <span className="note">최종 제출했어요. 결과는 교수자가 공개하면 볼 수 있어요.</span>
         <Link className="btn primary" to={`/student/assignments/${assignmentId}/check`}>이해 확인으로 →</Link>
       </div>
@@ -25,7 +25,7 @@ export default function FinalizeBar({ assignmentId, submitted, total, finalized,
   }
   if (confirming) {
     return (
-      <div className="boxed" style={{ marginTop: 18 }}>
+      <div className="panel boxed foot-bar">
         <b>최종 제출할까요?</b>
         <span className="note">최종 제출하면 답을 더 고칠 수 없고 AI 도움도 닫혀요. 이어서 AI 없이 짧은 이해 확인(3~5분)을 해요.</span>
         <div className="row">
@@ -36,7 +36,7 @@ export default function FinalizeBar({ assignmentId, submitted, total, finalized,
     )
   }
   return (
-    <div className="spread" style={{ marginTop: 18 }}>
+    <div className="panel spread foot-bar">
       <span className="note">
         {submitted} / {total}문항 제출 · 마감 전까지 고쳐서 다시 낼 수 있어요
       </span>

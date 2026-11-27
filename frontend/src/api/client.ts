@@ -21,17 +21,35 @@ export type Role = 'TEACHER' | 'STUDENT'
  */
 const TOKEN_KEY = 'tg.access_token'
 const ROLE_KEY = 'tg.role'
+const USER_KEY = 'tg.user'
+
+/** 로그인한 교수자 이름 · 이메일. 헤더 · 마이페이지에 쓴다(새 API 없이 로그인 응답을 저장) */
+export type SessionUser = { name: string; email: string }
+
+const readUser = (): SessionUser | null => {
+  try {
+    const v: unknown = JSON.parse(sessionStorage.getItem(USER_KEY) ?? 'null')
+    if (typeof v !== 'object' || v === null) return null
+    const { name, email } = v as Record<string, unknown>
+    return typeof name === 'string' && typeof email === 'string' ? { name, email } : null
+  } catch {
+    return null
+  }
+}
 
 export const session = {
   token: (): string | null => sessionStorage.getItem(TOKEN_KEY),
   role: (): Role | null => sessionStorage.getItem(ROLE_KEY) as Role | null,
-  save(token: string, role: Role) {
+  user: readUser,
+  save(token: string, role: Role, user?: SessionUser) {
     sessionStorage.setItem(TOKEN_KEY, token)
     sessionStorage.setItem(ROLE_KEY, role)
+    if (user) sessionStorage.setItem(USER_KEY, JSON.stringify(user))
   },
   clear() {
     sessionStorage.removeItem(TOKEN_KEY)
     sessionStorage.removeItem(ROLE_KEY)
+    sessionStorage.removeItem(USER_KEY)
   },
 }
 

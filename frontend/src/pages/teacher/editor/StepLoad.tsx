@@ -1,5 +1,6 @@
 import type { Assignment, Language } from '../../../api/assignments'
 import { LANGUAGE_LABEL } from '../../../api/client'
+import { fromKstLocalInput, toKstLocalInput } from '../../../components/format'
 import { typeSummary, totalPoints } from './questionText'
 
 type Props = {
@@ -49,10 +50,21 @@ export default function StepLoad({ draft, loaded, loading, fileName, error, onCh
           </select>
         </label>
       </div>
-      <label className="field">
-        <span className="label">과제 이름</span>
-        <input className="inp" value={draft.title} onChange={(e) => onChange({ title: e.target.value })} />
-      </label>
+      <div className="grid3">
+        <label className="field" style={{ gridColumn: 'span 2' }}>
+          <span className="label">과제 이름</span>
+          <input className="inp" value={draft.title} onChange={(e) => onChange({ title: e.target.value })} />
+        </label>
+        <label className="field">
+          <span className="label">마감 · 한국 시간</span>
+          <input
+            className="inp"
+            type="datetime-local"
+            value={toKstLocalInput(draft.due_at)}
+            onChange={(e) => onChange({ due_at: fromKstLocalInput(e.target.value) })}
+          />
+        </label>
+      </div>
       <label className="field">
         <span className="label">과제 설명 · AI가 도움을 줄 때 참고해요 (선택)</span>
         <textarea

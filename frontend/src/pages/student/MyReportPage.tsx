@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 
 import { getMyReport, type ConceptStatus } from '../../api/reports'
 import { formatScore } from '../../components/format'
+import { PageHead } from '../../components/PageHead'
 import { QueryState } from '../../components/QueryState'
 
 const STATUS: Record<ConceptStatus, { label: string; tone: string }> = {
@@ -15,32 +16,40 @@ const STATUS: Record<ConceptStatus, { label: string; tone: string }> = {
 export default function MyReportPage() {
   const assignmentId = Number(useParams().assignmentId)
   const report = useQuery({ queryKey: ['my-report', assignmentId], queryFn: () => getMyReport(assignmentId) })
-  if (!report.data) return <QueryState isPending={report.isPending} error={report.error} />
+  const back = { to: '/student/classes', label: '내 과제' }
+  if (!report.data) {
+    return (
+      <>
+        <PageHead back={back} eyebrow="My report" title="내 리포트" />
+        <main className="wrap page"><QueryState isPending={report.isPending} error={report.error} /></main>
+      </>
+    )
+  }
   const r = report.data
   if (!r.released) {
     return (
-      <section className="panel stack narrow">
-        <h2>내 리포트 · {r.assignment_title}</h2>
-        <p>아직 결과가 공개되지 않았어요. 교수자가 결과를 공개하면 점수, 정답, 개념별 상태를 여기서 볼 수 있어요.</p>
-        <Link className="btn" to="/student/classes">내 과제로</Link>
-      </section>
+      <>
+        <PageHead back={back} eyebrow="My report" title={r.assignment_title} />
+        <main className="wrap page">
+          <section className="panel stack narrow">
+            <p>아직 결과가 공개되지 않았어요. 교수자가 결과를 공개하면 점수, 정답, 개념별 상태를 여기서 볼 수 있어요.</p>
+            <Link className="btn" to="/student/classes">내 과제로</Link>
+          </section>
+        </main>
+      </>
     )
   }
 
   return (
-    <div>
-      <div className="sbar">
-        <h2>내 리포트 · {r.assignment_title}</h2>
-        <div className="kv">
-          <b>
-            {formatScore(r.score)} / {r.max_score}
-          </b>
-          <span>{r.pending_points ? `현재 점수 · ${r.pending_points}점 채점 대기` : '점수'}</span>
+    <>
+      <PageHead back={back} eyebrow="My report" title={r.assignment_title} />
+      <main className="wrap page">
+      <div className="grid g2" style={{ marginBottom: 20 }}>
+        <div className="tile">
+          <p className="k">{r.pending_points ? `현재 점수 · ${r.pending_points}점 채점 대기` : '점수'}</p>
+          <p className="v">{formatScore(r.score)}<small> / {r.max_score}</small></p>
         </div>
-        <div className="kv">
-          <b>{r.hint_steps}단계</b>
-          <span>받은 힌트</span>
-        </div>
+        <div className="tile"><p className="k">받은 힌트</p><p className="v">{r.hint_steps}<small> 단계</small></p></div>
       </div>
       <p className="flow">이 리포트는 확정 판정이 아니에요. 판단 근거를 함께 보여주고, 성적에 자동 반영하지 않아요.</p>
       <section className="panel sec" style={{ marginBottom: 16 }}>
@@ -100,6 +109,7 @@ export default function MyReportPage() {
           </section>
         </div>
       </div>
-    </div>
+      </main>
+    </>
   )
 }

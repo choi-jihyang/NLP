@@ -4,6 +4,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { getAssignment } from '../../../api/assignments'
 import { getAssignmentReport } from '../../../api/reports'
 import { QueryState } from '../../../components/QueryState'
+import { PageHead } from '../../../components/PageHead'
 import MistakeSection from './MistakeSection'
 import PairChart from './PairChart'
 import StudentTables from './StudentTables'
@@ -17,7 +18,7 @@ export default function DashboardPage() {
   const assignment = useQuery({ queryKey: ['assignment', assignmentId], queryFn: () => getAssignment(assignmentId) })
 
   if (!report.data || !assignment.data) {
-    return <QueryState isPending={report.isPending || assignment.isPending} error={report.error ?? assignment.error} />
+    return <main className="wrap page"><QueryState isPending={report.isPending || assignment.isPending} error={report.error ?? assignment.error} /></main>
   }
   const r = report.data
   const p = assignment.data.policy
@@ -25,14 +26,16 @@ export default function DashboardPage() {
   const hasProject = assignment.data.questions.some((q) => q.type === 'PROJECT')
 
   return (
+    <>
+    <PageHead
+      back={{ to: base, label: '클래스' }}
+      eyebrow="Report"
+      title={`${r.title} · 반 리포트`}
+      sub={`최종 제출 ${r.submitted_count}명 기준`}
+      actions={hasProject && <Link className="btn primary" to={`${base}/assignments/${assignmentId}/grading`}>간단 제작 채점</Link>}
+    />
+    <main className="wrap page">
     <div className="stack">
-      <div className="spread">
-        <h2>{r.title} · 반 리포트</h2>
-        <div className="row">
-          <span className="chip">최종 제출 {r.submitted_count}명 기준</span>
-          {hasProject && <Link className="btn sm primary" to={`${base}/assignments/${assignmentId}/grading`}>간단 제작 채점</Link>}
-        </div>
-      </div>
       <div className="figs">
         <div className="fig">
           <span className="label">제출</span>
@@ -74,5 +77,7 @@ export default function DashboardPage() {
         recordPath={(id) => `${base}/students/${id}?assignment=${assignmentId}`}
       />
     </div>
+      </main>
+    </>
   )
 }

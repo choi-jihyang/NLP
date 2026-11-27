@@ -5,6 +5,7 @@ import { listStudents } from '../../api/classes'
 import { getStudentRecord } from '../../api/reports'
 import { formatScore } from '../../components/format'
 import { QueryState } from '../../components/QueryState'
+import { PageHead } from '../../components/PageHead'
 import { TracePipe } from '../../components/TracePipe'
 
 /** 교수자: 학생 한 명의 과제 기록 */
@@ -19,25 +20,31 @@ export default function StudentRecordPage() {
   const students = useQuery({ queryKey: ['students', classId], queryFn: () => listStudents(classId) })
   const base = `/teacher/classes/${classId}`
 
-  if (!record.data) return <QueryState isPending={record.isPending} error={record.error} />
+  if (!record.data) return <main className="wrap page"><QueryState isPending={record.isPending} error={record.error} /></main>
   const r = record.data
   const name = students.data?.find((s) => s.seq === studentId)?.student_no ?? r.student_name
 
   return (
+    <>
+    <PageHead
+      back={{ to: base, label: '클래스' }}
+      eyebrow="Record"
+      title={`${name} · ${r.assignment_title}`}
+      actions={
+        <>
+          <label className="field" style={{ width: 160 }}>
+            <select className="inp" aria-label="학생 선택" value={studentId} onChange={(e) => navigate(`${base}/students/${e.target.value}?assignment=${assignmentId}`)}>
+              {students.data?.map((s) => (
+                <option key={s.seq} value={s.seq}>{s.student_no}</option>
+              ))}
+            </select>
+          </label>
+          <Link className="btn" to={`${base}/dashboard?assignment=${assignmentId}`}>반 리포트로</Link>
+        </>
+      }
+    />
+    <main className="wrap page">
     <div className="stack">
-      <div className="sbar">
-        <h2>
-          {name} · {r.assignment_title}
-        </h2>
-        <label className="field" style={{ width: 160 }}>
-          <select className="inp" aria-label="학생 선택" value={studentId} onChange={(e) => navigate(`${base}/students/${e.target.value}?assignment=${assignmentId}`)}>
-            {students.data?.map((s) => (
-              <option key={s.seq} value={s.seq}>{s.student_no}</option>
-            ))}
-          </select>
-        </label>
-        <Link className="btn sm" to={`${base}/dashboard?assignment=${assignmentId}`}>반 리포트로</Link>
-      </div>
       <p className="flow">학생에게는 담당 교수자가 이 기록을 볼 수 있다고 첫 접속 때 안내해요.</p>
       <div className="figs">
         <div className="fig">
@@ -96,5 +103,7 @@ export default function StudentRecordPage() {
         </section>
       )}
     </div>
+      </main>
+    </>
   )
 }
