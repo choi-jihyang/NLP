@@ -1,7 +1,7 @@
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from app.api.errors import REQUEST_ID_HEADER, install_error_handling
 from app.core.errors import AppError, ErrorCode
@@ -9,6 +9,22 @@ from app.core.errors import AppError, ErrorCode
 
 class _Item(BaseModel):
     name: str
+
+
+class _Question(BaseModel):
+    prompt: str
+    answer: str = ""
+
+    @model_validator(mode="after")
+    def _check(self) -> "_Question":
+        if self.answer == "9":
+            raise ValueError("객관식 정답을 선택지 중에서 골라 주세요.")
+        return self
+
+
+class _Assignment(BaseModel):
+    title: str
+    questions: list[_Question]
 
 
 def _app() -> FastAPI:
@@ -27,6 +43,10 @@ def _app() -> FastAPI:
     @app.post("/items")
     def items(item: _Item) -> dict[str, str]:
         return {"name": item.name}
+
+    @app.post("/assignments")
+    def assignments(a: _Assignment) -> dict[str, int]:
+        return {"count": len(a.questions)}
 
     @app.get("/crash")
     def crash() -> None:
@@ -67,6 +87,19 @@ def test_validation_error_lists_fields(client: TestClient):
     assert body["code"] == "VALIDATION_FAILED"
     assert body["message"] == "입력 값이 올바르지 않습니다: name"
     assert body["trace_id"] == res.headers[REQUEST_ID_HEADER]
+
+
+def test_validation_error_names_question_and_reason(client: TestClient):
+    # 문항 목록 안의 오류는 '문항 N'으로, 직접 쓴 검사 문구는 그대로 보여 준다(졸라보기 · 저장 화면에 그대로 뜸)
+    body = {"title": "t", "questions": [{"prompt": "a"}, {"prompt": "b", "answer": "9"}]}
+    res = client.post("/assignments", json=body)
+    assert res.status_code == 400
+    assert res.json()["message"] == "입력 값이 올바르지 않습니다: 문항 2 — 객관식 정답을 선택지 중에서 골라 주세요."
+
+
+def test_validation_error_names_question_field(client: TestClient):
+    res = client.post("/assignments", json={"questions": [{"answer": "1"}]})
+    assert res.json()["message"] == "입력 값이 올바르지 않습니다: 제목, 문항 1 문제"
 
 
 def test_unhandled_error_hides_detail(client: TestClient):
