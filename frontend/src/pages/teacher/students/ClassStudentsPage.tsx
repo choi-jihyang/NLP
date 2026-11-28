@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 
+import { listAssignments } from '../../../api/assignments'
 import { getClass, listStudents } from '../../../api/classes'
 import {
   decideJoinRequest,
@@ -23,6 +24,9 @@ export default function ClassStudentsPage() {
   const students = useQuery({ queryKey: ['students', classId], queryFn: () => listStudents(classId) })
   const requests = useQuery({ queryKey: ['join-requests', classId], queryFn: () => listJoinRequests(classId) })
   const roster = useQuery({ queryKey: ['roster', classId], queryFn: () => getRosterSettings(classId) })
+  const assignments = useQuery({ queryKey: ['assignments', classId], queryFn: () => listAssignments(classId) })
+  /** 학생별 기록은 과제 단위라 배포된 첫 과제로 연다. 없으면 기록 보기를 숨긴다 */
+  const recordAssignmentId = assignments.data?.find((a) => a.status !== 'DRAFT')?.seq ?? null
   const refresh = () =>
     Promise.all(
       [['students', classId], ['join-requests', classId], ['class', classId], ['classes']].map((queryKey) =>
@@ -75,6 +79,7 @@ export default function ClassStudentsPage() {
           count={cls.data.student_count}
           limit={cls.data.student_limit}
           basePath={base}
+          recordAssignmentId={recordAssignmentId}
           busyId={remove.isPending ? (remove.variables ?? null) : null}
           onRemove={(id) => remove.mutate(id)}
         />
