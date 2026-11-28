@@ -81,6 +81,11 @@ export default function StepLoad({ draft, loaded, loading, fileName, error, onCh
         <input type="file" accept=".md,.markdown,.txt" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
       </label>
       <div className="row">
+        <span className="note">양식에 맞춰 쓰면 문항을 자동으로 찾아요.</span>
+        <a className="btn sm" href="/thinkguard-assignment-template.md" download>양식 받기 (.md)</a>
+        <a className="btn sm" href="/thinkguard-assignment-example.md" download>예시 받기 (.md)</a>
+      </div>
+      <div className="row">
         <span className="note">파일이 없나요?</span>
         <button className="btn sm" disabled={loading} onClick={onSample}>샘플 과제로 시작</button>
         <button className="btn sm" disabled={loading} onClick={onBlank}>빈 과제에서 직접 만들기</button>
@@ -100,7 +105,7 @@ export default function StepLoad({ draft, loaded, loading, fileName, error, onCh
         </div>
       )}
       {error && <p className="error-text">{error.message}</p>}
-      <p className="note">정해진 양식(docs/spec/assignment-md-format.md)의 .md 파일만 읽어요. 양식이 다르면 틀린 곳을 알려 줘요.</p>
+      <p className="note">양식에 맞춘 .md 파일만 읽어요. 양식이 다르면 틀린 곳을 알려 줘요.</p>
       <div className="spread">
         <span />
         <button className="btn primary" disabled={!loaded || loading} onClick={onNext}>문항 확인하기</button>
