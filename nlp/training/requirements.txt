@@ -1,0 +1,9 @@
+anthropic>=1.0
+openai>=1.40
+huggingface_hub>=0.30
+scikit-learn>=1.4
+scipy
+numpy
+torch
+transformers>=4.45,<5
+sentencepiece
