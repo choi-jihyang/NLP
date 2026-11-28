@@ -1,4 +1,4 @@
-import { del, get, post, put, session } from './client'
+import { del, get, post, put, REENTRY_TICKET_KEY, session } from './client'
 
 /** 입장 방식. APPROVAL: 명단에 없는 학생은 참여 요청 → 교수자 수락 / OPEN: 코드만 있으면 바로 입장 */
 export type JoinMode = 'APPROVAL' | 'OPEN'
@@ -21,7 +21,10 @@ export type PendingRequest = { seq: number; student_no: string; requested_at: st
 export type RosterEntry = { student_no: string; is_use: boolean }
 export type RosterSettings = { join_mode: JoinMode; roster: RosterEntry[] }
 
-const TICKET_KEY = 'tg.reentry_ticket'
+const TICKET_KEY = REENTRY_TICKET_KEY
+
+/** 대기 중인 참여 요청 · 다시 입장 티켓 지우기(로그아웃 · 학번 다시 입력) */
+export const clearReentryTicket = () => sessionStorage.removeItem(TICKET_KEY)
 
 /** 학생: 수업 코드로 참여. 오류: 없는 코드 · 정원 초과 · 만료 · 내보낸 학생 */
 export const joinClass = async (body: JoinRequest): Promise<JoinResult> => {

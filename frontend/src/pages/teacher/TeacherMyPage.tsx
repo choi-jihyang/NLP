@@ -1,14 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 
-import { logout } from '../../api/auth'
 import { listClasses } from '../../api/classes'
 import { session } from '../../api/client'
 import { listPaymentHistory } from '../../api/payments'
 import { formatDot } from '../../components/format'
 import { PageHead } from '../../components/PageHead'
 import { SideNav } from '../../components/SideNav'
+import { useLogout } from '../../hooks/useLogout'
 
 const SECTIONS = [
   { id: 'account', label: '계정 정보' },
@@ -20,16 +19,12 @@ const UI_ONLY = '아직 화면만 있어요 · 저장되지 않아요'
 
 /** 교수자 마이페이지. 새 API 없이: 이름 · 이메일은 로그인 때 받은 값, 저장 · 비밀번호 · 연장은 화면만, 결제 내역은 예시 */
 export default function TeacherMyPage() {
-  const navigate = useNavigate()
   const user = session.user()
   const classes = useQuery({ queryKey: ['classes'], queryFn: listClasses })
   const payments = useQuery({ queryKey: ['payment-history'], queryFn: listPaymentHistory })
   const [notice, setNotice] = useState<string | null>(null)
   const uiOnly = (where: string) => setNotice(`${where}: ${UI_ONLY}`)
-  const leave = () => {
-    logout()
-    navigate('/')
-  }
+  const leave = useLogout()
 
   return (
     <>

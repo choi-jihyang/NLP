@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
 
-import { logout } from '../../api/auth'
 import { listMyClasses } from '../../api/classes'
 import { PageHead } from '../../components/PageHead'
 import { SideNav } from '../../components/SideNav'
+import { useLogout } from '../../hooks/useLogout'
 
 const SECTIONS = [
   { id: 'me', label: '내 정보' },
@@ -14,19 +13,15 @@ const SECTIONS = [
 
 /** 학생 마이페이지: 학번 · 참여한 클래스 · 동의한 기록 안내. 학생은 계정 · 비밀번호가 없다 */
 export default function StudentMyPage() {
-  const navigate = useNavigate()
   const mine = useQuery({ queryKey: ['my-classes'], queryFn: listMyClasses })
   const no = mine.data?.[0]?.student_no ?? '-'
-  const leave = () => {
-    logout()
-    navigate('/')
-  }
+  const leave = useLogout()
 
   return (
     <>
       <PageHead eyebrow="My page" title="마이페이지" />
       <main className="wrap page side-layout">
-        <SideNav items={SECTIONS} leaveLabel="나가기" onLeave={leave} />
+        <SideNav items={SECTIONS} leaveLabel="로그아웃" onLeave={leave} />
         <div className="stack" style={{ gap: 40 }}>
           <section className="panel stack" id="me">
             <div className="profile">

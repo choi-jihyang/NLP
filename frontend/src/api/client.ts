@@ -22,6 +22,8 @@ export type Role = 'TEACHER' | 'STUDENT'
 const TOKEN_KEY = 'tg.access_token'
 const ROLE_KEY = 'tg.role'
 const USER_KEY = 'tg.user'
+/** 학생 참여 요청 대기 · 다시 입장 티켓 (api/enrollments.ts가 쓴다) */
+export const REENTRY_TICKET_KEY = 'tg.reentry_ticket'
 
 /** 로그인한 교수자 이름 · 이메일. 헤더 · 마이페이지에 쓴다(새 API 없이 로그인 응답을 저장) */
 export type SessionUser = { name: string; email: string }
@@ -71,8 +73,20 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (token) headers.set('Authorization', `Bearer ${token}`)
 
   const res = await fetch(`/api${path}`, { ...init, headers })
+  if (res.status === 401 && token) expire()
   if (!res.ok) throw await toError(res)
   return res.json() as Promise<T>
+}
+
+/**
+ * 로그인했는데 서버가 401(토큰 만료 · 서버 DB가 바뀜 등)을 주면: 이 탭의 로그인 정보를 지우고 로그인 화면으로.
+ * 페이지를 새로 열어서 화면이 기억한 데이터도 함께 지운다.
+ */
+function expire() {
+  const role = session.role()
+  session.clear()
+  sessionStorage.removeItem(REENTRY_TICKET_KEY)
+  window.location.assign(role === 'STUDENT' ? '/login?as=student&expired=1' : '/login?expired=1')
 }
 
 export const get = <T>(path: string) => api<T>(path)
