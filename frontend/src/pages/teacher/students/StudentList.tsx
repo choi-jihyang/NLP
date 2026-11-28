@@ -8,12 +8,14 @@ type Props = {
   count: number
   limit: number
   basePath: string
+  /** 기록 보기로 열 과제. null이면 버튼을 숨긴다 */
+  recordAssignmentId: number | null
   busyId: number | null
   onRemove: (studentId: number) => void
 }
 
 /** 참여 중인 학생. 기록 보기 · 내보내기(한 번 더 확인) */
-export default function StudentList({ students, count, limit, basePath, busyId, onRemove }: Props) {
+export default function StudentList({ students, count, limit, basePath, recordAssignmentId, busyId, onRemove }: Props) {
   const [confirmId, setConfirmId] = useState<number | null>(null)
 
   return (
@@ -36,7 +38,9 @@ export default function StudentList({ students, count, limit, basePath, busyId, 
             </div>
           ) : (
             <div className="row">
-              <Link className="btn sm" to={`${basePath}/students/${s.seq}?assignment=a1`}>기록 보기</Link>
+              {recordAssignmentId !== null && (
+                <Link className="btn sm" to={`${basePath}/students/${s.seq}?assignment=${recordAssignmentId}`}>기록 보기</Link>
+              )}
               <button className="btn sm" onClick={() => setConfirmId(s.seq)}>내보내기</button>
             </div>
           )}
