@@ -19,7 +19,7 @@ def check_choice_answer(choices: list[str], answer: str) -> None:
     if len(choices) < 2:
         raise ValueError("객관식은 선택지가 2개 이상이어야 합니다.")
     if not (_CHOICE_INDEX.fullmatch(answer) and int(answer) < len(choices)):
-        raise ValueError("객관식 정답은 선택지 번호('0'부터)여야 합니다.")
+        raise ValueError("객관식 정답을 선택지 중에서 골라 주세요.")  # API 저장 모양은 '0'부터
 
 
 def not_blank(value: str) -> str:

@@ -53,8 +53,9 @@ export default function StepReview({ draft, onSaved, onPrev }: Props) {
             {simulate.data ? '다시 실행' : '실행하기'}
           </button>
         </div>
-        <p className="lead">배포 전에 학생들이 자주 쓰는 우회 요청과, 다른 AI의 답을 붙여 넣는 경우를 자동으로 보내 보고 AI가 설정대로 답하는지 확인해요.</p>
+        <p className="lead">배포 전에 학생들이 자주 쓰는 우회 요청을 AI 도움이 켜진 문항마다 보내 보고, AI가 설정대로 정답 없이 답하는지 확인해요.</p>
         {simulate.isPending && <p className="note">보내 보는 중…</p>}
+        {simulate.error && <p className="error-text">{simulate.error.message}</p>}
         {simulate.data && <SimulationList cases={simulate.data} questions={draft.questions} custom={p.prompt_mode === 'CUSTOM'} />}
       </section>
       <div style={{ marginTop: 16 }}>
