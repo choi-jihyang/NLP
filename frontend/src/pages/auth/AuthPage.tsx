@@ -14,6 +14,7 @@ export default function AuthPage({ tab }: Props) {
   const { search } = useLocation()
   const [params] = useSearchParams()
   const plan = params.get('plan')
+  const expired = params.get('expired') === '1'
   const done = () => navigate(plan && PLANS.includes(plan) ? `/teacher/classes/new?plan=${plan}` : '/teacher/classes')
   const go = (t: Props['tab']) => navigate(`/${t}${search}`, { replace: true })
 
@@ -22,6 +23,7 @@ export default function AuthPage({ tab }: Props) {
       <HomeNav />
       <main className="auth-center">
         <div className="panel stack auth-card">
+          {expired && <div className="status wait" role="status">로그인이 풀렸어요. 다시 로그인해 주세요.</div>}
           <div className="seg" role="tablist">
             <button type="button" role="tab" aria-pressed={tab === 'login'} onClick={() => go('login')}>로그인</button>
             <button type="button" role="tab" aria-pressed={tab === 'signup'} onClick={() => go('signup')}>계정 만들기</button>
