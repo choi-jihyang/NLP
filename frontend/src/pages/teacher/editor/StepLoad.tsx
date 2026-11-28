@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Assignment, Language } from '../../../api/assignments'
 import { LANGUAGE_LABEL } from '../../../api/client'
 import { fromKstLocalInput, toKstLocalInput } from '../../../components/format'
@@ -17,10 +18,24 @@ type Props = {
 }
 
 const LANGUAGES: Language[] = ['C', 'PYTHON', 'JAVA', 'JAVASCRIPT']
+type Start = 'FILE' | 'SAMPLE' | 'BLANK'
+
+const STARTS: { value: Start; title: string; desc: string }[] = [
+  { value: 'FILE', title: '파일 불러오기', desc: '양식에 맞춘 .md 파일을 올려요.' },
+  { value: 'SAMPLE', title: '샘플로 시작', desc: 'C 이진수 과제 5문항으로 둘러봐요.' },
+  { value: 'BLANK', title: '빈 과제로 시작', desc: '문항을 하나씩 직접 추가해요.' },
+]
+
 const AUDIENCES = ['대학 1학년', '대학 2학년', '비전공 교양', '고등학교 정보', '코딩 테스트 준비반']
 
 /** STEP 1. 과목·대상·언어를 적고 과제 파일을 불러온다 */
 export default function StepLoad({ draft, loaded, loading, fileName, error, onChange, onFile, onSample, onBlank, onNext }: Props) {
+  const [start, setStart] = useState<Start>('FILE')
+  const pick = (value: Start) => {
+    setStart(value)
+    if (value === 'SAMPLE') onSample()
+    if (value === 'BLANK') onBlank()
+  }
   return (
     <section className="panel stack">
       <h2>어떤 과제에 AI 도움을 붙일까요?</h2>
@@ -75,21 +90,30 @@ export default function StepLoad({ draft, loaded, loading, fileName, error, onCh
         />
       </label>
       <p className="note">퀴즈, 출력 예측, 코드 작성, 간단 제작 같은 문항 유형은 다음 단계에서 문항마다 정해요.</p>
-      <label className="drop">
-        <strong>과제 파일 올리기</strong>
-        <span className="note">정해진 양식의 마크다운(.md) · 눌러서 선택</span>
-        <input type="file" accept=".md,.markdown,.txt" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
-      </label>
-      <div className="row">
-        <span className="note">양식에 맞춰 쓰면 문항을 자동으로 찾아요.</span>
-        <a className="btn sm" href="/thinkguard-assignment-template.md" download>양식 받기 (.md)</a>
-        <a className="btn sm" href="/thinkguard-assignment-example.md" download>예시 받기 (.md)</a>
+      <h3>어떻게 시작할까요?</h3>
+      <div className="opts" role="radiogroup" aria-label="시작 방법">
+        {STARTS.map((o) => (
+          <label className="opt" key={o.value}>
+            <input type="radio" name="start" checked={start === o.value} disabled={loading} onChange={() => pick(o.value)} />
+            <strong>{o.title}</strong>
+            <span>{o.desc}</span>
+          </label>
+        ))}
       </div>
-      <div className="row">
-        <span className="note">파일이 없나요?</span>
-        <button className="btn sm" disabled={loading} onClick={onSample}>샘플 과제로 시작</button>
-        <button className="btn sm" disabled={loading} onClick={onBlank}>빈 과제에서 직접 만들기</button>
-      </div>
+      {start === 'FILE' && (
+        <>
+          <label className="drop">
+            <strong>과제 파일 올리기</strong>
+            <span className="note">정해진 양식의 마크다운(.md) · 눌러서 선택</span>
+            <input type="file" accept=".md,.markdown,.txt" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
+          </label>
+          <div className="row">
+            <span className="note">양식에 맞춰 쓰면 문항을 자동으로 찾아요.</span>
+            <a className="btn sm" href="/thinkguard-assignment-template.md" download>양식 받기 (.md)</a>
+            <a className="btn sm" href="/thinkguard-assignment-example.md" download>예시 받기 (.md)</a>
+          </div>
+        </>
+      )}
       {loading && (
         <div className="status wait">
           <div className="spin" />
@@ -105,7 +129,7 @@ export default function StepLoad({ draft, loaded, loading, fileName, error, onCh
         </div>
       )}
       {error && <p className="error-text">{error.message}</p>}
-      <p className="note">양식에 맞춘 .md 파일만 읽어요. 양식이 다르면 틀린 곳을 알려 줘요.</p>
+      {start === 'FILE' && <p className="note">양식에 맞춘 .md 파일만 읽어요. 양식이 다르면 틀린 곳을 알려 줘요.</p>}
       <div className="spread">
         <span />
         <button className="btn primary" disabled={!loaded || loading} onClick={onNext}>문항 확인하기</button>
