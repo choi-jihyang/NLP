@@ -12,8 +12,14 @@ import CheckItemCard from './CheckItemCard'
 /** 학생: 과제를 다 낸 뒤 AI 없이 하는 이해 확인 */
 export default function UnderstandingCheckPage() {
   const assignmentId = Number(useParams().assignmentId)
-  const check = useQuery({ queryKey: ['understanding', assignmentId], queryFn: () => getUnderstandingCheck(assignmentId) })
   const submission = useQuery({ queryKey: ['submission', assignmentId], queryFn: () => getMySubmission(assignmentId) })
+  // 최종 제출 전에는 서버가 409를 주므로 부르지 않는다(재시도하느라 '불러오는 중'에 머물던 문제)
+  const finalized = submission.data?.finalized === true
+  const check = useQuery({
+    queryKey: ['understanding', assignmentId],
+    queryFn: () => getUnderstandingCheck(assignmentId),
+    enabled: finalized,
+  })
   const [explanation, setExplanation] = useState('')
   const [values, setValues] = useState<Record<string, string>>({})
   const [confidence, setConfidence] = useState<Record<string, Confidence>>({})
@@ -37,17 +43,17 @@ export default function UnderstandingCheckPage() {
       sub="AI 없이 · 한 번만 낼 수 있어요"
     />
   )
-  if (!check.data || !submission.data) {
+  if (!submission.data) {
     return (
       <>
         {head}
         <main className="wrap page">
-          <QueryState isPending={check.isPending || submission.isPending} error={check.error ?? submission.error} />
+          <QueryState isPending={submission.isPending} error={submission.error} />
         </main>
       </>
     )
   }
-  if (!submission.data.finalized) {
+  if (!finalized) {
     return (
       <>
         {head}
@@ -56,6 +62,16 @@ export default function UnderstandingCheckPage() {
             <p>과제를 최종 제출한 뒤에 할 수 있어요.</p>
             <Link className="btn primary" to={`/student/assignments/${assignmentId}`}>과제로 돌아가기</Link>
           </section>
+        </main>
+      </>
+    )
+  }
+  if (!check.data) {
+    return (
+      <>
+        {head}
+        <main className="wrap page">
+          <QueryState isPending={check.isPending} error={check.error} />
         </main>
       </>
     )

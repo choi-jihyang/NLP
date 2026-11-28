@@ -10,11 +10,12 @@ export default function SignupForm({ onDone }: Props) {
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
   const mutation = useMutation({ mutationFn: signup, onSuccess: onDone })
   const mismatch = form.confirm.length > 0 && form.password !== form.confirm
+  const ready = form.name.trim() && form.email.trim() && form.password && form.password === form.confirm
   const set = (key: keyof typeof form) => (value: string) => setForm((f) => ({ ...f, [key]: value }))
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    if (mismatch) return
+    if (!ready) return
     mutation.mutate({ name: form.name, email: form.email, password: form.password })
   }
 
@@ -39,7 +40,7 @@ export default function SignupForm({ onDone }: Props) {
       </label>
       {mismatch && <p className="error-text">비밀번호가 서로 달라요.</p>}
       {mutation.error && <p className="error-text">{mutation.error.message}</p>}
-      <button className="btn primary lg" disabled={mutation.isPending || mismatch}>
+      <button className="btn primary lg" disabled={mutation.isPending || !ready}>
         {mutation.isPending ? '만드는 중…' : '계정 만들기'}
       </button>
     </form>

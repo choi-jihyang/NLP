@@ -12,8 +12,15 @@ export function useReveal(): void {
         }),
       { threshold: 0.15 },
     )
-    document.querySelectorAll('.reveal, .hstep').forEach((el) => io.observe(el))
-    return () => io.disconnect()
+    const watch = () => document.querySelectorAll('.reveal:not(.in), .hstep:not(.in)').forEach((el) => io.observe(el))
+    watch()
+    // 요금제 카드처럼 서버 응답 뒤에 생기는 요소도 지켜본다(새로고침하면 카드가 투명하게 남던 문제)
+    const mo = new MutationObserver(watch)
+    mo.observe(document.body, { childList: true, subtree: true })
+    return () => {
+      io.disconnect()
+      mo.disconnect()
+    }
   }, [])
 }
 
