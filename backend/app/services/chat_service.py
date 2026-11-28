@@ -53,8 +53,9 @@ async def reply(
         system = prompt_builder.build_from_config(context, decision.directive)
     else:
         system = prompt_builder.compose(base_prompt, decision.directive)
+    turns = [*history, ChatTurn(role="student", content=message)]
     try:
-        draft = await llm.generate(system, [*history, ChatTurn(role="student", content=message)])
+        draft = await llm.generate(system, turns)
     except httpx.HTTPError as exc:  # Ollama가 꺼져 있거나 시간 초과
         raise AppError(ErrorCode.LLM_UNAVAILABLE) from exc
     if not draft.strip():
@@ -62,7 +63,7 @@ async def reply(
         return ChatReply(policy.ASK_ATTEMPT_REPLY, decision.mode, result, used_llm=True)
 
     # 마지막 필터: 프롬프트가 뚫려도 정답·완성 코드는 학생에게 가지 않는다 (모든 LLM 모드에 적용)
-    check = await leak_guard.check(draft, history)
+    check = await leak_guard.check(draft, turns)  # 이번 학생 메시지까지 넘겨 학생이 보낸 빈칸과 비교한다
     if check.leaked:
         return ChatReply(
             policy.LEAK_BLOCKED_REPLY, decision.mode, result, used_llm=True,

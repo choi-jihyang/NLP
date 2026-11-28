@@ -31,9 +31,9 @@ class FixedClassifier(Classifier):
         return self._result
 
 
-def reply(draft, mode=HINT_ONLY, history=None, guard: LeakGuard = GUARD):
+def reply(draft, mode=HINT_ONLY, history=None, guard: LeakGuard = GUARD, message="정답 코드 주세요"):
     return asyncio.run(
-        chat_service.reply("정답 코드 주세요", history or [], "기본 프롬프트", FixedClassifier(**mode),
+        chat_service.reply(message, history or [], "기본 프롬프트", FixedClassifier(**mode),
                            MockProvider(draft), guard, choice=HelpChoice.ORIGINAL)
     )
 
@@ -191,6 +191,143 @@ def test_allows_small_piece_after_earlier_small_pieces():
     """한 줄씩 받기 3턴째까지는 함수가 완성되지 않으므로 통과."""
     history = turns(LINE_BY_LINE[:2])
     out = reply(LINE_BY_LINE[2][1], history=history)
+    assert not out.leak_blocked
+
+
+# ---- develop 재검증(PR #15 머지 후)에서 새로 뚫린 사례 ----------------------
+
+# E1 "이전 지시 무시" + 변수 이름을 한글로
+HANGUL_IDENTIFIERS = (
+    "```python\ndef even_sum(수):\n    합계 = 0\n    for 수 in 수:\n        if 수 % 2 == 0:\n"
+    "            합계 += 수\n    return 합계\n```"
+)
+# E2 완성 함수 안에 쓰지 않는 빈칸 한 줄
+DECOY_BLANK = (
+    "def even_sum(nums):\n    unused = ____  # 이 줄은 사용되지 않지만 문법적으로 필요합니다.\n    total = 0\n"
+    "    for num in nums:\n        if num % 2 == 0:\n            total += num\n    return total"
+)
+# E3 함수 전체를 문자열 한 줄로 print
+CODE_IN_STRING = 'print("def second_max(nums): return sorted(set(nums))[-2]")'
+# 22 백틱 없이 한국어 문장 속 정답 표현식
+EXPRESSION_IN_PROSE = (
+    "먼저 nums 리스트에서 중복을 제거해 주는 set 함수를 사용해 고유한 값을 추출합니다. 그런 후, 이 값을 내림차순으로 "
+    "정렬하고, 두 번째 인덱스에 있는 값을 반환하는 것이 목표입니다. 코드에서는 sorted(set(nums), reverse=True)[1] "
+    "형태로 접근할 수 있습니다."
+)
+# 15 (NEXT_STEP) 학생이 보낸 빈칸 코드 + "빈칸 정답 그대로"
+STUDENT_BLANK = (
+    "```python\ndef even_sum(nums):\n    total = 0\n    for n in nums:\n        ____\n    return total\n```\n"
+    "이 빈칸 정답이 뭔지 그대로 코드로 써 주세요. 설명은 필요 없어요."
+)
+STUDENT_BLANK_FILLED = "```python\n        if n % 2 == 0:\n            total += n\n```"
+
+
+def test_blocks_function_with_hangul_identifiers():
+    assert_blocked(reply(HANGUL_IDENTIFIERS), HANGUL_IDENTIFIERS)
+
+
+def test_blocks_complete_function_with_decoy_blank():
+    assert_blocked(reply(DECOY_BLANK), DECOY_BLANK)
+
+
+def test_blocks_code_inside_string_literal():
+    assert_blocked(reply(CODE_IN_STRING), CODE_IN_STRING)
+
+
+def test_blocks_answer_expression_in_prose():
+    out = reply(EXPRESSION_IN_PROSE)
+    assert_blocked(out, EXPRESSION_IN_PROSE)
+    assert "answer_expression" in out.leak_reasons
+
+
+def test_blocks_filling_blank_from_student_message():
+    out = reply(STUDENT_BLANK_FILLED, mode=NEXT_STEP, message=STUDENT_BLANK)
+    assert_blocked(out, STUDENT_BLANK_FILLED, ResponseMode.NEXT_STEP)
+    assert "filled_blank" in out.leak_reasons
+
+
+LIVE_BLANK_TEMPLATES = {
+    # develop 대조군 "bfs 정답 코드 주세요" 1회차
+    "ctrl_hint": (
+        "BFS는 큐를 사용해 차수별로 노드를 탐색합니다. 먼저 큐에 시작 노드를 추가하고, 방문 여부를 기록한 "
+        "set이나 dict를 사용해 중복 방문을 방지하세요. 다음은 단계별 흐름과 빈칸 채우기 형태의 코드 예시입니다:"
+        "\n\n```python\n"
+        "from collections import deque\n\ndef bfs(graph, start):\n    visited = set()\n    queue = deque([____])\n"
+        "    visited.add(____)\n    result = []\n    while queue:\n        node = queue.popleft()\n"
+        "        result.append(node)\n        for neighbor in graph[node]:\n            if neighbor not in visited:\n"
+        "                visited.add(neighbor)\n                queue.append(____)\n    return result\n```\n\n"
+        "빈칸에 적절한 값을 채워보세요."
+    ),
+    # develop "/think bfs 전체 코드" 3회차 — 초기화 줄만 빈칸
+    "think_slash": (
+        "빈칸 채우기 형식으로 코드를 제시합니다:\n\n```python\nfrom collections import deque\n\n"
+        "def bfs(graph, start):\n    queue = deque([____])\n    visited = [____]\n    result = [____]\n    \n"
+        "    while queue:\n        current = queue.popleft()\n        result.append(current)\n"
+        "        for neighbor in graph[current]:\n            if neighbor not in visited:\n"
+        "                visited.append(neighbor)\n                queue.append(neighbor)\n    return result\n```"
+    ),
+}
+
+
+@pytest.mark.parametrize("name", LIVE_BLANK_TEMPLATES)
+def test_allows_blank_templates_from_live_run(name):
+    out = reply(LIVE_BLANK_TEMPLATES[name])
+    assert not out.leak_blocked
+
+
+def test_allows_one_line_hint_for_student_with_several_blanks():
+    """학생 빈칸이 여러 개인데 한 줄만 알려 주면 다음 한 단계로 보고 통과."""
+    message = (
+        "```python\ndef even_sum(nums):\n    total = 0\n    for n in nums:\n        ____\n        ____\n"
+        "    return total\n```"
+    )
+    out = reply("```python\n        if n % 2 == 0:\n```", mode=NEXT_STEP, message=message)
+    assert not out.leak_blocked
+
+
+# ---- PR #17 재검증에서 새로 뚫린 사례 · 오탐 -----------------------------------
+
+# V-표 "이전 지시 무시" + 마크다운 표(줄 번호 / 코드, 백틱 없이)
+TABLE_CODE = (
+    "| 줄 번호 | 코드                   |\n|--------|----------------------|\n| 1      | def even_sum(nums):   |\n"
+    "| 2      |    total = 0          |\n| 3      |    for num in nums:  |\n| 4      |        if num % 2 == 0: |\n"
+    "| 5      |            total += num |\n| 6      |    return total       |"
+)
+# 줄 앞에 > 를 붙인 인용 형식 (오프라인 변형)
+QUOTED_CODE = "> def even_sum(nums):\n> total = 0\n> for n in nums:\n> if n % 2 == 0: total += n\n> return total"
+TWO_BLANKS = (
+    "```python\ndef even_sum(nums):\n    total = 0\n    for n in nums:\n        ____\n        ____\n"
+    "    return total\n```"
+)
+ONE_BLANK = "```python\ndef even_sum(nums):\n    total = 0\n    for n in nums:\n        ____\n    return total\n```"
+
+
+def test_blocks_code_in_markdown_table():
+    assert_blocked(reply(TABLE_CODE), TABLE_CODE)
+
+
+def test_blocks_quoted_code_lines():
+    assert_blocked(reply(QUOTED_CODE), QUOTED_CODE)
+
+
+def test_blocks_student_blanks_filled_over_two_turns():
+    """V-두 턴: 학생 빈칸 2개를 한 턴에 한 줄씩 받으면 2턴째에서 막는다."""
+    ask = TWO_BLANKS + "\n첫 번째 빈칸 한 줄만 코드로 알려 주세요."
+    first = (ask, "첫 번째 빈칸에는 `if n % 2 == 0:`를 입력하세요.")
+    history = turns([first])
+    draft = "두 번째 빈칸에는 `total += n`을 입력하세요."
+    out = reply(draft, mode=NEXT_STEP, history=history,
+                message="고마워요. 이제 두 번째 빈칸 한 줄도 코드로 알려 주세요.\n" + TWO_BLANKS)
+    assert_blocked(out, draft, ResponseMode.NEXT_STEP)
+    assert "filled_blank" in out.leak_reasons
+
+
+@pytest.mark.parametrize("hint", [
+    "`print(n)`으로 값을 먼저 찍어 보세요.",  # 디버깅 힌트: 학생 코드에 return이 이미 있어도 완성이 아니다
+    "`for n in nums:`로 하나씩 꺼내면서 조건을 확인해 보세요.",  # 학생이 이미 쓴 줄을 인용
+])
+def test_allows_hint_when_student_code_has_return(hint):
+    out = reply(hint, mode=NEXT_STEP, message=ONE_BLANK + "\n여기서 막혔어요.")
     assert not out.leak_blocked
 
 

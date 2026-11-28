@@ -1,6 +1,7 @@
 import asyncio
 
 from app.classifier.base import ClassificationResult, Classifier
+from app.leak_guard.base import LeakCheckResult, LeakGuard
 from app.leak_guard.module import ModuleLeakGuard
 from app.llm.mock import MockProvider
 from app.schemas.chat import ChatTurn
@@ -71,6 +72,26 @@ def test_empty_llm_reply_falls_back_to_fixed_message():
     out = run(FixedClassifier(requests_complete_answer=True), llm, choice=HelpChoice.FIRST_HINT)
     assert out.used_llm
     assert out.text == ASK_ATTEMPT_REPLY
+
+
+class RecordingGuard(LeakGuard):
+    def __init__(self):
+        self.calls: list[tuple[str, list[ChatTurn]]] = []
+
+    async def check(self, reply, history):
+        self.calls.append((reply, list(history)))
+        return LeakCheckResult(leaked=False)
+
+
+def test_leak_guard_receives_current_student_message():
+    """학생이 보낸 빈칸과 비교할 수 있도록 누출 검사에는 이번 학생 메시지까지 넘긴다."""
+    guard = RecordingGuard()
+    history = [ChatTurn(role="student", content="x=3 까지 했어요"), ChatTurn(role="assistant", content="좋아요")]
+    classifier = FixedClassifier(has_self_attempt_evidence=True)
+    asyncio.run(chat_service.reply("다음은요?", history, "", classifier, MockProvider(), guard))
+    draft, checked = guard.calls[0]
+    assert draft == MockProvider.DEFAULT_REPLY
+    assert checked == [*history, ChatTurn(role="student", content="다음은요?")]
 
 
 def test_complete_answer_without_choice_offers_choices_without_llm():
